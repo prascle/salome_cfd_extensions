@@ -33,12 +33,23 @@ SET(_bin_SCRIPTS
 )
 
 SET(_lib_SCRIPTS
-  __init__.py
-  initlog.py
+  CFDSTUDYGUI_ActionsHandler.py
+  CFDSTUDYGUI_Agents.py
+  CFDSTUDYGUI_CommandMgr.py
+  CFDSTUDYGUI_Commons.py
+  CFDSTUDYGUI_DataModel.py
+  CFDSTUDYGUI_DesktopMgr.py
+  CFDSTUDYGUI_DialogCollector.py
+  CFDSTUDYGUI_Management.py
+  CFDSTUDYGUI_Message.py
+  CFDSTUDYGUI_SolverGUI.py
   clientgui.py
-  utilstudy.py
   CLSMainWindow.py
+  initlog.py
+  __init__.py
   SATURNE8_DataModel.py
+  SATURNE8GUI.py
+  utilstudy.py
 )
 
 
@@ -49,11 +60,17 @@ SET(_ts_RESOURCES
   SATURNE8_msg_en.ts
   SATURNE8_msg_fr.ts
   SATURNE8_icons.ts
+  SATURNE8_images.ts
 )
 
 # uic files / to be processed by pyuic
 SET(_pyuic_files
   mw_saturne8.ui
+  ECSConversionDialog.ui
+  GUIActivationDialog.ui
+  InfoDialog.ui
+  SetTreeLocationDialog.ui
+  CFDSTUDYGUI_QProcessDialog.ui
 )
 
 # scripts / pyuic wrappings

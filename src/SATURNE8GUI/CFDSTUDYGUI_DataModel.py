@@ -92,28 +92,28 @@ import salome
 # Application modules
 #-------------------------------------------------------------------------------
 
-from CFDSTUDYGUI_Commons import CFD_Code, BinCode, Trace, sg
-from CFDSTUDYGUI_Commons import CaseInProcessStart, CaseInProcessEnd
-from CFDSTUDYGUI_Commons import CFD_Saturne, CFD_Neptune
-import CFDSTUDYGUI_SolverGUI
-import CFDSTUDYGUI_Commons
-from CFDSTUDYGUI_CommandMgr import runCommand
-from CFDSTUDYGUI_Message import cfdstudyMess
+from .CFDSTUDYGUI_Commons import CFD_Code, BinCode, Trace, sg
+from .CFDSTUDYGUI_Commons import CaseInProcessStart, CaseInProcessEnd
+from .CFDSTUDYGUI_Commons import CFD_Saturne, CFD_Neptune
+from . import CFDSTUDYGUI_SolverGUI
+from . import CFDSTUDYGUI_Commons
+from .CFDSTUDYGUI_CommandMgr import runCommand
+from .CFDSTUDYGUI_Message import cfdstudyMess
 from code_saturne.base.cs_exec_environment import separate_args
 
 #-------------------------------------------------------------------------------
 # log config
 #-------------------------------------------------------------------------------
 
-logging.basicConfig()
-log = logging.getLogger("CFDSTUDYGUI_DataModel")
-log.setLevel(logging.NOTSET)
+# logging.basicConfig()
+# log = logging.getLogger("CFDSTUDYGUI_DataModel")
+# log.setLevel(logging.NOTSET)
 
 #-------------------------------------------------------------------------------
 # Module name. Attribut "AttributeName" for the related SObject.
 #-------------------------------------------------------------------------------
 
-__MODULE_NAME__ = "CFDSTUDY"
+__MODULE_NAME__ = "SATURNE8"
 __MODULE_ID__   = 10000
 __OBJECT_ID__   = 10010
 
@@ -388,7 +388,7 @@ def _findOrCreateComponent():
     @return: the root C{SObject} for the Object browser representation.
     @rtype: C{SObject}
     """
-    log.debug("_findOrCreateComponent")
+    logging.debug("_findOrCreateComponent")
     study = _getStudy()
     father = study.FindComponent(__MODULE_NAME__)
     if father is None:
@@ -408,7 +408,7 @@ def _findOrCreateComponent():
     return father
 
 def _SetCaseLocation(theCasePath):
-    log.debug("_SetCaseLocation")
+    logging.debug("_SetCaseLocation")
     study         = _getStudy()
     builder       = study.NewBuilder()
     father        = _findOrCreateComponent()
@@ -448,7 +448,7 @@ def _SetStudyLocation(theStudyPath, theCaseNames,theCreateOpt,
     @type theCaseNames: C{String}
     @param theCaseNames: unix pathes of the new CFD cases to be build.
     """
-    log.debug("_SetStudyLocation")
+    logging.debug("_SetStudyLocation")
 
     iok = True
     if theCopyOpt:
@@ -516,7 +516,7 @@ def _CallCreateScript(theStudyPath, isCreateStudy, theCaseNames,
     @type theCaseNames: C{String}
     @param theCaseNames: unix pathes of the new CFD cases to be build.
     """
-    log.debug("_CallCreateScript")
+    logging.debug("_CallCreateScript")
     mess = ""
     scrpt, c ,mess = BinCode()
     if mess == "" :
@@ -555,7 +555,7 @@ def _CallCreateScript(theStudyPath, isCreateStudy, theCaseNames,
 
 def updateCasePath(theCasePath):
 
-    log.debug("updateCasePath")
+    logging.debug("updateCasePath")
     mess = ""
     scrpt, c ,mess = BinCode()
     if mess == "" :
@@ -576,7 +576,7 @@ def _UpdateStudy():
     """
     Updates CFD study tree of data from the root.
     """
-    log.debug("_UpdateStudy")
+    logging.debug("_UpdateStudy")
     study   = _getStudy()
     component = study.FindComponent(__MODULE_NAME__)
     if component == None:
@@ -595,9 +595,9 @@ def UpdateSubTree(theObject=None):
     @type theObject: C{SObject}
     @param theObject: branch of a tree of data to update.
     """
-    log.debug("UpdateSubTree")
+    logging.debug("UpdateSubTree")
     if theObject != None:
-        log.debug("UpdateSubTree -> path: %s" % _GetPath(theObject))
+        logging.debug("UpdateSubTree -> path: %s" % _GetPath(theObject))
         _RebuildTreeRecursively(theObject)
     else:
         _UpdateStudy()
@@ -608,7 +608,7 @@ def closeCFDStudyTree(theObject):
     """
     Close a CFD Study from the Object browser
     """
-    log.debug("closeCFDStudyTree")
+    logging.debug("closeCFDStudyTree")
     if theObject == None:
         return
     study   = _getStudy()
@@ -635,7 +635,7 @@ def _RebuildTreeRecursively(theObject):
     #
     if theObject == None:
         return
-    log.debug("_RebuildTreeRecursively -> %s childs: %s" % (theObject.GetName(), ScanChildNames(theObject,  ".*")))
+    logging.debug("_RebuildTreeRecursively -> %s childs: %s" % (theObject.GetName(), ScanChildNames(theObject,  ".*")))
     theObjectPath = _GetPath(theObject)
 
     if theObjectPath == None:
@@ -682,7 +682,7 @@ def _RebuildTreeRecursively(theObject):
     # Case with empty list of file: every SObject must be clean
     elif len(dirList) == 0:
         builder.RemoveObjectWithChildren(theObject)
-        log.debug("_RebuildTreeRecursively 3: %s childs: %s" % (theObject.GetName(), ScanChildNames(theObject,  ".*")))
+        logging.debug("_RebuildTreeRecursively 3: %s childs: %s" % (theObject.GetName(), ScanChildNames(theObject,  ".*")))
 
     else:
         objEnd = False
@@ -695,7 +695,7 @@ def _RebuildTreeRecursively(theObject):
                 if not dirEnd:
                     #append new object
                     if Trace(): print("1 Append new Item: ", dirName)
-                    log.debug("_RebuildTreeRecursively 4: dirName = %s objName = %s" %(dirName,objName))
+                    logging.debug("_RebuildTreeRecursively 4: dirName = %s objName = %s" %(dirName,objName))
                     _CreateObject(theObject, builder, dirName)
                     dirIndex+=1
 
@@ -722,7 +722,7 @@ def _RebuildTreeRecursively(theObject):
                 else:
                     #append new item at the end
                     if Trace(): print("2 Append new Item: ", dirName)
-                    log.debug("_RebuildTreeRecursively 5: dirName = %s objName = %s" %(dirName,objName))
+                    logging.debug("_RebuildTreeRecursively 5: dirName = %s objName = %s" %(dirName,objName))
                     _CreateObject(theObject, builder, dirName)
                     dirIndex+=1
 
@@ -753,7 +753,7 @@ def _RebuildTreeRecursively(theObject):
         if iter.Value().GetName():
             _RebuildTreeRecursively(iter.Value())
         iter.Next()
-    log.debug("_RebuildTreeRecursively -> %s END" % (theObject.GetName()))
+    logging.debug("_RebuildTreeRecursively -> %s END" % (theObject.GetName()))
 
 
 def _CreateObject(theFather, theBuilder, theName):
@@ -771,7 +771,7 @@ def _CreateObject(theFather, theBuilder, theName):
     @type theName: C{String}
     @param theName: AttributeName of the new child branch.
     """
-    log.debug("_CreateObject: %s" % theName)
+    logging.debug("_CreateObject: %s" % theName)
     newChild = theBuilder.NewObject(theFather)
     attr = theBuilder.FindOrCreateAttribute(newChild, "AttributeName")
     attr.SetValue(theName)
@@ -784,7 +784,7 @@ def _CreateItem(theFather,theNewName) :
     @type theFather: C{SObject}
     @type theNewName : C{String}
     """
-    log.debug("_CreateItem: NewItem = %s with Parent = %s" % (theNewName,theFather.GetName()))
+    logging.debug("_CreateItem: NewItem = %s with Parent = %s" % (theNewName,theFather.GetName()))
     if theNewName not in ScanChildNames(theFather,  ".*") :
         theBuilder = _getNewBuilder()
         _CreateObject(theFather, theBuilder, theNewName)
@@ -793,7 +793,7 @@ def _CreateItem(theFather,theNewName) :
 def getNameCodeFromXmlCasePath(XMLCasePath) :
     """
     """
-    log.debug("getNameCodeFromXmlCasePath")
+    logging.debug("getNameCodeFromXmlCasePath")
     code = ""
     if os.path.isfile(XMLCasePath):
         fd = os.open(XMLCasePath,os.O_RDONLY)
@@ -865,14 +865,14 @@ def _FillObject(theObject, theParent, theBuilder):
     @type theBuilder: C{SUIT_Study}
     @param theBuilder: C{SObject} constructor for create an attribut.
     """
-    log.debug("_FillObject")
+    logging.debug("_FillObject")
     attr = theBuilder.FindOrCreateAttribute(theParent, "AttributeLocalID")
     parentId = attr.Value()
     name = theObject.GetName()
     objectId = dict_object["OtherFile"]
     path = os.path.join(_GetPath(theParent), name)
-    log.debug("_FillObject Object Name : %s" % name)
-    log.debug("_FillObject Parent Name : %s" % theParent.GetName())
+    logging.debug("_FillObject Object Name : %s" % name)
+    logging.debug("_FillObject Parent Name : %s" % theParent.GetName())
     # Parent is study
     if parentId == dict_object["Study"] or parentId == dict_object["CouplingStudy"]:
         if Trace(): print("_FillObject : parent is Study ", theParent.GetName())
@@ -1236,7 +1236,7 @@ def _FillObject(theObject, theParent, theBuilder):
         if os.path.isdir(path):
             objectId = dict_object["OtherFolder"]
 
-    log.debug("_FillObject: %s %s" % \
+    logging.debug("_FillObject: %s %s" % \
         (name, [k for k, v in dict_object.items() if v == objectId][0]))
 
     if objectId in (dict_object["OtherFile"],
@@ -1476,7 +1476,7 @@ def FindStudyByPath(theStudyPath):
     @return: the CFD study.
     @rtype: C{SObject} or C{None}
     """
-    log.debug("FindStudyByPath")
+    logging.debug("FindStudyByPath")
     component = _getComponent()
     if component == None:
         return None
@@ -1505,7 +1505,7 @@ def FindCaseByPath(theCasePath):
     @return: the CFD study.
     @rtype: C{SObject} or C{None}
     """
-    log.debug("FindCaseByPath")
+    logging.debug("FindCaseByPath")
     component = _getComponent()
     if component == None:
         return None
@@ -1871,7 +1871,7 @@ def setCaseInProcess(theCasePath, isInProcess):
     @type isInProcess: C{True} or C{False}
     @param isInProcess: if C{True}, shows the I{CaseInProcess} icon.
     """
-    log.debug("setCaseInProcess")
+    logging.debug("setCaseInProcess")
     aStudyPath, aCaseName = os.path.split(theCasePath)
     aStudyObj = FindStudyByPath(aStudyPath)
     if not aStudyPath:

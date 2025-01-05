@@ -59,23 +59,23 @@ from salome.smesh import smeshBuilder
 # Application modules
 #-------------------------------------------------------------------------------
 
-import CFDSTUDYGUI_DialogCollector
-import CFDSTUDYGUI_DataModel
-import CFDSTUDYGUI_Commons
-import CFDSTUDYGUI_CommandMgr
-from CFDSTUDYGUI_Agents import *
-from CFDSTUDYGUI_Commons import _SetCFDCode, CFD_Code, BinCode, CFD_Saturne
-from CFDSTUDYGUI_Commons import CFD_Neptune, sgPyQt, sg, CheckCFD_CodeEnv
-import CFDSTUDYGUI_SolverGUI
-from CFDSTUDYGUI_Message import cfdstudyMess
+from . import CFDSTUDYGUI_DialogCollector
+from . import CFDSTUDYGUI_DataModel
+from . import CFDSTUDYGUI_Commons
+from . import CFDSTUDYGUI_CommandMgr
+# from CFDSTUDYGUI_Agents import *
+from .CFDSTUDYGUI_Commons import _SetCFDCode, CFD_Code, BinCode, CFD_Saturne
+from .CFDSTUDYGUI_Commons import CFD_Neptune, sgPyQt, sg, CheckCFD_CodeEnv
+from . import CFDSTUDYGUI_SolverGUI
+from .CFDSTUDYGUI_Message import cfdstudyMess
 
 #-------------------------------------------------------------------------------
 # log config
 #-------------------------------------------------------------------------------
 
-logging.basicConfig()
-log = logging.getLogger("CFDSTUDYGUI_ActionsHandler")
-log.setLevel(logging.NOTSET)
+# logging.basicConfig()
+# log = logging.getLogger("CFDSTUDYGUI_ActionsHandler")
+# log.setLevel(logging.NOTSET)
 
 #-------------------------------------------------------------------------------
 # Global definitions
@@ -197,7 +197,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         """
         Constructor.
         """
-        log.debug("__init__")
+        logging.debug("__init__")
         QObject.__init__(self, None)
 
         self.l_color = [(1,0,0),(0,1,0),(0,0,1),(1,1,0),(1,0,1),(0,1,1),]
@@ -212,7 +212,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
 
         self._SalomeSelection = sgPyQt.getSelection()
         self._SolverGUI = CFDSTUDYGUI_SolverGUI.CFDSTUDYGUI_SolverGUI()
-        self._DskAgent = Desktop_Agent()
+        #self._DskAgent = Desktop_Agent()
 
         self.RemoveAction = RemoveAction
         self.DisplayImageAction = DisplayImageAction
@@ -221,7 +221,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         """
         Creates menu, actions, and separators.
         """
-        log.debug("createActions")
+        logging.debug("createActions")
         menu_id = sgPyQt.createMenu(ObjectTR.tr("CFDSTUDY_MENU"),\
                                      -1,\
                                      -1,\
@@ -852,7 +852,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         Updates all action according with current selection and study states.
         This function connected to selection change signal.
         """
-        log.debug("updateActions")
+        logging.debug("updateActions")
         component = CFDSTUDYGUI_DataModel._getComponent()
         if component == None:
             #disable all actions except Study Location
@@ -935,7 +935,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
 
 
     def updateActionsXmlFile(self, XMLSobj) :
-        log.debug("updateActionsXmlFile")
+        logging.debug("updateActionsXmlFile")
         if XMLSobj != None:
             if CFDSTUDYGUI_DataModel.checkType(XMLSobj,
                                                CFDSTUDYGUI_DataModel.dict_object["DATAfileXML"]):
@@ -970,7 +970,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         @type popup: C{QPopupMenu}
         @param popup: popup menu from the Object Browser.
         """
-        log.debug("customPopup")
+        logging.debug("customPopup")
         if id == CFDSTUDYGUI_DataModel.dict_object["Study"]:
             popup.addAction(self.commonAction(AddCaseAction))
             popup.addAction(self.commonAction(CloseStudyAction))
@@ -1129,7 +1129,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         does not exist, the corresponding folder is created.
         dialog.CreateOption boolean indicates that Create study button is checked
         """
-        log.debug("slotStudyLocation")
+        logging.debug("slotStudyLocation")
         dialog = self.DialogCollector.SetTreeLocationDialog
         dialog.__init__()
         dialog.exec_()
@@ -1170,7 +1170,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         """
         Builds new CFD cases.
         """
-        log.debug("slotAddCase")
+        logging.debug("slotAddCase")
         dialog = self.DialogCollector.SetTreeLocationDialog
         dialog.__init__()
         dialog.setCaseMode()
@@ -1232,7 +1232,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
             - CFD code selected
             - environnement variables defined
         """
-        log.debug("slotInfo")
+        logging.debug("slotInfo")
         dialog = self.DialogCollector.InfoDialog
         dialog.show()
         self.updateActions()
@@ -1257,7 +1257,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         @type theObject: C{SObject}
         @param theObject: branch of a tree of data to update.
         """
-        log.debug("updateObjBrowser")
+        logging.debug("updateObjBrowser")
         cursor = QCursor(Qt.BusyCursor)
         QApplication.setOverrideCursor(cursor)
 
@@ -1340,7 +1340,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         Close file or folder and children from the Object Browser.
         Delete dock windows cases attached to a CFD Study if this study is being closed from the Object Browser.
         """
-        log.debug("slotCloseStudyAction")
+        logging.debug("slotCloseStudyAction")
         theStudy = self._singleSelectedObject()
         caseList = []
         xmlcaseList= []
@@ -1359,7 +1359,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
 
 
     def slotRemoveAction(self):
-        log.debug("slotRemoveAction")
+        logging.debug("slotRemoveAction")
         listSobj = self._multipleSelectedObject()
         study = CFDSTUDYGUI_DataModel._getStudy()
         if listSobj != [] :
@@ -1619,7 +1619,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
             return
         smeshgui = salome.ImportComponentGUI("SMESH")
 
-        log.debug("slotDisplayMESH -> self._multipleSelectedObject()[0].GetName()= %s" % self._multipleSelectedObject()[0].GetName())
+        logging.debug("slotDisplayMESH -> self._multipleSelectedObject()[0].GetName()= %s" % self._multipleSelectedObject()[0].GetName())
         for  sobj in self._multipleSelectedObject():
             if sobj != None:
                 entry = sobj.GetID()
@@ -1746,7 +1746,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         """
         Open into Salome the CFD GUI from an XML file whose name is sobj.GetName()
         """
-        log.debug("OpenCFD_GUI")
+        logging.debug("OpenCFD_GUI")
         import os
         if sobj != None:
             if not os.path.exists(CFDSTUDYGUI_DataModel._GetPath(sobj)):
@@ -1785,7 +1785,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         """
         Open into Salome the CFD GUI from an XML file whose name is sobj.GetName()
         """
-        log.debug("slotOpenCFD_GUI")
+        logging.debug("slotOpenCFD_GUI")
         sobj = self._singleSelectedObject()
         if sobj != None:
             import os
@@ -1800,7 +1800,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         """
         Open into Salome the CFD GUI an existing XML file case from the Gui menu and not from Object browser
         """
-        log.debug("slotOpenAnExistingCaseFileFromMenu")
+        logging.debug("slotOpenAnExistingCaseFileFromMenu")
         boo         = False
         StudyPath   = ""
         CaseName    = ""
@@ -1828,7 +1828,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         Check if filepath is an XML file which belong to a CFD case directory
         The structure of the case directory must include DATA RESU SRC directory
         """
-        log.debug("checkCFDCaseDir")
+        logging.debug("checkCFDCaseDir")
         boo = True
         StudyPath = ""
         CasePath  = ""
@@ -1867,7 +1867,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         """
         Close into Salome the CFD GUI from an XML file whose name is sobj.GetName()
         """
-        log.debug("CloseCFD_GUI")
+        logging.debug("CloseCFD_GUI")
         if sobj != None and CFDSTUDYGUI_DataModel.checkType(sobj, CFDSTUDYGUI_DataModel.dict_object["DATAfileXML"]):
             aXmlFileName = sobj.GetName()
             aCase = CFDSTUDYGUI_DataModel.GetCase(sobj)
@@ -1888,7 +1888,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
             # close the active CFDGUI window with the icon button CLOSE_CFD_GUI_ACTION_ICON in the tool bar
             aStudyName, aCaseName, aXmlFileName = self._SolverGUI.getStudyCaseXmlNames(self._SolverGUI._CurrentWindow)
 
-        log.debug("CloseCFD_GUI %s %s %s" % (aStudyName, aCaseName, aXmlFileName))
+        logging.debug("CloseCFD_GUI %s %s %s" % (aStudyName, aCaseName, aXmlFileName))
         if self._SolverGUI.okToContinue():
             self._SolverGUI.removeDockWindow(aStudyName, aCaseName, aXmlFileName)
             self.commonAction(OpenGUIAction).setEnabled(True)
@@ -1900,7 +1900,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         """
         Close into Salome the CFD GUI from an XML file whose name is sobj.GetName()
         """
-        log.debug("slotCloseCFD_GUI")
+        logging.debug("slotCloseCFD_GUI")
         sobj = self._singleSelectedObject()
         self.CloseCFD_GUI(sobj)
 
@@ -1918,7 +1918,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         Build the command line for the GUI of Code_Saturne/NEPTUNE_CFD.
         Launch a new CFD GUI with popup menu on case object into SALOME Object browser
         """
-        log.debug("slotLaunchGUI")
+        logging.debug("slotLaunchGUI")
         #get current selection
         sobj = self._singleSelectedObject()
         if study:
@@ -2028,7 +2028,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
 
         aMeshFold = aFirtsObj.GetFather()
         thePath = CFDSTUDYGUI_DataModel._GetPath(aMeshFold)
-        log.debug("slotMeshConvertToMed -> thePath = %s" % thePath)
+        logging.debug("slotMeshConvertToMed -> thePath = %s" % thePath)
         args = ""
 
         b, c, mess = BinCode()
@@ -2046,7 +2046,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
             args += " med "
             args += CFDSTUDYGUI_DataModel._GetPath(sobj)
 
-            log.debug("slotMeshConvertToMed -> args = %s" % args)
+            logging.debug("slotMeshConvertToMed -> args = %s" % args)
             dlg = CFDSTUDYGUI_CommandMgr.CFDSTUDYGUI_QProcessDialog(sgPyQt.getDesktop(),
                                                                     self.tr("STMSG_ECS_CONVERT"),
                                                                     [args],
@@ -2058,7 +2058,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
     def slotRunScript(self):
         """
         """
-        log.debug("slotRunScript")
+        logging.debug("slotRunScript")
         sobj = self._singleSelectedObject()
         if sobj:
             curd = os.path.abspath('.')
@@ -2084,7 +2084,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         """
         Redirects B{Save} method to GUI of current solver
         """
-        log.debug("slotSaveDataFile")
+        logging.debug("slotSaveDataFile")
         xmlDefaultName = "setup.xml"
         xmlFilePath = self._SolverGUI.SaveXmlFile()
         if xmlFilePath == None:
@@ -2099,13 +2099,13 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
 
 
     def slotSaveAsDataFile(self):
-        log.debug("slotSaveAsDataFile")
+        logging.debug("slotSaveAsDataFile")
         oldXmlFilePath, xmlFilePath = self._SolverGUI.SaveAsXmlFile()
         self.updateGui(oldXmlFilePath,xmlFilePath)
 
 
     def updateGui(self,oldXmlFilePath,xmlFilePath):
-        log.debug("updateGui")
+        logging.debug("updateGui")
         if oldXmlFilePath == xmlFilePath :
             return
         if xmlFilePath == None :
@@ -2393,11 +2393,11 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         return action_id
 
 
-    def dskAgent(self):
-        """
-        Returns the dekstop Agent.
-        """
-        return self._DskAgent
+    # def dskAgent(self):
+    #     """
+    #     Returns the dekstop Agent.
+    #     """
+    #     return self._DskAgent
 
 
     def disconnectSolverGUI(self):
@@ -2406,7 +2406,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         We can have one or several of them with the right click on the main menu bar of
         Salome
         """
-        log.debug("disconnectSolverGUI")
+        logging.debug("disconnectSolverGUI")
         self._SolverGUI.disconnectDockWindows()
 
 
@@ -2414,7 +2414,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         """
         Show all the dock windows of CFDSTUDY, when activating another Salome Component
         """
-        log.debug("connectSolverGUI")
+        logging.debug("connectSolverGUI")
         self._SolverGUI.connectDockWindows()
 
 #-------------------------------------------------------------------------------

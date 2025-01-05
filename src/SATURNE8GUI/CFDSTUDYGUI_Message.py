@@ -1,8 +1,4 @@
-#Qt4/Qt5
-try :
-  from PyQt4.QtGui import QDialog, QMessageBox
-except :
-  from PyQt5.QtWidgets import QDialog, QMessageBox
+from PyQt5.QtWidgets import QDialog, QMessageBox
 
 # --- Get SALOME PyQt interface
 import SalomePyQt

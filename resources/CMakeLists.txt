@@ -18,12 +18,65 @@
 #
 
 SET(SATURNE8_RESOURCES_FILES
-  SATURNE8.png
-  SATURNE8_case.png
-  SATURNE8_case_open.png
+  CaseAdd.png
+  CaseEdit.png
+  CaseInProcess.png
+  Case.png
+  CaseRun.png
+  CFDSTUDY.png
+  CheckCompilation.png
+  CloseGui.png
+  Close.png
+  compiler-icon.png
+  create_load_case.png
+  data_editor-icon.png
+  Delete.png
+  Document.png
+  EditableDocument.png
+  EditFile.png
+  edit-redo.png
+  edit-undo.png
+  Executable.png
+  file_transfer.png
+  Folder.png
+  FolderRed.png
+  InfoCFDSTUDY.png
+  LaunchGUI.png
+  LaunchGUIwithOptions.png
   LightApp.xml
+  MED_Module_Convert.png
+  mesh_group.png
+  mesh.png
+  mesh_tree_group.png
+  mesh_tree_mesh.png
+  MoveFile.png
+  MoveFolder.png
+  NewTreeCreate.png
+  OpenedFolder.png
+  ot-logo.png
+  paravisFile.png
+  resu_viewer-icon.png
+  run_button.png
+  RunScript.png
+  saturne8_240.png
+  SATURNE8_case_open.png
+  SATURNE8_case.png
   SATURNE8_en.xml
+  SalomeAppSL.xml
+  SATURNE8.png
+  Save.png
+  SetTreeLocation.png
+  SMESH_Module_Export.png
+  src_editor-icon.png
+  Study.png
+  TmpFile.png
+  UnknownDocument.png
+  UpdateObjBrowser.png
+  ViewFile.png
+  VISU_Module_Export.png
+  VISU_Plot_Export.png
+  VISU_Plot.png
 )
 
 INSTALL(FILES ${SATURNE8_RESOURCES_FILES} DESTINATION ${SALOME_SATURNE8_INSTALL_RES_DATA})
-SALOME_CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/SalomeApp.xml.in ${CMAKE_CURRENT_BINARY_DIR}/SalomeApp.xml INSTALL ${SALOME_SATURNE8_INSTALL_RES_DATA})
+#SALOME_CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/SalomeApp.xml.in ${CMAKE_CURRENT_BINARY_DIR}/SalomeAppSL.xml INSTALL ${SALOME_SATURNE8_INSTALL_RES_DATA})

@@ -49,9 +49,9 @@ from code_saturne.gui.base.QtCore    import *
 # Application modules
 #-------------------------------------------------------------------------------
 
-from CFDSTUDYGUI_Commons import Trace
-from CFDSTUDYGUI_ActionsHandler import CFDSTUDYGUI_ActionsHandler
-from CFDSTUDYGUI_Agents import *
+from .CFDSTUDYGUI_Commons import Trace
+from .CFDSTUDYGUI_ActionsHandler import CFDSTUDYGUI_ActionsHandler
+from .CFDSTUDYGUI_Agents import *
 
 #-------------------------------------------------------------------------------
 # Classes definition

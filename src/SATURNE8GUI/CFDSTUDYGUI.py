@@ -58,24 +58,24 @@ import salome, salome_version
 # Application modules
 #-------------------------------------------------------------------------------
 
-import CFDSTUDYGUI_ActionsHandler
-import CFDSTUDYGUI_DataModel
-import CFDSTUDYGUI_Commons
-import CFDSTUDYGUI_DesktopMgr
-import CFDSTUDYGUI_SolverGUI
+from . import CFDSTUDYGUI_ActionsHandler
+from . import CFDSTUDYGUI_DataModel
+from . import CFDSTUDYGUI_Commons
+from . import CFDSTUDYGUI_DesktopMgr
+from . import CFDSTUDYGUI_SolverGUI
 
-from CFDSTUDYGUI_Commons import sg, sgPyQt
-from CFDSTUDYGUI_Commons import CFD_Saturne, CFD_Neptune
-from CFDSTUDYGUI_Commons import CheckCFD_CodeEnv
-from CFDSTUDYGUI_Message import cfdstudyMess
+from .CFDSTUDYGUI_Commons import sg, sgPyQt
+from .CFDSTUDYGUI_Commons import CFD_Saturne, CFD_Neptune
+from .CFDSTUDYGUI_Commons import CheckCFD_CodeEnv
+from .CFDSTUDYGUI_Message import cfdstudyMess
 
 #-------------------------------------------------------------------------------
 # log config
 #-------------------------------------------------------------------------------
 
-logging.basicConfig()
-log = logging.getLogger("CFDSTUDYGUI")
-log.setLevel(logging.NOTSET)
+# logging.basicConfig()
+# log = logging.getLogger("CFDSTUDYGUI")
+# log.setLevel(logging.NOTSET)
 
 #-------------------------------------------------------------------------------
 # Global definitions
@@ -104,7 +104,7 @@ def initialize():
     This method is called when GUI module is being created and initialized.
     """
     # nothing to do here.
-    log.debug("initialize")
+    logging.debug("initialize")
     if not sgPyQt.hasSetting( "CFDSTUDY", "ExternalEditor"):
         sgPyQt.addSetting( "CFDSTUDY", "ExternalEditor", DEFAULT_EDITOR_NAME )
     if not sgPyQt.hasSetting( "CFDSTUDY", "ExternalReader"):
@@ -150,7 +150,7 @@ def windows():
     @return: layout of the SALOME dockable windows
     @rtype: C{Dictionary}
     """
-    log.debug("windows")
+    logging.debug("windows")
 
     winMap = {}
     winMap[ WT_ObjectBrowser ] = Qt.LeftDockWidgetArea
@@ -163,7 +163,7 @@ def closeStudy() :
     """
     This method is called when salome study is closed (Salome desktop button File -> close -> close w/o saving button) and Salome Main window desktop is already available
     """
-    log.debug("closeStudy")
+    logging.debug("closeStudy")
     if salome_version.getVersion() >= '7.5.0' :
         dsk = sgPyQt.getDesktop()
         CFDSTUDYGUI_SolverGUI._c_CFDGUI.cleanAllDock(dsk)
@@ -180,7 +180,7 @@ def views():
     @return: list of the SALOME view window types
     @rtype: C{String} or C{list} of C{String}
     """
-    log.debug("views")
+    logging.debug("views")
     winList = "VTKViewer"
     #winList = "OCCViewer"
     #winList = "Plot2d"
@@ -196,7 +196,7 @@ def setWorkSpace(ws):
     @type ws: C{QWidget}
     @param ws: main window's central widget
     """
-    log.debug("setWorkSpace")
+    logging.debug("setWorkSpace")
 
     dsk = sgPyQt.getDesktop()
     _DesktopMgr.setWorkspace(dsk, ws)
@@ -207,7 +207,7 @@ def createPreferences():
     """
     Manages the preferences QDialog of the module.
     """
-    log.debug("createPreferences")
+    logging.debug("createPreferences")
     genTab = sgPyQt.addPreference(ObjectTR.tr("CFDSTUDY_PREF_GEN_GROUP"))
     EditorField = str(ObjectTR.tr("EDITOR"))
     editorGroup = sgPyQt.addPreference(EditorField,genTab)
@@ -221,7 +221,7 @@ def createPreferences():
 
 
 def preferenceChanged( section, setting ):
-    log.debug("preferenceChanged(): %s / %s" % ( section, setting ))
+    logging.debug("preferenceChanged(): %s / %s" % ( section, setting ))
     pass
 
 
@@ -232,7 +232,7 @@ def activate():
     @rtype: C{True} or C{False}
     @return: C{True} only if the activation is successful.
     """
-    log.debug("activate")
+    logging.debug("activate")
     dsk = sgPyQt.getDesktop()
     dsk.setTabPosition(Qt.RightDockWidgetArea,QTabWidget.South)
     dsk.setTabPosition(Qt.LeftDockWidgetArea,QTabWidget.South)
@@ -241,7 +241,7 @@ def activate():
 
     env_saturne, msg = CheckCFD_CodeEnv(CFD_Saturne)
 
-    log.debug("activate -> env_saturne = %s" % env_saturne)
+    logging.debug("activate -> env_saturne = %s" % env_saturne)
 
     if not env_saturne:
         QMessageBox.critical(ActionHandler.dskAgent().workspace(),
@@ -262,7 +262,7 @@ def activate():
     # Hide the Python Console window layout
     for dock in sgPyQt.getDesktop().findChildren(QDockWidget):
         dockTitle = dock.windowTitle()
-        log.debug("activate -> QDockWidget: %s" % dockTitle)
+        logging.debug("activate -> QDockWidget: %s" % dockTitle)
         if "Object Browser" in str(dockTitle):
             dock.raise_()
             dock.show()
@@ -279,7 +279,7 @@ def setSettings():
     Stores the selected CFD code and updates action according with current
     selection and study states in the desktop manager.
     """
-    log.debug("setSettings")
+    logging.debug("setSettings")
 
     dsk = sgPyQt.getDesktop()
     ActionHandler = _DesktopMgr.getActionHandler(dsk)
@@ -290,7 +290,7 @@ def deactivate():
     """
     This method is called when GUI module is being deactivated.
     """
-    log.debug("deactivate")
+    logging.debug("deactivate")
     dsk = sgPyQt.getDesktop()
     ActionHandler = _DesktopMgr.getActionHandler(dsk)
 

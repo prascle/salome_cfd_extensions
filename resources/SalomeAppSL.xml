@@ -1,9 +1,30 @@
+<!--
+  Copyright (C) 2009-2016  OPEN CASCADE
+
+  This library is free software; you can redistribute it and/or
+  modify it under the terms of the GNU Lesser General Public
+  License as published by the Free Software Foundation; either
+  version 2.1 of the License, or (at your option) any later version.
+
+  This library is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  Lesser General Public License for more details.
+
+  You should have received a copy of the GNU Lesser General Public
+  License along with this library; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+
+  See http://www.salome-platform.org/ or email : webmaster.salome@opencascade.com
+
+-->
 <document>
-  <section name="CFDSTUDY">
+  <section name="SATURNE8">
     <!-- Major module parameters -->
-    <parameter name="name"    value="CFDSTUDY"/>
-    <parameter name="icon"    value="CFDSTUDY.png"/>
-    <parameter name="library" value="SalomePyQtGUI"/>
+    <parameter name="name"    value="SATURNE8"/>
+    <parameter name="icon"    value="SATURNE8.png"/>
+    <parameter name="version" value="@SALOMESATURNE8_VERSION@"/>
+    <parameter name="library" value="SalomePyQtGUILight"/>
     <parameter name="documentation" value="CFDSTUDY_help"/>
     <!-- Other module preferences -->
     <parameter name="Kernel"         value="/usr/local/bin"/>
@@ -15,10 +36,11 @@
   </section>
   <section name="resources">
     <!-- Module resources -->
-    <parameter name="CFDSTUDY" value="${CFDSTUDY_ROOT_DIR}/share/salome/resources/cfdstudy"/>
+    <parameter name="SATURNE8" value="${SATURNE8_ROOT_DIR}/share/salome/resources/saturne8"/>
   </section>
   <section name="CFDSTUDY_help" >
    <parameter name="sub_menu"        value="%1 module"/>
-    <parameter name="%1 Salome module User's Guide" value="%CFDSTUDY_ROOT_DIR%/share/doc/salome/gui/CFDSTUDY/index.html"/>
+    <parameter name="%1 Salome module User's Guide" value="${SATURNE8_ROOT_DIR}/share/doc/salome/gui/CFDSTUDY/index.html"/>
   </section>
+
 </document>

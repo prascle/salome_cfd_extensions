@@ -6,21 +6,24 @@ import traceback
 import time
 
 from PyQt5 import QtWidgets
-from PyQt5.QtWidgets import QMenu
-from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QMenu, QMessageBox
+from PyQt5.QtCore import Qt, QObject
 
 import salome
 from salome.smesh import smeshBuilder
 # from qtsalome import QMenu
 
-#from SaturneMain import MainView
-#import saturneIHMContext as sct
+from code_saturne.base import cs_package
+
 
 from .CLSMainWindow import CLSMainWindow
 from .CLSMainWindow import getSalomePyQt
 from .CLSMainWindow import col
 from .utilstudy import DumpMesh
 from .SATURNE8_DataModel import SATURNE8_DataModel
+from .CFDSTUDYGUI_Commons import CheckCFD_CodeEnv, CFD_Saturne
+from .CFDSTUDYGUI_Message import cfdstudyMess
+from .CFDSTUDYGUI_ActionsHandler import CFDSTUDYGUI_ActionsHandler
 
 salome.salome_init()
 
@@ -83,61 +86,95 @@ class ClientGui():
 
         self.casesToReload = []
 
-        self.dict_command = {
-            951: self.loadfile,
-            952: self.savefile,
-            970: self.createOrLoadCase,
-        }
+        # self.dict_command = {
+        #     951: self.loadfile,
+        #     952: self.savefile,
+        #     970: self.createOrLoadCase,
+        # }
 
-        self.dict_actions = {
-            "loadfile":      951,
-            "savefile":      952,
-            "createOrLoadCase": 970,
-        }
+        # self.dict_actions = {
+        #     "loadfile":      951,
+        #     "savefile":      952,
+        #     "createOrLoadCase": 970,
+        # }
 
-        # Load File, Save File actions
-        getSalomePyQt().createAction(self.dict_actions["loadfile"],
-                                     "Load text File",
-                                     "Load text file")
-        getSalomePyQt().createAction(self.dict_actions["savefile"],
-                                     "Save text File",
-                                     "Save text file")
-        # Separator
-        separator = getSalomePyQt().createSeparator()
-        getSalomePyQt().createAction(self.dict_actions["createOrLoadCase"],
-                                     "Create or Load a Saturne Case",
-                                     "Create or Load a Saturne Case")
-        # Separator
-        separator = getSalomePyQt().createSeparator()
+        # # Load File, Save File actions
+        # getSalomePyQt().createAction(self.dict_actions["loadfile"],
+        #                              "Load text File",
+        #                              "Load text file")
+        # getSalomePyQt().createAction(self.dict_actions["savefile"],
+        #                              "Save text File",
+        #                              "Save text file")
+        # # Separator
+        # separator = getSalomePyQt().createSeparator()
+        # getSalomePyQt().createAction(self.dict_actions["createOrLoadCase"],
+        #                              "Create or Load a Saturne Case",
+        #                              "Create or Load a Saturne Case")
+        # # Separator
+        # separator = getSalomePyQt().createSeparator()
 
-        # Get Menu 'File'
-        menuFile = getSalomePyQt().createMenu("File", -1, -1)
-        # Add actions in the menu 'File'
-        getSalomePyQt().createMenu(separator,                     menuFile, -1, 10)
-        getSalomePyQt().createMenu(self.dict_actions["loadfile"], menuFile, 10)
-        getSalomePyQt().createMenu(self.dict_actions["savefile"], menuFile, 10)
-        getSalomePyQt().createMenu(separator,                     menuFile, -1, 10)
-        # Create 'Saturne8' menu
-        menuSaturne8 = getSalomePyQt().createMenu("Saturne8", -1, -1, 50)
-        # Add actions in the menu 'Saturne8'
-        getSalomePyQt().createMenu(self.dict_actions["createOrLoadCase"],
-                                   menuSaturne8, 10)
-        getSalomePyQt().createMenu(separator,
-                                   menuSaturne8, -1, 10)
+        # # Get Menu 'File'
+        # menuFile = getSalomePyQt().createMenu("File", -1, -1)
+        # # Add actions in the menu 'File'
+        # getSalomePyQt().createMenu(separator,                     menuFile, -1, 10)
+        # getSalomePyQt().createMenu(self.dict_actions["loadfile"], menuFile, 10)
+        # getSalomePyQt().createMenu(self.dict_actions["savefile"], menuFile, 10)
+        # getSalomePyQt().createMenu(separator,                     menuFile, -1, 10)
+        # # Create 'Saturne8' menu
+        # menuSaturne8 = getSalomePyQt().createMenu("Saturne8", -1, -1, 50)
+        # # Add actions in the menu 'Saturne8'
+        # getSalomePyQt().createMenu(self.dict_actions["createOrLoadCase"],
+        #                            menuSaturne8, 10)
+        # getSalomePyQt().createMenu(separator,
+        #                            menuSaturne8, -1, 10)
+        
+        self.ah = CFDSTUDYGUI_ActionsHandler()
+        self.ah.createActions()
+        
         self._dataModel = SATURNE8_DataModel()
 
     def initialize(self):
         """
         """
         logging.debug("initialize")
-        # self.mainWindow = getSalomePyQt().getDesktop()
-        # self.clsmainw = CLSMainWindow(self.mainWindow)
-        # view = getSalomePyQt().createView(getSaturne8ViewType(),
-        #                                   self.clsmainw)
-        # logging.debug("create view %s", view)
-        # getSalomePyQt().setViewClosable(view, False)
-        # getSalomePyQt().setViewTitle(view, "Saturne workspace")
-        # self.clsmainw.initContextMenus(self.treeItemMenuMgr)
+        
+        # ObjectTR is a convenient object for traduction purpose
+        
+        self.ObjectTR = QObject()
+        DEFAULT_EDITOR_NAME = self.ObjectTR.tr("CFDSTUDY_PREF_EDITOR")
+        DEFAULT_READER_NAME = self.ObjectTR.tr("CFDSTUDY_PREF_READER")
+        DEFAULT_DISPLAY_VIEWER_NAME = self.ObjectTR.tr("CFDSTUDY_PREF_DISPLAY_VIEWER")
+        if not getSalomePyQt().hasSetting( "SATURNE8", "ExternalEditor"):
+            getSalomePyQt().addSetting( "SATURNE8", "ExternalEditor", DEFAULT_EDITOR_NAME )
+        if not getSalomePyQt().hasSetting( "SATURNE8", "ExternalReader"):
+            getSalomePyQt().addSetting( "SATURNE8", "ExternalReader", DEFAULT_READER_NAME )
+        if not getSalomePyQt().hasSetting( "SATURNE8", "ExternalDisplay"):
+            getSalomePyQt().addSetting( "SATURNE8", "ExternalDisplay", DEFAULT_DISPLAY_VIEWER_NAME )
+
+        # preload code_saturne package to handle configuration file
+        
+        cs_root_dir = os.getenv('CS_ROOT_DIR')
+        if cs_root_dir == None:
+            try:
+                import inspect
+                p = inspect.getfile(cs_package)
+                d = os.path.split(p)
+                while d[1] != 'lib':
+                    d = os.path.split(d[0])
+                    cs_root_dir = d[0]
+            except Exception:
+                pass
+
+        if cs_root_dir != None:
+            config_file = (os.path.join(cs_root_dir,
+                                        'lib',
+                                        'code_saturne_build.cfg'))
+            try:
+                pkg = cs_package.package(config_file=config_file)
+            except Exception:   # for compatibility with older versions
+                pass
+
+        pass
 
     def initSmesh(self):
         logging.debug("initSmesh")
@@ -196,6 +233,24 @@ class ClientGui():
                 else:
                     self.publishCase(case, "", "")
             self.casesToReload = []
+            
+        env_saturne, msg = CheckCFD_CodeEnv(CFD_Saturne)
+        logging.debug("activate -> env_saturne = %s" % env_saturne)
+        if not env_saturne:
+            QMessageBox.critical(getSalomePyQt().getDesktop(),
+                                "Error", msg, QMessageBox.Ok, 0)
+            return False
+
+        if msg != "":
+            mess = cfdstudyMess.trMessage(self.ObjectTR.tr("CFDSTUDY_INVALID_ENV"),[]) + " ; "+ msg
+            cfdstudyMess.aboutMessage(msg)
+            return False
+        else:
+            self.ah.DialogCollector.InfoDialog.setCode(env_saturne)
+
+        self.ah._SalomeSelection.currentSelectionChanged.connect(self.ah.updateActions)
+
+        self.ah.connectSolverGUI()            
         return True
 
     def closeStudy(self):

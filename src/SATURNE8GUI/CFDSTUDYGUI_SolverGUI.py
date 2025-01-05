@@ -53,10 +53,10 @@ from code_saturne.gui.base.QtWidgets import *
 # Application modules
 #-------------------------------------------------------------------------------
 
-from CFDSTUDYGUI_Commons import CFD_Code, CFD_Saturne, CFD_Neptune, getCFDSolverName, sgPyQt, sg
-from CFDSTUDYGUI_Commons import LoggingMgr
-import CFDSTUDYGUI_DataModel
-from CFDSTUDYGUI_Management import CFDGUI_Management
+from .CFDSTUDYGUI_Commons import CFD_Code, CFD_Saturne, CFD_Neptune, getCFDSolverName, sgPyQt, sg
+from .CFDSTUDYGUI_Commons import LoggingMgr
+from . import CFDSTUDYGUI_DataModel
+from .CFDSTUDYGUI_Management import CFDGUI_Management
 from code_saturne.base import cs_info
 from code_saturne.base import cs_run_conf
 
@@ -64,9 +64,9 @@ from code_saturne.base import cs_run_conf
 # log config
 #-------------------------------------------------------------------------------
 
-logging.basicConfig()
-log = logging.getLogger("CFDSTUDYGUI_SolverGUI")
-log.setLevel(logging.NOTSET)
+# logging.basicConfig()
+# log = logging.getLogger("CFDSTUDYGUI_SolverGUI")
+# log.setLevel(logging.NOTSET)
 
 #-------------------------------------------------------------------------------
 # Global definitions
@@ -99,7 +99,7 @@ def tabifyCfdGui():
     tabify DockWidgets which contains CFD study CASE QMainview :
     CFDSTUDY Main Window
     """
-    log.debug("tabifyCfdGui")
+    logging.debug("tabifyCfdGui")
     dsk = sgPyQt.getDesktop()
     ldockMainWin = []
 
@@ -126,7 +126,7 @@ def findDockWindow(xmlName, caseName, studyCFDName):
     """-
     Find if the dockwindow corresponding to this xmlcase is already opened
     """
-    log.debug("findDockWindow")
+    logging.debug("findDockWindow")
     bool_findDockWindow = False
 
     if _c_CFDGUI != None:
@@ -144,7 +144,7 @@ class CFDSTUDYGUI_SolverGUI(QObject):
     Auxilliary class for interaction with solvers GUI
     """
     def __init__(self):
-        log.debug("CFDSTUDY_SolverGUI.__init__: ")
+        logging.debug("CFDSTUDY_SolverGUI.__init__: ")
         QObject.__init__(self, None)
         self._CurrentWindow = None
         self.dockMainWin = None
@@ -154,7 +154,7 @@ class CFDSTUDYGUI_SolverGUI(QObject):
         """
         Executes GUI for solver relatively CFDCode
         """
-        log.debug("CFDSTUDY_SolverGUI.ExecGUI: ")
+        logging.debug("CFDSTUDY_SolverGUI.ExecGUI: ")
         mw = None
         aTitle = xmlFileName
         aStartPath = None
@@ -212,7 +212,7 @@ class CFDSTUDYGUI_SolverGUI(QObject):
 
 
     def okToContinue(self):
-        log.debug("okToContinue")
+        logging.debug("okToContinue")
         if self._CurrentWindow != None and self._CurrentWindow.okToContinue():
             if self._CurrentWindow.case['probes']:
                 self._CurrentWindow.case['probes'].removeActors()
@@ -222,7 +222,7 @@ class CFDSTUDYGUI_SolverGUI(QObject):
 
 
     def SaveXmlFile(self):
-        log.debug("SaveXmlFile")
+        logging.debug("SaveXmlFile")
         xml_file = None
         if self._CurrentWindow != None:
             self._CurrentWindow.fileSave()
@@ -390,7 +390,7 @@ class CFDSTUDYGUI_SolverGUI(QObject):
         """
         mw.dockWidgetBrowser is the Browser of the CFD MainView
         """
-        log.debug("launchGUI")
+        logging.debug("launchGUI")
         from code_saturne.gui.cs_gui import process_cmd_line
         from code_saturne.gui.base.MainView import MainView
         from code_saturne.base.cs_package import package
@@ -458,7 +458,7 @@ class CFDSTUDYGUI_SolverGUI(QObject):
         """
         called by closeStudy in CFDSTUDYGUI.py because the Object Browser size is stored into ~/.config/salome/SalomeApprc.xxx file xxx is the salome version
         """
-        log.debug("resizeObjectBrowserDock")
+        logging.debug("resizeObjectBrowserDock")
         dsk = sgPyQt.getDesktop()
         if dsk != None:
             objectBrowserDockWindow = findObjectBrowserDockWindow()
@@ -470,7 +470,7 @@ class CFDSTUDYGUI_SolverGUI(QObject):
         """
         visible referred to Object Browser dock widget
         """
-        log.debug("resizeMainWindowDock")
+        logging.debug("resizeMainWindowDock")
         dsk = sgPyQt.getDesktop()
         if dsk != None:
             dock = self.sender()
@@ -482,7 +482,7 @@ class CFDSTUDYGUI_SolverGUI(QObject):
         """
         visible referred to Object Browser dock widget
         """
-        log.debug("resizeObjectBrowserDock")
+        logging.debug("resizeObjectBrowserDock")
         dsk = sgPyQt.getDesktop()
         if dsk != None:
             if visible:
@@ -548,7 +548,7 @@ class CFDSTUDYGUI_SolverGUI(QObject):
         Close the CFD_study_dock_windows if opened from close Study popup menu
         into the object browser
         """
-        log.debug("removeDockWindowfromStudyAndCaseNames -> %s %s" % (studyCFDName, caseName))
+        logging.debug("removeDockWindowfromStudyAndCaseNames -> %s %s" % (studyCFDName, caseName))
         dsk = sgPyQt.getDesktop()
         if _c_CFDGUI != None:
             _c_CFDGUI.delDockfromStudyAndCaseNames(dsk, studyCFDName, caseName)
@@ -558,7 +558,7 @@ class CFDSTUDYGUI_SolverGUI(QObject):
         """
         Close the CFD_study_dock_windows from remove  popup menu in object browser
         """
-        log.debug("removeDockWindow -> %s %s %s" % (studyCFDName, caseName, xmlName))
+        logging.debug("removeDockWindow -> %s %s %s" % (studyCFDName, caseName, xmlName))
         dsk = sgPyQt.getDesktop()
         if _c_CFDGUI != None:
             _c_CFDGUI.delDock(dsk, studyCFDName, caseName, xmlName)

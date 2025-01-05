@@ -39,9 +39,9 @@ import os, sys, logging
 # log config
 #-------------------------------------------------------------------------------
 
-logging.basicConfig()
-log = logging.getLogger("CFDSTUDYGUI_Management")
-log.setLevel(logging.NOTSET)
+# logging.basicConfig()
+# log = logging.getLogger("CFDSTUDYGUI_Management")
+# log.setLevel(logging.NOTSET)
 
 #-------------------------------------------------------------------------------
 # Class definitions
@@ -101,7 +101,7 @@ class CFDGUI_Management:
       self.aCaseCFD      = aCaseCFD
       self.aXmlCFDFile   = axmlCFDFile
 
-      log.debug("set_d_CfdCases \n\tdock = %s\n\tmwCFD = %s\n\taStudyCFD = %s\n\taCaseCFD = %s\n\taxmlCFDFile = %s" % \
+      logging.debug("set_d_CfdCases \n\tdock = %s\n\tmwCFD = %s\n\taStudyCFD = %s\n\taCaseCFD = %s\n\taxmlCFDFile = %s" % \
                  (dock, mwCFD, aStudyCFD, aCaseCFD, axmlCFDFile))
 
 
@@ -174,7 +174,7 @@ class CFDGUI_Management:
 
 
     def getStudyCaseXmlNames(self, mw):
-        log.debug("getStudyCaseXmlNames mw = %s" % mw)
+        logging.debug("getStudyCaseXmlNames mw = %s" % mw)
         if self.checkDockWindowsLists():
             for l in self.d_CfdCases:
                 if l[self.mwCFDPosInListe] == mw:
@@ -275,7 +275,7 @@ class CFDGUI_Management:
         clean all dock windows of cfd cases and clean attached main liste;
         called when closing salome study and remaining into the desktop
         """
-        log.debug("cleanAllDock")
+        logging.debug("cleanAllDock")
         if self.d_CfdCases == [] : return
         for liste_object in self.d_CfdCases :
             dockcfd = liste_object[self.dockPosInListe]

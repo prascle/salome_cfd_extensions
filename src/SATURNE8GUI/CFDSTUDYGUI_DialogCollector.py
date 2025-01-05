@@ -53,22 +53,22 @@ ObjectTR = QObject()
 # Application modules
 #-------------------------------------------------------------------------------
 
-from ui_InfoDialog            import Ui_InfoDialog
-from ui_SetTreeLocationDialog import Ui_SetTreeLocationDialog
-from ui_ECSConversionDialog   import Ui_ECSConversionDialog
-from ui_GUIActivationDialog   import Ui_GUIActivationDialog
-import CFDSTUDYGUI_DataModel
-import CFDSTUDYGUI_Commons
-from CFDSTUDYGUI_Commons import CFD_Code, getCFDSolverName, sgPyQt
-from CFDSTUDYGUI_Commons import CFD_Saturne, CFD_Neptune, CheckCFD_CodeEnv
-from CFDSTUDYGUI_Message import cfdstudyMess
+from .InfoDialog_ui            import Ui_InfoDialog
+from .SetTreeLocationDialog_ui import Ui_SetTreeLocationDialog
+from .ECSConversionDialog_ui   import Ui_ECSConversionDialog
+from .GUIActivationDialog_ui   import Ui_GUIActivationDialog
+from . import CFDSTUDYGUI_DataModel
+from . import CFDSTUDYGUI_Commons
+from .CFDSTUDYGUI_Commons import CFD_Code, getCFDSolverName, sgPyQt
+from .CFDSTUDYGUI_Commons import CFD_Saturne, CFD_Neptune, CheckCFD_CodeEnv
+from .CFDSTUDYGUI_Message import cfdstudyMess
 #-------------------------------------------------------------------------------
 # log config
 #-------------------------------------------------------------------------------
 
-logging.basicConfig()
-log = logging.getLogger("CFDSTUDYGUI_DialogCollector")
-log.setLevel(logging.NOTSET)
+# logging.basicConfig()
+# log = logging.getLogger("CFDSTUDYGUI_DialogCollector")
+# log.setLevel(logging.NOTSET)
 #-------------------------------------------------------------------------------
 # Dialog definitions
 #-------------------------------------------------------------------------------
@@ -543,7 +543,7 @@ class GUIActivationDialogHandler(GUIActivationDialog):
     """
     """
     def __init__(self, parent = None):
-        log.debug("__init__")
+        logging.debug("__init__")
         self.xmlfile = ""
         GUIActivationDialog.__init__(self, parent)
 
@@ -570,7 +570,7 @@ class GUIActivationDialogHandler(GUIActivationDialog):
     def fillData(self, xmlFileName):
         """
         """
-        log.debug("fillData")
+        logging.debug("fillData")
         self.CaseCB.clear()
         self.xmlfile = xmlFileName
 
@@ -592,7 +592,7 @@ class GUIActivationDialogHandler(GUIActivationDialog):
 
 
     def slotUpdateData(self):
-        log.debug("slotUpdateData")
+        logging.debug("slotUpdateData")
         self.ActivateBtn.setEnabled(True)
         self.FileCB.clear()
 

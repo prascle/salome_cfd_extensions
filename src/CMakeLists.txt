@@ -17,18 +17,5 @@
 # See http://www.salome-platform.org/ or email : webmaster.salome@opencascade.com
 #
 
-##
-# Common packages
-##
-SET(SUBDIRS_COMMON
-  SATURNE8GUI
-)
-
-SET(SUBDIRS
-  ${SUBDIRS_COMMON}
-)
-
-FOREACH(dir ${SUBDIRS})
- ADD_SUBDIRECTORY(${dir})
-ENDFOREACH(dir ${SUBDIRS})
-
+ADD_SUBDIRECTORY(SATURNE8GUI)
+#ADD_SUBDIRECTORY(CFDSTUDYOTURNS)

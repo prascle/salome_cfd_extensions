@@ -49,18 +49,18 @@ from code_saturne.gui.base.QtWidgets import *
 # Application modules
 #-------------------------------------------------------------------------------
 
-import CFDSTUDYGUI_Commons, CFDSTUDYGUI_SolverGUI
-from CFDSTUDYGUI_Commons import sgPyQt, LoggingMgr
-from ui_CFDSTUDYGUI_QProcessDialog import Ui_CFDSTUDYGUI_QProcessDialog
-import CFDSTUDYGUI_DataModel
+from . import CFDSTUDYGUI_Commons, CFDSTUDYGUI_SolverGUI
+from .CFDSTUDYGUI_Commons import sgPyQt, LoggingMgr
+from .CFDSTUDYGUI_QProcessDialog_ui import Ui_CFDSTUDYGUI_QProcessDialog
+from . import CFDSTUDYGUI_DataModel
 
 #-------------------------------------------------------------------------------
 # log config
 #-------------------------------------------------------------------------------
 
-logging.basicConfig()
-log = logging.getLogger("CFDSTUDYGUI_CommandMgr")
-log.setLevel(logging.NOTSET)
+# logging.basicConfig()
+# log = logging.getLogger("CFDSTUDYGUI_CommandMgr")
+# log.setLevel(logging.NOTSET)
 
 #-------------------------------------------------------------------------------
 # Classes definitions

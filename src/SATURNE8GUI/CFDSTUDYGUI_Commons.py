@@ -39,7 +39,7 @@ import logging
 #-------------------------------------------------------------------------------
 # Salome modules
 #-------------------------------------------------------------------------------
-from CFDSTUDYGUI_Message import cfdstudyMess
+from .CFDSTUDYGUI_Message import cfdstudyMess
 # Get SALOME PyQt interface
 import SalomePyQt
 sgPyQt = SalomePyQt.SalomePyQt()
@@ -84,9 +84,9 @@ UpdateScriptFolder  = -1002
 # log config
 #-------------------------------------------------------------------------------
 
-logging.basicConfig()
-log = logging.getLogger("CFDSTUDYGUI_Commons")
-log.setLevel(logging.NOTSET)
+# logging.basicConfig()
+# log = logging.getLogger("CFDSTUDYGUI_Commons")
+# log.setLevel(logging.NOTSET)
 
 #-------------------------------------------------------------------------------
 # Functions definitions
@@ -112,7 +112,7 @@ def getCFDSolverName(code_name=None):
     return solver_name
 
 def _SetCFDCode(var):
-    log.debug("_SetCFDCode : var = %s" % var)
+    logging.debug("_SetCFDCode : var = %s" % var)
     global _CFD_Code
     _CFD_Code = var
 
@@ -183,10 +183,10 @@ def CheckCFD_CodeEnv(code):
         _solver_name = getCFDSolverName(code);
         pkg = package(name = _solver_name)
         prefix = pkg.get_dir('prefix')
-        log.debug("CheckCFD_CodeEnv -> prefix = %s" % (prefix))
+        logging.debug("CheckCFD_CodeEnv -> prefix = %s" % (prefix))
 
         bindir = pkg.get_dir('bindir')
-        log.debug("CheckCFD_CodeEnv -> prefix = %s" % (bindir))
+        logging.debug("CheckCFD_CodeEnv -> prefix = %s" % (bindir))
 
         if not os.path.exists(prefix):
             mess = cfdstudyMess.trMessage(ObjectTR.tr("ENV_DLG_INVALID_DIRECTORY"),
@@ -198,8 +198,8 @@ def CheckCFD_CodeEnv(code):
                                               [bindir])
                 iok = False
 
-    log.debug("CheckCFD_CodeEnv -> %s = %s" % (code, iok))
-    log.debug("CheckCFD_CodeEnv -> %s: %s" % (code, mess))
+    logging.debug("CheckCFD_CodeEnv -> %s = %s" % (code, iok))
+    logging.debug("CheckCFD_CodeEnv -> %s: %s" % (code, mess))
     return iok, mess
 
 
@@ -220,11 +220,11 @@ def BinCode():
     b = os.path.join(pkg.get_dir('bindir'),
                      _solver_name+pkg.config.shext)
     c = pkg.get_preprocessor()
-    log.debug("BinCode -> \n    %s\n    %s" % (b, c))
+    logging.debug("BinCode -> \n    %s\n    %s" % (b, c))
     return b, c, mess
 
 def isaCFDCase(theCasePath):
-    log.debug("isaCFDCase")
+    logging.debug("isaCFDCase")
     dirList = []
     if os.path.isdir(theCasePath):
         dirList = os.walk(theCasePath).__next__()[1]
@@ -234,7 +234,7 @@ def isaCFDCase(theCasePath):
     return False
 
 def isaCFDStudy(theStudyPath):
-    log.debug("isaCFDStudy")
+    logging.debug("isaCFDStudy")
     dirList = []
     if os.path.isdir(theStudyPath):
         dirList = os.walk(theStudyPath).__next__()[1]
@@ -245,7 +245,7 @@ def isaCFDStudy(theStudyPath):
     return False
 
 def isSyrthesCase(theCasePath):
-    log.debug("isSyrthesCase")
+    logging.debug("isSyrthesCase")
 #a minima
     iok = True
     if os.path.isdir(theCasePath):
@@ -255,7 +255,7 @@ def isSyrthesCase(theCasePath):
     return iok
 
 def isaSaturneSyrthesCouplingStudy(theStudyPath):
-    log.debug("isaSaturneSyrthesCouplingStudy")
+    logging.debug("isaSaturneSyrthesCouplingStudy")
     iok = False
     hasCFDCase     = False
     hasSyrthesCase = False
