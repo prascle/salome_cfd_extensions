@@ -17,14 +17,17 @@
 #
 # See http://www.salome-platform.org/ or email : webmaster.salome@opencascade.com
 #
+
+# should be done at the very first to avoid interference with logging.basicConfig() from code_saturne
 import logging
+from saturne8 import initlog
+initlog.setDebug()
+
 import salome
 
-from saturne8 import initlog
 from saturne8 import clientgui
 from saturne8.clientgui import getClientGui
 
-initlog.setDebug()
 salome.salome_init()
 
 

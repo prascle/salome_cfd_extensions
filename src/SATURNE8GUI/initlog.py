@@ -16,7 +16,7 @@ fh = None
 
 def setLogger(logfile, level, formatter):
     global ch, fh
-    rootLogger = logging.getLogger('')
+    rootLogger = logging.getLogger()
     if fh is not None:
         rootLogger.removeHandler(fh)
         fh = None
