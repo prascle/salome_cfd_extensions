@@ -148,6 +148,7 @@ class CFDSTUDYGUI_SolverGUI(QObject):
         QObject.__init__(self, None)
         self._CurrentWindow = None
         self.dockMainWin = None
+        self._isActive = False
 
 
     def ExecGUI(self, WorkSpace, xmlFileName, aCase):
@@ -199,17 +200,19 @@ class CFDSTUDYGUI_SolverGUI(QObject):
         mw = self.launchGUI(WorkSpace, aCase, xmlFileName)
         if mw != None:
             self._CurrentWindow = mw
+        self._isActive =True
 
         return mw
 
 
     def isActive(self):
-        if _c_CFDGUI.getDocks() == {}:
-            self._CurrentWindow = None
-        if self._CurrentWindow != None:
-            return True
-        else:
-            return False
+        return self._isActive
+        # if _c_CFDGUI.getDocks() == {}:
+        #     self._CurrentWindow = None
+        # if self._CurrentWindow != None:
+        #     return True
+        # else:
+        #     return False
 
 
     def okToContinue(self):

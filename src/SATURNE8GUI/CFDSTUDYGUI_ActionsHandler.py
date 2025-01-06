@@ -883,6 +883,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         # selection handler
         sobj = self._singleSelectedObject()
         if sobj == None : #multiple selection not authorized
+            logging.debug("obj == None")
             for i in self._CommonActionIdMap:
                 if i != InfoCFDSTUDYAction:
                     if i == SetStudyAction or i == OpenAnExistingCase:
@@ -891,18 +892,21 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
                         self.commonAction(i).setEnabled(False)#multiple selection not authorized
 
         if sobj != None:
+            logging.debug("sobj != None")
             isStudy = CFDSTUDYGUI_DataModel.checkType(sobj, CFDSTUDYGUI_DataModel.dict_object["Study"])
             self.commonAction(AddCaseAction).setEnabled(isStudy)
             aStudy = CFDSTUDYGUI_DataModel.GetStudyByObj(sobj)
             aCase = CFDSTUDYGUI_DataModel.GetCase(sobj)
 
             if aCase != None:
+                logging.debug("aCase != None")
                 code = CFDSTUDYGUI_DataModel.checkCode(aCase)
                 _SetCFDCode(code)
                 dialog = self.DialogCollector.InfoDialog
                 dialog.update(code)
 
             if aStudy != None and aCase != None:
+                logging.debug("aStudy != None and aCase != None")
                 boo = CFDSTUDYGUI_DataModel.checkType(sobj, CFDSTUDYGUI_DataModel.dict_object["DATALaunch"]) or CFDSTUDYGUI_DataModel.checkType(sobj, CFDSTUDYGUI_DataModel.dict_object["Case"])
                 self.commonAction(LaunchGUIAction).setEnabled(boo)
                 self.commonAction(OpenGUIAction).setEnabled(CFDSTUDYGUI_DataModel.checkCaseLaunchGUI(aCase))
@@ -912,9 +916,11 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
             self.commonAction(AddCaseAction).setEnabled(False)
         #enable / disable solver actions
         isActivatedView = self._SolverGUI.isActive() # Main GUI Window is active
+        logging.debug("isActivatedView: %s", isActivatedView)
 
         for a in self._SolverActionIdMap:
             if a != SolverFileMenu and a != SolverToolsMenu and a != SolverHelpMenu:
+                logging.debug("setEnabled(%s) %s", isActivatedView, a)
                 self.solverAction(a).setEnabled(isActivatedView)
 
         from code_saturne.base.cs_package import package

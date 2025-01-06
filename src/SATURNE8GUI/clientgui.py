@@ -6,7 +6,7 @@ import traceback
 import time
 
 from PyQt5 import QtWidgets
-from PyQt5.QtWidgets import QMenu, QMessageBox
+from PyQt5.QtWidgets import QMenu, QMessageBox, QDockWidget
 from PyQt5.QtCore import Qt, QObject
 
 import salome
@@ -224,7 +224,7 @@ class ClientGui():
         #     self.createOrLoadCase)
         self.initSmesh()
         if len(self.casesToReload) and self.widget is None:  # when reload study
-            self.createOrLoadCase(True)
+            # self.createOrLoadCase(True)
             i = 0
             for case in self.casesToReload:
                 if i == 0:
@@ -250,6 +250,7 @@ class ClientGui():
         self.ah.setSolverParentWidget(self.clsmainw.ui.gl_fr_droite)
         self.ah._SalomeSelection.currentSelectionChanged.connect(self.ah.updateActions)
         self.ah.connectSolverGUI()
+                   
         return True
 
     def closeStudy(self):
@@ -288,14 +289,15 @@ class ClientGui():
     def OnGUIEvent(self, commandID):
         """
         """
-        if commandID in self.dict_command:
-            logging.debug("OnGUIEvent: %s", commandID)
-            try:
-                self.dict_command[commandID]()
-            except:
-                traceback.print_exc()
-        else:
-            logging.warning("the command is not implemented: %s", commandID)
+        logging.debug("OnGUIEvent: %s", commandID)
+        # if commandID in self.dict_command:
+        #     logging.debug("OnGUIEvent: %s", commandID)
+        #     try:
+        #         self.dict_command[commandID]()
+        #     except:
+        #         traceback.print_exc()
+        # else:
+        #     logging.warning("the command is not implemented: %s", commandID)
 
     def onSelectionUpdated(self, entryList):
         """
@@ -360,28 +362,28 @@ class ClientGui():
         if self.widget is not None:
             self.widget.close()
 
-    def createOrLoadCase(self, withoutDialog=False):
-        """
-        """
-        showDialog = not withoutDialog
-        logging.debug("createOrLoadCase %s", showDialog)
-        first = True
-        if self.widget is None:
-            sct.saturneIHMContext.setDataFile("")
-            self.widget = MainView(
-                getSalomePyQt().getDesktop(), True, showDialog)
-            self.widget.titleChanged.connect(self.updateSaturneTitle)
-        else:
-            first = False
-            self.widget.New_File()
-        self.widget.saturneIHMCollector.DialogNew.welcomeRejected.connect(
-            self.closeWelcomeDialog)
+    # def createOrLoadCase(self, withoutDialog=False):
+    #     """
+    #     """
+    #     showDialog = not withoutDialog
+    #     logging.debug("createOrLoadCase %s", showDialog)
+    #     first = True
+    #     if self.widget is None:
+    #         sct.saturneIHMContext.setDataFile("")
+    #         self.widget = MainView(
+    #             getSalomePyQt().getDesktop(), True, showDialog)
+    #         self.widget.titleChanged.connect(self.updateSaturneTitle)
+    #     else:
+    #         first = False
+    #         self.widget.New_File()
+    #     self.widget.saturneIHMCollector.DialogNew.welcomeRejected.connect(
+    #         self.closeWelcomeDialog)
 
-        if first:
-            self.clsmainw.ui.pb_createLoadCase.hide()
-            self.clsmainw.ui.gl_fr_droite.removeItem(
-                self.clsmainw.ui.hl_pb_createLoadCase)
-            self.clsmainw.ui.gl_fr_droite.addWidget(self.widget, 1, 0, -1, -1)
+    #     if first:
+    #         self.clsmainw.ui.pb_createLoadCase.hide()
+    #         self.clsmainw.ui.gl_fr_droite.removeItem(
+    #             self.clsmainw.ui.hl_pb_createLoadCase)
+    #         self.clsmainw.ui.gl_fr_droite.addWidget(self.widget, 1, 0, -1, -1)
 
     def unloadCase(self, caseName):
         """
@@ -529,9 +531,9 @@ class ClientGui():
         items = self.clsmainw.ui.tw_gauche.selectedItems()
         if len(items) > 0:
             item = items[0]
-            if item.text(col.name) == "Saturne cases":
-                menu.addAction("create or load case", self.createOrLoadCase)
-            elif os.path.splitext(item.text(col.name))[1] == '.syd':
+            # if item.text(col.name) == "Saturne cases":
+            #     menu.addAction("create or load case", self.createOrLoadCase)
+            if os.path.splitext(item.text(col.name))[1] == '.syd':
                 self.currentFile = os.path.join(
                     item.text(col.details), item.text(col.name))
                 self.currentEntry = ""
