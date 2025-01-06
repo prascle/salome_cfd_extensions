@@ -220,8 +220,8 @@ class ClientGui():
                 "activateViewManagerAndView VTK Viewer: %s", self._VTKViewer)
             getSalomePyQt().activateViewManagerAndView(self._VTKViewer)
         getSalomePyQt().enableSelector()
-        self.clsmainw.ui.pb_createLoadCase.clicked.connect(
-            self.createOrLoadCase)
+        # self.clsmainw.ui.pb_createLoadCase.clicked.connect(
+        #     self.createOrLoadCase)
         self.initSmesh()
         if len(self.casesToReload) and self.widget is None:  # when reload study
             self.createOrLoadCase(True)
@@ -247,10 +247,9 @@ class ClientGui():
             return False
         else:
             self.ah.DialogCollector.InfoDialog.setCode(env_saturne)
-
+        self.ah.setSolverParentWidget(self.clsmainw.ui.gl_fr_droite)
         self.ah._SalomeSelection.currentSelectionChanged.connect(self.ah.updateActions)
-
-        self.ah.connectSolverGUI()            
+        self.ah.connectSolverGUI()
         return True
 
     def closeStudy(self):

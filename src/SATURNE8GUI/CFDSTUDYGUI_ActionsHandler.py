@@ -216,6 +216,18 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
 
         self.RemoveAction = RemoveAction
         self.DisplayImageAction = DisplayImageAction
+        
+        self.solverParentWidget = None
+        
+    def setSolverParentWidget(self, solverParentWidget):
+        """
+        store the parent widget that will be used to embed solver GUI
+
+        :param solverParentWidget: Qt widget that will be the parent of solver GUI widget
+        :type solverParentWidget: QtWidget
+        """
+        logging.debug("set parent widget for solver GUI")
+        self.solverParentWidget = solverParentWidget
 
     def createActions(self):
         """
@@ -1776,7 +1788,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
                     return
 
                 # xml case file not already opened
-                wm = self._SolverGUI.ExecGUI(sgPyQt.getDesktop(),
+                wm = self._SolverGUI.ExecGUI(self.solverParentWidget,
                                              aXmlFileName, aCase)
                 self.updateActions()
 
@@ -1976,7 +1988,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
                 mess = cfdstudyMess.trMessage(self.tr("NO_CASE_STRUCTURE_FOUND"),[aCaseName])
                 cfdstudyMess.aboutMessage(mess)
                 return
-        wm = self._SolverGUI.ExecGUI(sgPyQt.getDesktop(), None, aCase)
+        wm = self._SolverGUI.ExecGUI(self.solverParentWidget, None, aCase)
         self.updateActions()
 
 
