@@ -1776,7 +1776,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
                     return
 
                 # xml case file not already opened
-                wm = self._SolverGUI.ExecGUI(self.dskAgent().workspace(),
+                wm = self._SolverGUI.ExecGUI(sgPyQt.getDesktop(),
                                              aXmlFileName, aCase)
                 self.updateActions()
 
@@ -1976,7 +1976,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
                 mess = cfdstudyMess.trMessage(self.tr("NO_CASE_STRUCTURE_FOUND"),[aCaseName])
                 cfdstudyMess.aboutMessage(mess)
                 return
-        wm = self._SolverGUI.ExecGUI(self.dskAgent().workspace(), None, aCase)
+        wm = self._SolverGUI.ExecGUI(sgPyQt.getDesktop(), None, aCase)
         self.updateActions()
 
 
