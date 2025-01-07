@@ -466,6 +466,7 @@ def _SetCaseLocation(theCasePath):
     caseObject = getSObject(studyObject,aCaseName)
     twiStudy = findOrCreateStudyTWI(studyObject, theStudyPath)
     twiCase = findOrCreateCaseTWI(caseObject, twiStudy, theCasePath)
+    _RebuildTWRecursively(twiCase)
     UpdateSubTree(caseObject)
     if getSObject(studyObject,"MESH") == None:
         _CreateItem(studyObject,"MESH")
@@ -793,6 +794,50 @@ def _RebuildTreeRecursively(theObject):
             _RebuildTreeRecursively(iter.Value())
         iter.Next()
     logging.debug("_RebuildTreeRecursively -> %s END" % (theObject.GetName()))
+
+def createTWItem(parentTWI, itemName, itemPath):
+    logging.debug("createTWItem %s", itemPath)
+    from .CLSMainWindow import col
+    twItem = QTreeWidgetItem()
+    twItem.setText(col.name, itemName)
+    twItem.setText(col.details, itemPath)
+    parentTWI.addChild(twItem)
+    return twItem
+    
+def _RebuildTWRecursively(twItem):
+    from .CLSMainWindow import col
+    itemPath = twItem.text(col.details)
+    logging.debug("_RebuildTWRecursively %s", itemPath)
+    if itemPath is None:
+        return
+    
+    lst = []
+    if os.path.isdir(itemPath):
+        lst = os.listdir(itemPath)
+    lst.sort()
+    
+    nbChildren = twItem.childCount()
+    childPaths = {}
+    for i in range(nbChildren):
+        c = twItem.child(i)
+        p = c.text(col.details)
+        childPaths[p] = c
+    
+    for aName in lst:
+        aPath = os.path.join(itemPath, aName)
+        if aPath not in childPaths:
+            nc = createTWItem(twItem, aName, aPath)
+    
+    for k, v in childPaths.items():
+        aName = os.path.basename(k)
+        if aName not in lst:
+            twItem.removeChild(v)
+    
+    nbChildren = twItem.childCount()
+    for i in range(nbChildren):
+        c = twItem.child(i)
+        _RebuildTWRecursively(c)
+    logging.debug("_RebuildTWRecursively %s END", itemPath)
 
 
 def _CreateObject(theFather, theBuilder, theName):
