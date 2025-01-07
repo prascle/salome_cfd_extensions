@@ -74,6 +74,7 @@ import subprocess
 
 from code_saturne.gui.base.QtCore    import *
 from code_saturne.gui.base.QtWidgets import *
+from PyQt5.QtGui import QIcon
 
 from omniORB import CORBA
 
@@ -407,6 +408,41 @@ def _findOrCreateComponent():
             pass
     return father
 
+def getModuleFolder():
+    from .clientgui import getClientGui
+    return getClientGui().getCLSMainWindow().getSaturneFolder()
+
+def getQIcon(category):
+    id = dict_object[category]
+    iconPath = os.path.join(os.getenv("SATURNE8_ROOT_DIR"), 
+                            "share/salome/resources/saturne8", 
+                            ObjectTR.tr(icon_collection[id]))
+    logging.debug("icon: %s %s", category, iconPath)
+    return QIcon(iconPath)
+
+def findOrCreateStudyTWI(studyObject, studyPath):
+    logging.debug("findOrCreateStudyTWI %s", studyPath)
+    from .CLSMainWindow import col
+    twiRoot = getModuleFolder()
+    twiStudy = QTreeWidgetItem()
+    twiStudy.setIcon(col.name, getQIcon("Study"))
+    twiStudy.setText(col.name, studyObject.GetName())
+    twiStudy.setText(col.details, studyPath)
+    twiStudy.setText(col.entry, studyObject.GetID())
+    twiRoot.addChild(twiStudy)
+    return twiStudy
+
+def findOrCreateCaseTWI(caseObject, twiStudy, casePath):
+    logging.debug("findOrCreateCaseTWI %s", casePath)
+    from .CLSMainWindow import col
+    twiCase = QTreeWidgetItem()
+    twiCase.setIcon(col.name, getQIcon("Case"))
+    twiCase.setText(col.name, caseObject.GetName())
+    twiCase.setText(col.details, casePath)
+    twiCase.setText(col.entry, caseObject.GetID())
+    twiStudy.addChild(twiCase)
+    return twiCase
+    
 def _SetCaseLocation(theCasePath):
     logging.debug("_SetCaseLocation")
     study         = _getStudy()
@@ -428,6 +464,8 @@ def _SetCaseLocation(theCasePath):
             attr.SetValue(os.path.dirname(theStudyPath))
     _CreateItem(studyObject,aCaseName)
     caseObject = getSObject(studyObject,aCaseName)
+    twiStudy = findOrCreateStudyTWI(studyObject, theStudyPath)
+    twiCase = findOrCreateCaseTWI(caseObject, twiStudy, theCasePath)
     UpdateSubTree(caseObject)
     if getSObject(studyObject,"MESH") == None:
         _CreateItem(studyObject,"MESH")
@@ -492,6 +530,7 @@ def _SetStudyLocation(theStudyPath, theCaseNames,theCreateOpt,
         attr.SetValue(aStudyName)
         attr = builder.FindOrCreateAttribute(studyObject, "AttributeComment")
         attr.SetValue(aStudyDir)
+        findOrCreateStudyTWI(studyObject, theStudyPath)
 
     if iok:
         UpdateSubTree(studyObject)
@@ -1466,7 +1505,6 @@ def GetStudyByObj(theObject):
 
     return None
 
-
 def FindStudyByPath(theStudyPath):
     """
     Returns a CFD study described by the unix path I{theStudyPath}.
@@ -1476,7 +1514,7 @@ def FindStudyByPath(theStudyPath):
     @return: the CFD study.
     @rtype: C{SObject} or C{None}
     """
-    logging.debug("FindStudyByPath")
+    logging.debug("FindStudyByPath %s", theStudyPath)
     component = _getComponent()
     if component == None:
         return None

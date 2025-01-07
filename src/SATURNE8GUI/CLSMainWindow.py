@@ -37,7 +37,7 @@ class CLSMainWindow(QMainWindow):
         self.ui.tw_gauche.setColumnCount(4)
         self.ui.tw_gauche.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.saturneFolder = QTreeWidgetItem()
-        self.saturneFolder.setText(col.name, "Saturne cases")
+        self.saturneFolder.setText(col.name, "CFD Studies")
         self.saturneFolder.setText(col.ref, "REF")
         self.saturneFolder.setText(col.details, "details")
         self.saturneFolder.setText(col.entry, "entry")
@@ -50,6 +50,9 @@ class CLSMainWindow(QMainWindow):
         self.entryItems = {}         # Entry from tree item
         self.treeItemMenuMgr = None
         self.selectedEntry = None
+        
+    def getSaturneFolder(self):
+        return self.saturneFolder
 
     def initContextMenus(self, treeItemMenuMgr):
         """
