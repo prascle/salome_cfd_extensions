@@ -280,6 +280,88 @@ icon_collection[dict_object["SRCSYRFolder"]]          = "CFDSTUDY_FOLDER_OBJ_ICO
 icon_collection[dict_object["USRSRCSYRFile"]]         = "CFDSTUDY_EDIT_DOCUMENT_OBJ_ICON"
 icon_collection[dict_object["CouplingStudy"]]         = "CFDSTUDY_STUDY_OBJ_ICON"
 
+_CFDTreeWidget = None
+
+def getCFDTW():
+    global _CFDTreeWidget
+    if _CFDTreeWidget is None:
+        _CFDTreeWidget = CFDTreeWidget()
+    return _CFDTreeWidget
+
+class CFDTreeWidget():
+    
+    def __init__(self):
+        from .CLSMainWindow import col
+        self.col = col        
+    
+    def findOrCreateStudyTWI(self, studyObject, studyPath):
+        logging.debug("findOrCreateStudyTWI %s", studyPath)
+        col = self.col
+        twiRoot = getModuleFolder()
+        twiStudy = QTreeWidgetItem()
+        twiStudy.setIcon(col.name, getQIcon("Study"))
+        twiStudy.setText(col.name, studyObject.GetName())
+        twiStudy.setText(col.details, studyPath)
+        twiStudy.setText(col.entry, studyObject.GetID())
+        twiRoot.addChild(twiStudy)
+        return twiStudy
+
+    def findOrCreateCaseTWI(self, caseObject, twiStudy, casePath):
+        logging.debug("findOrCreateCaseTWI %s", casePath)
+        col = self.col
+        twiCase = QTreeWidgetItem()
+        twiCase.setIcon(col.name, getQIcon("Case"))
+        twiCase.setText(col.name, caseObject.GetName())
+        twiCase.setText(col.details, casePath)
+        twiCase.setText(col.entry, caseObject.GetID())
+        twiStudy.addChild(twiCase)
+        return twiCase
+
+    def createTWItem(self, parentTWI, itemName, itemPath):
+        logging.debug("createTWItem %s", itemPath)
+        col = self.col
+        twItem = QTreeWidgetItem()
+        twItem.setText(col.name, itemName)
+        twItem.setText(col.details, itemPath)
+        parentTWI.addChild(twItem)
+        return twItem
+        
+    def rebuildTWRecursively(self, twItem):
+        col = self.col
+        itemPath = twItem.text(col.details)
+        logging.debug("rebuildTWRecursively %s", itemPath)
+        if itemPath is None:
+            return
+        
+        lst = []
+        if os.path.isdir(itemPath):
+            lst = os.listdir(itemPath)
+        lst.sort()
+        
+        nbChildren = twItem.childCount()
+        childPaths = {}
+        for i in range(nbChildren):
+            c = twItem.child(i)
+            p = c.text(col.details)
+            childPaths[p] = c
+        
+        for aName in lst:
+            aPath = os.path.join(itemPath, aName)
+            if aPath not in childPaths:
+                nc = self.createTWItem(twItem, aName, aPath)
+        
+        for k, v in childPaths.items():
+            aName = os.path.basename(k)
+            if aName not in lst:
+                twItem.removeChild(v)
+        
+        nbChildren = twItem.childCount()
+        for i in range(nbChildren):
+            c = twItem.child(i)
+            self.rebuildTWRecursively(c)
+        logging.debug("rebuildTWRecursively %s END", itemPath)
+
+    
 #-------------------------------------------------------------------------------
 # ObjectTR is a convenient object for traduction purpose
 #-------------------------------------------------------------------------------
@@ -419,29 +501,6 @@ def getQIcon(category):
                             ObjectTR.tr(icon_collection[id]))
     logging.debug("icon: %s %s", category, iconPath)
     return QIcon(iconPath)
-
-def findOrCreateStudyTWI(studyObject, studyPath):
-    logging.debug("findOrCreateStudyTWI %s", studyPath)
-    from .CLSMainWindow import col
-    twiRoot = getModuleFolder()
-    twiStudy = QTreeWidgetItem()
-    twiStudy.setIcon(col.name, getQIcon("Study"))
-    twiStudy.setText(col.name, studyObject.GetName())
-    twiStudy.setText(col.details, studyPath)
-    twiStudy.setText(col.entry, studyObject.GetID())
-    twiRoot.addChild(twiStudy)
-    return twiStudy
-
-def findOrCreateCaseTWI(caseObject, twiStudy, casePath):
-    logging.debug("findOrCreateCaseTWI %s", casePath)
-    from .CLSMainWindow import col
-    twiCase = QTreeWidgetItem()
-    twiCase.setIcon(col.name, getQIcon("Case"))
-    twiCase.setText(col.name, caseObject.GetName())
-    twiCase.setText(col.details, casePath)
-    twiCase.setText(col.entry, caseObject.GetID())
-    twiStudy.addChild(twiCase)
-    return twiCase
     
 def _SetCaseLocation(theCasePath):
     logging.debug("_SetCaseLocation")
@@ -464,9 +523,9 @@ def _SetCaseLocation(theCasePath):
             attr.SetValue(os.path.dirname(theStudyPath))
     _CreateItem(studyObject,aCaseName)
     caseObject = getSObject(studyObject,aCaseName)
-    twiStudy = findOrCreateStudyTWI(studyObject, theStudyPath)
-    twiCase = findOrCreateCaseTWI(caseObject, twiStudy, theCasePath)
-    _RebuildTWRecursively(twiCase)
+    twiStudy = getCFDTW().findOrCreateStudyTWI(studyObject, theStudyPath)
+    twiCase = getCFDTW().findOrCreateCaseTWI(caseObject, twiStudy, theCasePath)
+    getCFDTW().rebuildTWRecursively(twiCase)
     UpdateSubTree(caseObject)
     if getSObject(studyObject,"MESH") == None:
         _CreateItem(studyObject,"MESH")
@@ -531,7 +590,7 @@ def _SetStudyLocation(theStudyPath, theCaseNames,theCreateOpt,
         attr.SetValue(aStudyName)
         attr = builder.FindOrCreateAttribute(studyObject, "AttributeComment")
         attr.SetValue(aStudyDir)
-        findOrCreateStudyTWI(studyObject, theStudyPath)
+        getCFDTW().findOrCreateStudyTWI(studyObject, theStudyPath)
 
     if iok:
         UpdateSubTree(studyObject)
@@ -794,50 +853,6 @@ def _RebuildTreeRecursively(theObject):
             _RebuildTreeRecursively(iter.Value())
         iter.Next()
     logging.debug("_RebuildTreeRecursively -> %s END" % (theObject.GetName()))
-
-def createTWItem(parentTWI, itemName, itemPath):
-    logging.debug("createTWItem %s", itemPath)
-    from .CLSMainWindow import col
-    twItem = QTreeWidgetItem()
-    twItem.setText(col.name, itemName)
-    twItem.setText(col.details, itemPath)
-    parentTWI.addChild(twItem)
-    return twItem
-    
-def _RebuildTWRecursively(twItem):
-    from .CLSMainWindow import col
-    itemPath = twItem.text(col.details)
-    logging.debug("_RebuildTWRecursively %s", itemPath)
-    if itemPath is None:
-        return
-    
-    lst = []
-    if os.path.isdir(itemPath):
-        lst = os.listdir(itemPath)
-    lst.sort()
-    
-    nbChildren = twItem.childCount()
-    childPaths = {}
-    for i in range(nbChildren):
-        c = twItem.child(i)
-        p = c.text(col.details)
-        childPaths[p] = c
-    
-    for aName in lst:
-        aPath = os.path.join(itemPath, aName)
-        if aPath not in childPaths:
-            nc = createTWItem(twItem, aName, aPath)
-    
-    for k, v in childPaths.items():
-        aName = os.path.basename(k)
-        if aName not in lst:
-            twItem.removeChild(v)
-    
-    nbChildren = twItem.childCount()
-    for i in range(nbChildren):
-        c = twItem.child(i)
-        _RebuildTWRecursively(c)
-    logging.debug("_RebuildTWRecursively %s END", itemPath)
 
 
 def _CreateObject(theFather, theBuilder, theName):
