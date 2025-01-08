@@ -34,10 +34,14 @@
             <translation>UpdateObjBrowser.png</translation>
         </message>
         <message>
+            <source>CFDSTUDY_ICON</source>
+            <translation>CFDSTUDY.png</translation>
+        </message>
+         <message>
             <source>INFO_CFDSTUDY_ICON</source>
             <translation>InfoCFDSTUDY.png</translation>
         </message>
-        <message>
+       <message>
             <source>CFDSTUDY_UNKNOWN_OBJ_ICON</source>
             <translation>UnknownDocument.png</translation>
         </message>

@@ -125,6 +125,7 @@ __OBJECT_ID__   = 10010
 
 dict_object = {}
 
+dict_object["CFDSTUDY"]      = 101000
 dict_object["OtherFile"]     = 100000
 dict_object["OtherFolder"]   = 100001
 dict_object["Study"]         = 100002
@@ -207,6 +208,8 @@ MESHSubFolder_int = 200000
 
 icon_collection = {}
 
+icon_collection[dict_object["CFDSTUDY"]]      = "CFDSTUDY_ICON"
+
 icon_collection[dict_object["OtherFile"]]      = "CFDSTUDY_UNKNOWN_OBJ_ICON"
 icon_collection[dict_object["OtherFolder"]]    = "CFDSTUDY_FOLDER_OBJ_ICON"
 icon_collection[dict_object["Study"]]          = "CFDSTUDY_STUDY_OBJ_ICON"
@@ -282,6 +285,14 @@ icon_collection[dict_object["CouplingStudy"]]         = "CFDSTUDY_STUDY_OBJ_ICON
 
 _CFDTreeWidget = None
 
+def getQIcon(category):
+    id = dict_object[category]
+    iconPath = os.path.join(os.getenv("SATURNE8_ROOT_DIR"), 
+                            "share/salome/resources/saturne8", 
+                            ObjectTR.tr(icon_collection[id]))
+    logging.debug("icon: %s %s", category, iconPath)
+    return QIcon(iconPath)
+
 def getCFDTW():
     global _CFDTreeWidget
     if _CFDTreeWidget is None:
@@ -291,13 +302,16 @@ def getCFDTW():
 class CFDTreeWidget():
     
     def __init__(self):
+        from .clientgui import getClientGui
         from .CLSMainWindow import col
-        self.col = col        
+        self.moduleFolder = getClientGui().getCLSMainWindow().getSaturneFolder()
+        self.col = col   
+        self.moduleFolder.setIcon(col.name, getQIcon("CFDSTUDY"))
     
     def findOrCreateStudyTWI(self, studyObject, studyPath):
         logging.debug("findOrCreateStudyTWI %s", studyPath)
         col = self.col
-        twiRoot = getModuleFolder()
+        twiRoot = self.moduleFolder
         twiStudy = QTreeWidgetItem()
         twiStudy.setIcon(col.name, getQIcon("Study"))
         twiStudy.setText(col.name, studyObject.GetName())
@@ -310,10 +324,21 @@ class CFDTreeWidget():
         logging.debug("findOrCreateCaseTWI %s", casePath)
         col = self.col
         twiCase = QTreeWidgetItem()
-        twiCase.setIcon(col.name, getQIcon("Case"))
+        twiCase.setIcon(col.name, getQIcon("MESHFolder"))
         twiCase.setText(col.name, caseObject.GetName())
         twiCase.setText(col.details, casePath)
         twiCase.setText(col.entry, caseObject.GetID())
+        twiStudy.addChild(twiCase)
+        return twiCase
+
+    def findOrCreateMeshTWI(self, meshObject, twiStudy, meshPath):
+        logging.debug("findOrCreateMeshTWI %s", meshPath)
+        col = self.col
+        twiCase = QTreeWidgetItem()
+        twiCase.setIcon(col.name, getQIcon("Case"))
+        twiCase.setText(col.name, meshObject.GetName())
+        twiCase.setText(col.details, meshPath)
+        twiCase.setText(col.entry, meshObject.GetID())
         twiStudy.addChild(twiCase)
         return twiCase
 
@@ -323,6 +348,10 @@ class CFDTreeWidget():
         twItem = QTreeWidgetItem()
         twItem.setText(col.name, itemName)
         twItem.setText(col.details, itemPath)
+        if os.path.isdir(itemPath):
+            twItem.setIcon(col.name, getQIcon("OtherFolder"))
+        else:
+            twItem.setIcon(col.name, getQIcon("OtherFile"))
         parentTWI.addChild(twItem)
         return twItem
         
@@ -489,18 +518,6 @@ def _findOrCreateComponent():
         except:
             pass
     return father
-
-def getModuleFolder():
-    from .clientgui import getClientGui
-    return getClientGui().getCLSMainWindow().getSaturneFolder()
-
-def getQIcon(category):
-    id = dict_object[category]
-    iconPath = os.path.join(os.getenv("SATURNE8_ROOT_DIR"), 
-                            "share/salome/resources/saturne8", 
-                            ObjectTR.tr(icon_collection[id]))
-    logging.debug("icon: %s %s", category, iconPath)
-    return QIcon(iconPath)
     
 def _SetCaseLocation(theCasePath):
     logging.debug("_SetCaseLocation")
@@ -531,6 +548,9 @@ def _SetCaseLocation(theCasePath):
         _CreateItem(studyObject,"MESH")
         meshObject = getSObject(studyObject,"MESH")
         if meshObject != None:
+            meshPath = os.path.join(theStudyPath, "MESH")
+            twiMesh = getCFDTW().findOrCreateCaseTWI(meshObject, twiStudy, meshPath)
+            getCFDTW().rebuildTWRecursively(twiMesh)
             UpdateSubTree(meshObject)
 
 
