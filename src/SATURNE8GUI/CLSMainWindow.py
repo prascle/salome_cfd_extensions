@@ -12,7 +12,8 @@ from .mw_saturne8_ui import Ui_mw_Saturne
 col = IntEnum('column', [('name',    0),
                          ('ref',     1),
                          ('details', 2),
-                         ('entry',   3)])
+                         ('entry',   3),
+                         ('id',      4)])
 
 _sgPyQt = None
 
@@ -34,13 +35,14 @@ class CLSMainWindow(QMainWindow):
         logging.debug("__init__")
         self.ui = Ui_mw_Saturne()
         self.ui.setupUi(self)
-        self.ui.tw_gauche.setColumnCount(4)
+        self.ui.tw_gauche.setColumnCount(5)
         self.ui.tw_gauche.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.saturneFolder = QTreeWidgetItem()
         self.saturneFolder.setText(col.name, "CFD Studies")
         self.saturneFolder.setText(col.ref, "REF")
         self.saturneFolder.setText(col.details, "details")
         self.saturneFolder.setText(col.entry, "entry")
+        self.saturneFolder.setText(col.id, "id")
         self.ui.tw_gauche.addTopLevelItem(self.saturneFolder)
         self.ui.tw_gauche.itemSelectionChanged.connect(
             self.treeSelectionChanged)

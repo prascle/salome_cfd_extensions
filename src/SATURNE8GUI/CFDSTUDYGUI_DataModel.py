@@ -285,6 +285,12 @@ icon_collection[dict_object["CouplingStudy"]]         = "CFDSTUDY_STUDY_OBJ_ICON
 
 _CFDTreeWidget = None
 
+def getCFDTW():
+    global _CFDTreeWidget
+    if _CFDTreeWidget is None:
+        _CFDTreeWidget = CFDTreeWidget()
+    return _CFDTreeWidget
+
 def getQIcon(category):
     id = dict_object[category]
     iconPath = os.path.join(os.getenv("SATURNE8_ROOT_DIR"), 
@@ -293,11 +299,8 @@ def getQIcon(category):
     logging.debug("icon: %s %s", category, iconPath)
     return QIcon(iconPath)
 
-def getCFDTW():
-    global _CFDTreeWidget
-    if _CFDTreeWidget is None:
-        _CFDTreeWidget = CFDTreeWidget()
-    return _CFDTreeWidget
+def getTWIid(category):
+    return dict_object[category]
 
 class CFDTreeWidget():
     
@@ -307,16 +310,20 @@ class CFDTreeWidget():
         self.moduleFolder = getClientGui().getCLSMainWindow().getSaturneFolder()
         self.col = col   
         self.moduleFolder.setIcon(col.name, getQIcon("CFDSTUDY"))
+
+    def setIdCon(self, twItem, category):
+            twItem.setIcon(self.col.name, getQIcon(category))
+            twItem.setText(self.col.id, str(getTWIid(category)))
     
     def findOrCreateStudyTWI(self, studyObject, studyPath):
         logging.debug("findOrCreateStudyTWI %s", studyPath)
         col = self.col
         twiRoot = self.moduleFolder
         twiStudy = QTreeWidgetItem()
-        twiStudy.setIcon(col.name, getQIcon("Study"))
         twiStudy.setText(col.name, studyObject.GetName())
         twiStudy.setText(col.details, studyPath)
         twiStudy.setText(col.entry, studyObject.GetID())
+        self.setIdCon(twiStudy, "Study")
         twiRoot.addChild(twiStudy)
         return twiStudy
 
@@ -324,23 +331,23 @@ class CFDTreeWidget():
         logging.debug("findOrCreateCaseTWI %s", casePath)
         col = self.col
         twiCase = QTreeWidgetItem()
-        twiCase.setIcon(col.name, getQIcon("MESHFolder"))
         twiCase.setText(col.name, caseObject.GetName())
         twiCase.setText(col.details, casePath)
         twiCase.setText(col.entry, caseObject.GetID())
+        self.setIdCon(twiCase, "Case")
         twiStudy.addChild(twiCase)
         return twiCase
 
     def findOrCreateMeshTWI(self, meshObject, twiStudy, meshPath):
         logging.debug("findOrCreateMeshTWI %s", meshPath)
         col = self.col
-        twiCase = QTreeWidgetItem()
-        twiCase.setIcon(col.name, getQIcon("Case"))
-        twiCase.setText(col.name, meshObject.GetName())
-        twiCase.setText(col.details, meshPath)
-        twiCase.setText(col.entry, meshObject.GetID())
-        twiStudy.addChild(twiCase)
-        return twiCase
+        twiMesh = QTreeWidgetItem()
+        twiMesh.setText(col.name, meshObject.GetName())
+        twiMesh.setText(col.details, meshPath)
+        twiMesh.setText(col.entry, meshObject.GetID())
+        self.setIdCon(twiMesh, "MESHFolder")
+        twiStudy.addChild(twiMesh)
+        return twiMesh
 
     def createTWItem(self, parentTWI, itemName, itemPath):
         logging.debug("createTWItem %s", itemPath)
@@ -348,13 +355,375 @@ class CFDTreeWidget():
         twItem = QTreeWidgetItem()
         twItem.setText(col.name, itemName)
         twItem.setText(col.details, itemPath)
-        if os.path.isdir(itemPath):
-            twItem.setIcon(col.name, getQIcon("OtherFolder"))
+        # --- parent is study
+        if parentTWI == self.moduleFolder:
+            if os.path.isdir(itemPath):
+                if CFDSTUDYGUI_Commons.isaCFDCase(itemPath):
+                    self.setIdCon(twItem, "Case")
+                else:
+                    boo = False
+                    dirList = os.listdir(itemPath)
+                    for i in dirList:
+                        if re.match(".*\.syd$", i) or re.match(".*\.syd_example$", i):
+                            boo = True
+                    if boo :
+                        self.setIdCon(twItem, "SYRCaseFolder")
+                    else:
+                        if itemName == "MESH":
+                            self.setIdCon(twItem, "MESHFolder")
+                        elif itemName == "POST":
+                            self.setIdCon(twItem, "POSTFolder")
+                        else:
+                            self.setIdCon(twItem, "OtherFolder")               
+            if itemName in ("code_saturne", "neptune_cfd", "runcase"):
+                self.setIdCon(twItem, "CouplingLauncher")
+            elif itemName == "RESU_COUPLING":
+                self.setIdCon(twItem, "RESU_COUPLINGFolder")
+    #parent is Syrthes Case
+    #     elif parentId == dict_object["SYRCaseFolder"]:
+    #         if os.path.isdir(path):
+    #             if name == "usr_examples":
+    #                 objectId = dict_object["SRCSYRFolder"]
+    #         if name in ["Makefile","syrthes.py","user_cond.c"]:
+    #             objectId = dict_object["SyrthesFile"]
+    #         if re.match(".*\.syd$", name) or re.match(".*\.syd_example$", name) :
+    #             objectId = dict_object["SyrthesSydFile"]
+    #     #parent is Syrthes user examples
+    #     elif parentId == dict_object["SRCSYRFolder"]:
+    #         if re.match(".*\.c$", name):
+    #             objectId = dict_object["USRSRCSYRFile"]
+
+    #     #parent is Case
+    #     elif parentId == dict_object["Case"]:
+    #         if os.path.isdir(path):
+    #             if name == "DATA":
+    #                 objectId = dict_object["DATAFolder"]
+    #             elif name == "SRC":
+    #                 objectId = dict_object["SRCFolder"]
+    #             elif name == "RESU":
+    #                 objectId = dict_object["RESUFolder"]
+    #             else:
+    #                 objectId = dict_object["OtherFolder"]
+
+    #     # parent is DATA folder
+    #     elif parentId == dict_object["DATAFolder"]:
+    #         if os.path.isdir(path):
+    #             if name == "REFERENCE":
+    #                 objectId = dict_object["REFERENCEDATAFolder"]
+    #             if name == "DRAFT":
+    #                 objectId = dict_object["DRAFTFolder"]
+    #         else:
+    #             if name[0:12] == "code_saturne" or name[0:10] == "neptune_cfd":
+    #                 # could use "DATALaunch" but prefer to hide this wrapper.
+    #                 objectId = dict_object["OtherFile"]
+    #             elif name[0:10] == "run.cfg":
+    #                 objectId = dict_object["DATARunConf"]
+    #             elif re.match("^dp_", name) or re.match("^meteo",name) or re.match("^cs_", name):
+    #                 objectId = dict_object["DATAFile"]
+    #             elif re.match(".*\.py$", name):
+    #                 objectId = dict_object["DATAPyFile"]
+    #             else:
+    #                 if os.path.isfile(path):
+    #                     fd = os.open(path , os.O_RDONLY)
+    #                     try:
+    #                         f = os.fdopen(fd)
+    #                         l1 = f.readline()
+    #                         if l1.startswith('''<?xml version="1.0" encoding="utf-8"?><Code_Saturne_GUI''') or l1.startswith('''<?xml version="1.0" encoding="utf-8"?><NEPTUNE_CFD_GUI'''):
+    #                             objectId = dict_object["DATAfileXML"]
+    #                         elif l1.startswith('''<?xml version="1.0" encoding="utf-8"?>''') :
+    #                             l2 = f.readline()
+    #                             if l2.startswith('''<Code_Saturne_GUI''') or l2.startswith('''<NEPTUNE_CFD_GUI'''):
+    #                                 objectId = dict_object["DATAfileXML"]
+    #                         else:
+    #                                 objectId = dict_object["DATAFile"]
+    #                         f.close()
+    #                     except:
+    #                         pass
+
+    #     # parent is DRAFT folder
+    #     elif parentId == dict_object["DRAFTFolder"]:
+    #         draftParentFolder = os.path.basename(_GetPath(theParent.GetFather()))
+    #         if os.path.isfile(path):
+    #             if draftParentFolder == "DATA":
+    #                 if re.match("^dp_", name) or re.match("^meteo",name) or re.match("^cs_", name):
+    #                     objectId = dict_object["DATADRAFTFile"]
+    #             elif draftParentFolder == "SRC":
+    #                 if re.match(".*\.[fF]$", name) or \
+    #                     re.match(".*\.[fF]90$", name) or \
+    #                     re.match(".*\.for$", name) or \
+    #                     re.match(".*\.FOR$", name):
+    #                     objectId = dict_object["SRCDRAFTFile"]
+    #                 elif re.match(".*\.c$", name):
+    #                     objectId = dict_object["SRCDRAFTFile"]
+    #                 elif re.match(".*\.cxx$", name) or \
+    #                     re.match(".*\.cpp$", name):
+    #                     objectId = dict_object["SRCDRAFTFile"]
+    #                 elif re.match(".*\.h$", name) or \
+    #                     re.match(".*\.hxx$", name) or \
+    #                     re.match(".*\.hpp$", name):
+    #                     objectId = dict_object["SRCDRAFTFile"]
+    #         elif os.path.isdir(path):
+    #             objectId = dict_object["OtherFolder"]
+
+    #     # parent is REFERENCE folder into DATA folder
+    #     elif parentId == dict_object["REFERENCEDATAFolder"]:
+    #         if os.path.isfile(path):
+    #             if re.match("^dp_", name) or re.match("^meteo",name) or re.match("^cs_", name):
+    #                 objectId = dict_object["REFERENCEDATAFile"]
+    #         elif os.path.isdir(path):
+    #             objectId = dict_object["OtherFolder"]
+
+    #     # parent is MESH folder
+    #     elif parentId == dict_object["MESHFolder"]:
+    #         if os.path.isdir(path):
+    #             if d_dirMesh != {}:
+    #                 for key in list(d_dirMesh.keys()):
+    #                     if path in d_dirMesh[key]:
+    #                         objectId = key
+    #         else:
+    #             if re.match(".*\.des$", name):
+    #                 objectId = dict_object["DESFile"]
+    #             elif re.match(".*\.med$", name):
+    #                 objectId = dict_object["MEDFile"]
+    #             elif re.match(".*\.dat$", name):
+    #                 objectId = dict_object["DATFile"]
+    #             elif re.match(".*\.cgns$", name):
+    #                 objectId = dict_object["CGNSFile"]
+    #             elif re.match(".*\.ccm$", name):
+    #                 objectId = dict_object["CcmFile"]
+    #             elif re.match(".*\.case$", name):
+    #                 objectId = dict_object["CaseFile"]
+    #             elif re.match(".*\.neu$", name):
+    #                 objectId = dict_object["NeuFile"]
+    #             elif re.match(".*\.msh$", name):
+    #                 objectId = dict_object["MSHFile"]
+    #             elif re.match(".*\.hex$", name):
+    #                 objectId = dict_object["HexFile"]
+    #             elif re.match(".*\.unv$", name):
+    #                 objectId = dict_object["UnvFile"]
+    #             elif re.match(".*\.syr$", name):
+    #                 objectId = dict_object["SYRMESHFile"]
+    #             else:
+    #                 objectId = dict_object["MESHFile"]
+
+    #     # parent is POST folder
+    #     elif parentId == dict_object["POSTFolder"]:
+    #         if os.path.isdir(path):
+    #             objectId = dict_object["OtherFolder"]
+    #         else:
+    #             objectId = dict_object["POSTFile"]
+
+    #     # parent is SRC folder
+    #     elif parentId == dict_object["SRCFolder"]:
+    #         if os.path.isfile(path):
+    #             if re.match(".*\.[fF]$", name) or re.match(".*\.[fF]90$", name) \
+    #             or re.match(".*\.for$", name) or re.match(".*\.FOR$", name):
+    #                 objectId = dict_object["SRCFile"]
+    #             elif re.match(".*\.c$", name):
+    #                 objectId = dict_object["SRCFile"]
+    #             elif re.match(".*\.cpp$", name) or re.match(".*\.cxx$", name):
+    #                 objectId = dict_object["SRCFile"]
+    #             elif re.match(".*\.h$", name) or re.match(".*\.hpp$", name) or re.match(".*\.hxx$", name):
+    #                 objectId = dict_object["SRCFile"]
+    #             elif re.match(".*\.log$", name):
+    #                 objectId = dict_object["LOGSRCFile"]
+    #         elif os.path.isdir(path):
+    #             if name == "REFERENCE" or name == "EXAMPLES" :
+    #                 objectId = dict_object["USERSFolder"]
+    #             elif name == "DRAFT":
+    #                 objectId = dict_object["DRAFTFolder"]
+    #             else:
+    #                 objectId = dict_object["OtherFolder"]
+
+    #     # parent REFERENCE/base... folder
+    #     elif parentId == dict_object["USERSFolder"]:
+    #         if os.path.isfile(path):
+    #             if re.match(".*\.[fF]$", name) or re.match(".*\.[fF]90$", name) \
+    #             or re.match(".*\.for$", name) or re.match(".*\.FOR$", name):
+    #                 objectId = dict_object["USRSRCFile"]
+    #             elif re.match(".*\.c$", name):
+    #                 objectId = dict_object["USRSRCFile"]
+    #             elif re.match(".*\.cpp$", name) or re.match(".*\.cxx$", name):
+    #                 objectId = dict_object["USRSRCFile"]
+    #             elif re.match(".*\.h$", name) or re.match(".*\.hpp$", name) or re.match(".*\.hxx$", name):
+    #                 objectId = dict_object["USRSRCFile"]
+    #             elif re.match(".*\.log$", name):
+    #                 objectId = dict_object["LOGSRCFile"]
+    #         elif os.path.isdir(path):
+    #             if name in ("atmo", "base", "cplv", "cfbl", "cogz", \
+    #                         "ctwr", "elec", "fuel", "lagr", "pprt", "rayt"):
+    #                 objectId = dict_object["USERSFolder"]
+    #             else:
+    #                 objectId = dict_object["OtherFolder"]
+
+    #     # parent is RESU folder
+    #     elif parentId == dict_object["RESUFolder"]:
+    #         if os.path.isdir(path):
+    #             if "error" in os.listdir(path):
+    #                 objectId = dict_object["RESUSubErrFolder"]
+    #             else:
+    #                 objectId = dict_object["RESUSubFolder"]
+
+    #     # parent is RESULT SRC folder
+    #     elif parentId == dict_object["RESSRCFolder"]:
+    #         if os.path.isfile(path):
+    #             if re.match(".*\.[fF]$", name) or re.match(".*\.[fF]90$", name) \
+    #             or re.match(".*\.for$", name) or re.match(".*\.FOR$", name):
+    #                 objectId = dict_object["RESSRCFile"]
+    #             elif re.match(".*\.c$", name):
+    #                 objectId = dict_object["RESSRCFile"]
+    #             elif re.match(".*\.cpp$", name) or re.match(".*\.cxx$", name):
+    #                 objectId = dict_object["RESSRCFile"]
+    #             elif re.match(".*\.h$", name) or re.match(".*\.hpp$", name) or re.match(".*\.hxx$", name):
+    #                 objectId = dict_object["RESSRCFile"]
+
+    #     # parent is RESULT sub folder
+    #     elif parentId == dict_object["RESUSubFolder"] or parentId == dict_object["RESUSubErrFolder"]:
+    #         if os.path.isdir(path):
+    #             if name == "src_neptune" or name == "src_saturne":
+    #                 objectId = dict_object["RESSRCFolder"]
+    #             elif name == "monitoring":
+    #                 objectId = dict_object["HISTFolder"]
+    #             elif name == "checkpoint":
+    #                 objectId = dict_object["SUITEFolder"]
+    #             elif name == "mesh_input":
+    #                 objectId = dict_object["PRETFolder"]
+    #             elif name == "partition_output":
+    #                 objectId = dict_object["PRETFolder"]
+    #             elif name == "postprocessing":
+    #                 objectId = dict_object["POSTPROFolder"]
+    #         else:
+    #             if re.match(".*\.dat$", name) or re.match(".*\.csv$", name):
+    #                 objectId = dict_object["HISTFile"]
+    #             elif re.match(".*\.xml$", name):
+    #                 objectId = dict_object["RESXMLFile"]
+    #             elif re.match(".*\.log$", name):
+    #                 objectId = dict_object["RESUFile"]
+    #             elif re.match("listing$", name):
+    #                 objectId = dict_object["RESUFile"]
+    #             elif re.match("error$", name):
+    #                 objectId = dict_object["RESUFile"]
+    #             elif re.match(".*\.png$", name):
+    #                 objectId = dict_object["RESUPNGFile"]
+
+    #     elif parentId == dict_object["POSTPROFolder"] :
+    #         if os.path.isfile(path):
+    #             if re.match(".*\.med$", name):
+    #                 objectId = dict_object["RESMEDFile"]
+    #             if re.match(".*\.case$", name):
+    #                 objectId = dict_object["RESENSIGHTFile"]
+
+    #     # parent is HIST folder
+    #     elif parentId == dict_object["HISTFolder"]:
+    #         if os.path.isfile(path):
+    #             if re.match(".*\.dat$", name) or re.match(".*\.csv$", name):
+    #                 objectId = dict_object["HISTFile"]
+
+    #     # parent is RESU_COUPLING folder
+    #     elif parentId == dict_object["RESU_COUPLINGFolder"]:
+    #         if os.path.isdir(path):
+    #             objectId = dict_object["RESU_COUPLINGSubFolder"]
+
+    #     # parent is RESU_COUPLING sub folder
+    #     elif parentId == dict_object["RESU_COUPLINGSubFolder"]:
+    #         if os.path.isdir(path):
+    #             if os.path.isfile(os.path.join(path,"syrthes")):
+    #                 objectId = dict_object["RESUSubFolderSYR"]
+    #             else:
+    #                 # test if folder is a result cfd folder?
+    #                 objectId = dict_object["RESUSubFolder"]
+
+    #     elif parentId == dict_object["RESUSubFolderSYR"]:
+    #         if re.match(".*\.log$", name):
+    #             objectId = dict_object["RESUFile"]
+    #         if re.match(".*\.dat$", name):
+    #             objectId = dict_object["RESUFile"]
+    #         if re.match(".*\.rdt$", name):
+    #             objectId = dict_object["RESUFile"]
+    #         if re.match(".*\.res$", name):
+    #             objectId = dict_object["RESUFile"]
+    #         if re.match(".*\.syr$", name):
+    #             objectId = dict_object["RESUFile"]
+    #         if re.match(".*\.data$", name):
+    #             objectId = dict_object["RESUFile"]
+    #         if re.match(".*\.add$", name):
+    #             objectId = dict_object["RESUFile"]
+    #         if re.match(".*\.c$", name):
+    #             objectId = dict_object["RESUFile"]
+    #         elif re.match("listing$", name):
+    #             objectId = dict_object["RESUFile"]
+
+    # #MESH sub folder
+    #     if parentId in list(d_dirMesh.keys()):
+    #         if os.path.isdir(path):
+    #             if d_dirMesh != {}:
+    #                 for key in list(d_dirMesh.keys()):
+    #                     if path in d_dirMesh[key]:
+    #                         objectId = key
+    #         else:
+    #             if re.match(".*\.des$", name):
+    #                 objectId = dict_object["DESFile"]
+    #             elif re.match(".*\.med$", name):
+    #                 objectId = dict_object["MEDFile"]
+    #             elif re.match(".*\.dat$", name):
+    #                 objectId = dict_object["DATFile"]
+    #             elif re.match(".*\.cgns$", name):
+    #                 objectId = dict_object["CGNSFile"]
+    #             elif re.match(".*\.ccm$", name):
+    #                 objectId = dict_object["CcmFile"]
+    #             elif re.match(".*\.case$", name):
+    #                 objectId = dict_object["CaseFile"]
+    #             elif re.match(".*\.neu$", name):
+    #                 objectId = dict_object["NeuFile"]
+    #             elif re.match(".*\.msh$", name):
+    #                 objectId = dict_object["MSHFile"]
+    #             elif re.match(".*\.hex$", name):
+    #                 objectId = dict_object["HexFile"]
+    #             elif re.match(".*\.unv$", name):
+    #                 objectId = dict_object["UnvFile"]
+    #             elif re.match(".*\.syr$", name):
+    #                 objectId = dict_object["SYRMESHFile"]
+    #             else:
+    #                 objectId = dict_object["MESHFile"]
+
+
+    #     if objectId == dict_object["OtherFile"]:
+    #         if re.match(".*\.[fF]$", name) or \
+    #         re.match(".*\.[fF]90$", name) or \
+    #         re.match(".*\.for$", name) or \
+    #         re.match(".*\.FOR$", name):
+    #             if _DetectUSERSObject(theObject) == True:
+    #                 if Trace(): print("******************************", path)
+    #                 objectId = _DetectSRCObject(theParent)
+    #         elif re.match(".*\.c$", name):
+    #             if _DetectUSERSObject(theObject) == True:
+    #                 if Trace(): print("******************************", path)
+    #                 objectId = _DetectSRCObject(theParent)
+    #         elif re.match(".*\.cpp$", name) or \
+    #         re.match(".*\.cxx$", name):
+    #             if _DetectUSERSObject(theObject) == True:
+    #                 if Trace(): print("******************************", path)
+    #                 objectId = _DetectSRCObject(theParent)
+    #         elif re.match(".*\.h$", name) or \
+    #         re.match(".*\.hxx$", name) or \
+    #         re.match(".*\.hpp$", name):
+    #             if _DetectUSERSObject(theObject) == True:
+    #                 if Trace(): print("******************************", path)
+    #                 objectId = _DetectSRCObject(theParent)
+
+    #     if objectId == dict_object["OtherFile"]:
+    #         if os.path.isdir(path):
+    #             objectId = dict_object["OtherFolder"]
+    
         else:
-            twItem.setIcon(col.name, getQIcon("OtherFile"))
+            if os.path.isdir(itemPath):
+                self.setIdCon(twItem, "OtherFolder")
+            else:
+                self.setIdCon(twItem, "OtherFile")
+                
         parentTWI.addChild(twItem)
         return twItem
-        
+            
     def rebuildTWRecursively(self, twItem):
         col = self.col
         itemPath = twItem.text(col.details)
@@ -549,7 +918,7 @@ def _SetCaseLocation(theCasePath):
         meshObject = getSObject(studyObject,"MESH")
         if meshObject != None:
             meshPath = os.path.join(theStudyPath, "MESH")
-            twiMesh = getCFDTW().findOrCreateCaseTWI(meshObject, twiStudy, meshPath)
+            twiMesh = getCFDTW().findOrCreateMeshTWI(meshObject, twiStudy, meshPath)
             getCFDTW().rebuildTWRecursively(twiMesh)
             UpdateSubTree(meshObject)
 
