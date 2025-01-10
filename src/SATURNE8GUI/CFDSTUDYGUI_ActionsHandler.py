@@ -223,6 +223,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         self.DisplayImageAction = DisplayImageAction
         
         self.solverParentWidget = None
+        self.selectedItem = None
         
     def setSolverParentWidget(self, solverParentWidget):
         """
@@ -368,6 +369,13 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         action_id = sgPyQt.actionId(action)
         self._ActionMap[action_id] = action
         self._CommonActionIdMap[ViewAction] = action_id
+        # action = QAction(ObjectTR.tr("VIEW_ACTION_TEXT"), sgPyQt.getDesktop())
+        # action.setToolTip(ObjectTR.tr("VIEW_ACTION_TIP"))
+        # #action.setIcon(ObjectTR.tr("VIEW_ACTION_ICON"))
+        # action.triggered.connect(self.slotViewAction)
+        # action_id = 123456
+        # self._ActionMap[action_id] = action
+        # self._CommonActionIdMap[ViewAction] = action_id
 
         action = sgPyQt.createAction(-1,\
                                       ObjectTR.tr("EDIT_ACTION_TEXT"),\
@@ -1066,7 +1074,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
                         self.solverAction(SolverRedoAction).setEnabled(True)
 
 
-    def customPopup(self, idText, popup):
+    def customPopup(self, item, popup):
         """
         Callback for fill popup menu according current selection state.
         Function called by C{createPopupMenu} from CFDSTUDYGUI.py
@@ -1076,6 +1084,8 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         @type popup: C{QPopupMenu}
         @param popup: popup menu from the Object Browser.
         """
+        self.selectedItem = item
+        idText = item.text(self.col.id)
         id = int(idText)
         logging.debug("customPopup %s",id)
         if id == CFDSTUDYGUI_DataModel.dict_object["Study"]:
@@ -1378,11 +1388,14 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         Edits in the read only mode the file selected in the Object Browser.
         Warning, the editor is always emacs!
         """
+        logging.debug("slotViewAction")
         viewerName = str( sgPyQt.stringSetting( "CFDSTUDY", "ExternalReader", str(self.tr("CFDSTUDY_PREF_READER")) )).strip()
         if viewerName != "":
-            sobj = self._singleSelectedObject()
-            if sobj is not None:
-                path = CFDSTUDYGUI_DataModel._GetPath(sobj)
+            # sobj = self._singleSelectedObject()
+            # if sobj is not None:
+            #     path = CFDSTUDYGUI_DataModel._GetPath(sobj)
+            if self.selectedItem is not None:
+                path = self.selectedItem.text(self.col.details)
                 try:
                     if re.match(".*emacs$", viewerName):
                         subprocess.Popen([viewerName, path, "-f", "toggle-read-only"])

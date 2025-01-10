@@ -538,8 +538,7 @@ class ClientGui():
         items = self.clsmainw.ui.tw_gauche.selectedItems()
         if len(items) > 0:
             item = items[0]
-            id = item.text(col.id)
-            self.ah.customPopup(id, menu)
+            self.ah.customPopup(item, menu)
             # if item.text(col.name) == "Saturne cases":
             #     menu.addAction("create or load case", self.createOrLoadCase)
             # if os.path.splitext(item.text(col.name))[1] == '.syd':
