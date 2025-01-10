@@ -199,7 +199,12 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         """
         logging.debug("__init__")
         QObject.__init__(self, None)
-
+        
+        from .clientgui import getClientGui
+        self.getClientGui = getClientGui
+        from .CLSMainWindow import col
+        self.col = col   
+ 
         self.l_color = [(1,0,0),(0,1,0),(0,0,1),(1,1,0),(1,0,1),(0,1,1),]
         self.ul_color = []
         #intialise all dialogs
@@ -858,6 +863,30 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
 
         self.updateActions()
 
+    def findStudyItem(self, twItem):
+        """
+        retrieve the study item
+        """
+        cur = twItem
+        while cur:
+            if cur.text(self.col.id) == str(CFDSTUDYGUI_DataModel.dict_object["Study"]):
+                return twItem
+            cur = cur.parent()
+        logging.debug("************* outside Study ? *****************")
+        return None
+
+    def findCaseItem(self, twItem):
+        """
+        retrieve the case item
+        """
+        cur = twItem
+        while cur:
+            if cur.text(self.col.id) == str(CFDSTUDYGUI_DataModel.dict_object["Case"]):
+                return twItem
+            cur = cur.parent()
+        logging.debug("************* outside Study ? *****************")
+        return None
+
 
     def updateActions(self):
         """
@@ -865,25 +894,36 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         This function connected to selection change signal.
         """
         logging.debug("updateActions")
-        component = CFDSTUDYGUI_DataModel._getComponent()
-        if component == None:
-            #disable all actions except Study Location
-            for i in self._CommonActionIdMap:
-                if not i == InfoCFDSTUDYAction:
-                    if i == SetStudyAction or i == OpenAnExistingCase:
-                        self.commonAction(i).setEnabled(True)
-                    else:
-                        self.commonAction(i).setEnabled(False)
-        else:
-            #enable all actions
-            for i in self._CommonActionIdMap:
-                if not i == InfoCFDSTUDYAction:
-                    self.commonAction(i).setEnabled(True)
+        # component = CFDSTUDYGUI_DataModel._getComponent()
+        # if component == None:
+        #     #disable all actions except Study Location
+        #     for i in self._CommonActionIdMap:
+        #         if not i == InfoCFDSTUDYAction:
+        #             if i == SetStudyAction or i == OpenAnExistingCase:
+        #                 self.commonAction(i).setEnabled(True)
+        #             else:
+        #                 self.commonAction(i).setEnabled(False)
+        # else:
+        #     #enable all actions
+        #     for i in self._CommonActionIdMap:
+        #         if not i == InfoCFDSTUDYAction:
+        #             self.commonAction(i).setEnabled(True)
+
+        #enable all actions
+        for i in self._CommonActionIdMap:
+            if not i == InfoCFDSTUDYAction:
+                 self.commonAction(i).setEnabled(True)
 
         # selection handler
-        sobj = self._singleSelectedObject()
-        if sobj == None : #multiple selection not authorized
-            logging.debug("obj == None")
+        # sobj = self._singleSelectedObject()
+        # if sobj == None : #multiple selection not authorized
+        items = self.getClientGui().getTWSelectedItems()
+        # item = None
+        # if len(items):
+        #     item = items[0]
+        
+        if len(items) != 1:
+            logging.debug("no selection or multiple selection")
             for i in self._CommonActionIdMap:
                 if i != InfoCFDSTUDYAction:
                     if i == SetStudyAction or i == OpenAnExistingCase:
@@ -891,25 +931,36 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
                     else:
                         self.commonAction(i).setEnabled(False)#multiple selection not authorized
 
-        if sobj != None:
-            logging.debug("sobj != None")
-            isStudy = CFDSTUDYGUI_DataModel.checkType(sobj, CFDSTUDYGUI_DataModel.dict_object["Study"])
+        # if sobj != None:
+        if len(items) == 1:
+            item = items[0]
+            id = item.text(self.col.id)
+            logging.debug("single selection %s", id)
+            # isStudy = CFDSTUDYGUI_DataModel.checkType(sobj, CFDSTUDYGUI_DataModel.dict_object["Study"])
+            isStudy = (id == str(CFDSTUDYGUI_DataModel.dict_object["Study"]))
             self.commonAction(AddCaseAction).setEnabled(isStudy)
-            aStudy = CFDSTUDYGUI_DataModel.GetStudyByObj(sobj)
-            aCase = CFDSTUDYGUI_DataModel.GetCase(sobj)
+            # aStudy = CFDSTUDYGUI_DataModel.GetStudyByObj(sobj)
+            aStudy = self.findStudyItem(item)
+            #aCase = CFDSTUDYGUI_DataModel.GetCase(sobj)
+            aCase = self.findCaseItem(item)
 
             if aCase != None:
                 logging.debug("aCase != None")
-                code = CFDSTUDYGUI_DataModel.checkCode(aCase)
+                # code = CFDSTUDYGUI_DataModel.checkCode(aCase)
+                code = "Code_Saturne" # TODO: rewrite a check for "Code_Saturne" or "NEPTUNE_CFD"
                 _SetCFDCode(code)
                 dialog = self.DialogCollector.InfoDialog
                 dialog.update(code)
 
             if aStudy != None and aCase != None:
                 logging.debug("aStudy != None and aCase != None")
-                boo = CFDSTUDYGUI_DataModel.checkType(sobj, CFDSTUDYGUI_DataModel.dict_object["DATALaunch"]) or CFDSTUDYGUI_DataModel.checkType(sobj, CFDSTUDYGUI_DataModel.dict_object["Case"])
+                # boo = CFDSTUDYGUI_DataModel.checkType(sobj, CFDSTUDYGUI_DataModel.dict_object["DATALaunch"]) or 
+                #       CFDSTUDYGUI_DataModel.checkType(sobj, CFDSTUDYGUI_DataModel.dict_object["Case"])
+                boo = (id == str(CFDSTUDYGUI_DataModel.dict_object["DATALaunch"])) or \
+                      (id == str(CFDSTUDYGUI_DataModel.dict_object["Case"]))
                 self.commonAction(LaunchGUIAction).setEnabled(boo)
-                self.commonAction(OpenGUIAction).setEnabled(CFDSTUDYGUI_DataModel.checkCaseLaunchGUI(aCase))
+                #self.commonAction(OpenGUIAction).setEnabled(CFDSTUDYGUI_DataModel.checkCaseLaunchGUI(aCase))
+                self.commonAction(OpenGUIAction).setEnabled(True) # TODO: check
             else:
                 self.commonAction(LaunchGUIAction).setEnabled(False)
         else:
@@ -934,22 +985,59 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
             self.solverAction(NCSolverHelpTheory).setEnabled(False)
             self.solverAction(NCSolverHelpDoxygen).setEnabled(False)
 
-        if sobj != None:
-            self.updateActionsXmlFile(sobj)
-            if CFDSTUDYGUI_DataModel.checkType(sobj.GetFather(), CFDSTUDYGUI_DataModel.dict_object["CouplingStudy"]) and \
-               CFDSTUDYGUI_DataModel.checkType(sobj, CFDSTUDYGUI_DataModel.dict_object["Case"]):
-                self.commonAction(RemoveAction).setEnabled(False)
-                self.commonAction(RemoveAction).setVisible(False)
-            if CFDSTUDYGUI_DataModel.checkType(sobj.GetFather(), CFDSTUDYGUI_DataModel.dict_object["Study"]) and \
-               CFDSTUDYGUI_DataModel.checkType(sobj, CFDSTUDYGUI_DataModel.dict_object["Case"]):
-                self.commonAction(RemoveAction).setEnabled(True)
+        # if sobj != None:
+        if len(items) == 1:
+            item = items[0]
+            self.updateActionsXmlFileItem(item)
+            # if CFDSTUDYGUI_DataModel.checkType(sobj.GetFather(), CFDSTUDYGUI_DataModel.dict_object["CouplingStudy"]) and \
+            #    CFDSTUDYGUI_DataModel.checkType(sobj, CFDSTUDYGUI_DataModel.dict_object["Case"]):
+            if (id == str(CFDSTUDYGUI_DataModel.dict_object["Case"])):
+                idParent = item.parent().text(self.col.id)
+                if (idParent == str(CFDSTUDYGUI_DataModel.dict_object["CouplingStudy"])):  
+                    self.commonAction(RemoveAction).setEnabled(False)
+                    self.commonAction(RemoveAction).setVisible(False)
+                if (idParent == str(CFDSTUDYGUI_DataModel.dict_object["Study"])):  
+                    self.commonAction(RemoveAction).setEnabled(True)
+                    self.commonAction(RemoveAction).setVisible(True)
+            # if CFDSTUDYGUI_DataModel.checkType(sobj.GetFather(), CFDSTUDYGUI_DataModel.dict_object["Study"]) and \
+            #    CFDSTUDYGUI_DataModel.checkType(sobj, CFDSTUDYGUI_DataModel.dict_object["Case"]):
+            #     self.commonAction(RemoveAction).setEnabled(True)
+            #     self.commonAction(RemoveAction).setVisible(True)
+            # if CFDSTUDYGUI_DataModel.checkType(sobj, CFDSTUDYGUI_DataModel.dict_object["RESUSubFolder"]):
+            if (id == str(CFDSTUDYGUI_DataModel.dict_object["RESUSubFolder"])):
                 self.commonAction(RemoveAction).setVisible(True)
-            if CFDSTUDYGUI_DataModel.checkType(sobj, CFDSTUDYGUI_DataModel.dict_object["RESUSubFolder"]):
+            # if CFDSTUDYGUI_DataModel.checkType(sobj, CFDSTUDYGUI_DataModel.dict_object["RESUSubErrFolder"]):
+            if (id == str(CFDSTUDYGUI_DataModel.dict_object["RESUSubErrFolder"])):
                 self.commonAction(RemoveAction).setVisible(True)
-            if CFDSTUDYGUI_DataModel.checkType(sobj, CFDSTUDYGUI_DataModel.dict_object["RESUSubErrFolder"]):
+            # if CFDSTUDYGUI_DataModel.checkType(sobj, CFDSTUDYGUI_DataModel.dict_object["RESU_COUPLINGSubFolder"]):
+            if (id == str(CFDSTUDYGUI_DataModel.dict_object["RESU_COUPLINGSubFolder"])):
                 self.commonAction(RemoveAction).setVisible(True)
-            if CFDSTUDYGUI_DataModel.checkType(sobj, CFDSTUDYGUI_DataModel.dict_object["RESU_COUPLINGSubFolder"]):
-                self.commonAction(RemoveAction).setVisible(True)
+
+
+    def updateActionsXmlFileItem(self, item) :
+        id = item.text(self.col.id)
+        logging.debug("updateActionsXmlFile %s", id)
+        isStudy = (id == str(CFDSTUDYGUI_DataModel.dict_object["Study"]))
+        self.commonAction(AddCaseAction).setEnabled(isStudy)
+        study = self.findStudyItem(item)
+        case = self.findCaseItem(item)
+        if (id == str(CFDSTUDYGUI_DataModel.dict_object["DATAfileXML"])):
+                self.solverAction(SolverCloseAction).setEnabled(False)
+                self.solverAction(SolverSaveAction).setEnabled(False)
+                self.solverAction(SolverSaveAsAction).setEnabled(False)
+                self.solverAction(SolverUndoAction).setEnabled(False)
+                self.solverAction(SolverRedoAction).setEnabled(False)
+                if case != None and study != None:
+                    # if CFDSTUDYGUI_SolverGUI._c_CFDGUI.findDock(XMLSobj.GetName(),
+                    #                                             case.GetName(),
+                    #                                             study.GetName()):
+                    if True: # TODO...
+                        self.solverAction(SolverCloseAction).setEnabled(True)
+                        self.commonAction(OpenGUIAction).setEnabled(False)
+                        self.solverAction(SolverSaveAction).setEnabled(True)
+                        self.solverAction(SolverSaveAsAction).setEnabled(True)
+                        self.solverAction(SolverUndoAction).setEnabled(True)
+                        self.solverAction(SolverRedoAction).setEnabled(True)
 
 
     def updateActionsXmlFile(self, XMLSobj) :
@@ -978,7 +1066,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
                         self.solverAction(SolverRedoAction).setEnabled(True)
 
 
-    def customPopup(self, id, popup):
+    def customPopup(self, idText, popup):
         """
         Callback for fill popup menu according current selection state.
         Function called by C{createPopupMenu} from CFDSTUDYGUI.py
@@ -988,7 +1076,8 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         @type popup: C{QPopupMenu}
         @param popup: popup menu from the Object Browser.
         """
-        logging.debug("customPopup")
+        id = int(idText)
+        logging.debug("customPopup %s",id)
         if id == CFDSTUDYGUI_DataModel.dict_object["Study"]:
             popup.addAction(self.commonAction(AddCaseAction))
             popup.addAction(self.commonAction(CloseStudyAction))

@@ -37,8 +37,9 @@ def getClientGui():
     """
     global _clientGui
     if _clientGui is None:
-        logging.info("clientGui instanciated!")
+        logging.info("begin clientGui instanciate")
         _clientGui = ClientGui()
+        logging.info("clientGui instanciated!")
     return _clientGui
 
 
@@ -72,6 +73,7 @@ class ClientGui():
         self._VTKViewer = 0
         self._PVViewer = 0
         self._dataModel = None
+        self.ah = None
 
         self.mainWindow = None
         self.clsmainw = None
@@ -128,10 +130,6 @@ class ClientGui():
         # getSalomePyQt().createMenu(separator,
         #                            menuSaturne8, -1, 10)
         
-        self.ah = CFDSTUDYGUI_ActionsHandler()
-        self.ah.createActions()
-        
-        self._dataModel = SATURNE8_DataModel()
 
     def initialize(self):
         """
@@ -223,6 +221,12 @@ class ClientGui():
         # self.clsmainw.ui.pb_createLoadCase.clicked.connect(
         #     self.createOrLoadCase)
         self.initSmesh()
+        if self.ah is None:
+            self.ah = CFDSTUDYGUI_ActionsHandler()
+            self.ah.createActions()
+        if self._dataModel is None:
+            self._dataModel = SATURNE8_DataModel()
+
         if len(self.casesToReload) and self.widget is None:  # when reload study
             # self.createOrLoadCase(True)
             i = 0
@@ -520,6 +524,9 @@ class ClientGui():
         logging.debug("menu ResetView %s", self.currentEntry)
         salome.sg.ResetView()
 
+    def getTWSelectedItems(self):
+        return self.clsmainw.ui.tw_gauche.selectedItems()
+    
     def treeItemMenuMgr(self, position):
         """
         Defines all the specific actions related to each item of the tree
@@ -531,35 +538,37 @@ class ClientGui():
         items = self.clsmainw.ui.tw_gauche.selectedItems()
         if len(items) > 0:
             item = items[0]
+            id = item.text(col.id)
+            self.ah.customPopup(id, menu)
             # if item.text(col.name) == "Saturne cases":
             #     menu.addAction("create or load case", self.createOrLoadCase)
-            if os.path.splitext(item.text(col.name))[1] == '.syd':
-                self.currentFile = os.path.join(
-                    item.text(col.details), item.text(col.name))
-                self.currentEntry = ""
-                menu.addAction("unload case", self.actUnloadCase)
-                menu.addAction("reload case", self.actReloadCase)
-            elif os.path.splitext(item.text(col.name))[1] == '.med':
-                self.currentFile = os.path.join(
-                    item.text(col.details), item.text(col.name))
-                self.currentEntry = item.text(col.entry)
-                menu.addAction("load mesh", self.actLoadMesh)
-                menu.addAction("show", self.actShow)
-                menu.addAction("show only", self.actShowOnly)
-                menu.addAction("hide", self.actHide)
-                menu.addAction("FitAll", self.actFitAll)
-                menu.addAction("ResetView", self.actResetView)
-            elif "Groups" in item.text(col.name):
-                self.currentFile = ""
-                self.currentEntry = item.text(col.entry)
-            else:
-                self.currentFile = ""
-                self.currentEntry = item.text(col.entry)
-                menu.addAction("show", self.actShow)
-                menu.addAction("show only", self.actShowOnly)
-                menu.addAction("hide", self.actHide)
-                menu.addAction("FitAll", self.actFitAll)
-                menu.addAction("ResetView", self.actResetView)
+            # if os.path.splitext(item.text(col.name))[1] == '.syd':
+            #     self.currentFile = os.path.join(
+            #         item.text(col.details), item.text(col.name))
+            #     self.currentEntry = ""
+            #     menu.addAction("unload case", self.actUnloadCase)
+            #     menu.addAction("reload case", self.actReloadCase)
+            # elif os.path.splitext(item.text(col.name))[1] == '.med':
+            #     self.currentFile = os.path.join(
+            #         item.text(col.details), item.text(col.name))
+            #     self.currentEntry = item.text(col.entry)
+            #     menu.addAction("load mesh", self.actLoadMesh)
+            #     menu.addAction("show", self.actShow)
+            #     menu.addAction("show only", self.actShowOnly)
+            #     menu.addAction("hide", self.actHide)
+            #     menu.addAction("FitAll", self.actFitAll)
+            #     menu.addAction("ResetView", self.actResetView)
+            # elif "Groups" in item.text(col.name):
+            #     self.currentFile = ""
+            #     self.currentEntry = item.text(col.entry)
+            # else:
+            #     self.currentFile = ""
+            #     self.currentEntry = item.text(col.entry)
+            #     menu.addAction("show", self.actShow)
+            #     menu.addAction("show only", self.actShowOnly)
+            #     menu.addAction("hide", self.actHide)
+            #     menu.addAction("FitAll", self.actFitAll)
+            #     menu.addAction("ResetView", self.actResetView)
 
         menu.exec_(self.clsmainw.ui.tw_gauche.viewport().mapToGlobal(position))
 
