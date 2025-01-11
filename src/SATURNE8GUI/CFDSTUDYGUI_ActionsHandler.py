@@ -1360,6 +1360,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         Re-reads the unix folders and updates the complete representation
         of the CFD studies in the Object Browser.
         """
+        logging.debug("slotUpdateObjectBrowser")
         sobj = self._singleSelectedObject()
         if sobj != None:
             self.updateObjBrowser(sobj)
@@ -1416,6 +1417,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         """
         Edits in the user's editor the file selected in the Object Browser.
         """
+        logging.debug("slotEditAction")
         viewerName = str( sgPyQt.stringSetting( "CFDSTUDY", "ExternalEditor", str(self.tr("CFDSTUDY_PREF_EDITOR") ) )).strip()
         if str(viewerName) != "":
             sobj = self._singleSelectedObject()
@@ -1435,6 +1437,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         Edits in the read only mode the file selected in the Object Browser.
         Warning, the editor is always emacs!
         """
+        logging.debug("slotDisplayImageAction")
         displayViewerName = str( sgPyQt.stringSetting( "CFDSTUDY", "ExternalDisplay", str(self.tr("CFDSTUDY_PREF_DISPLAY_VIEWER")) )).strip()
         if displayViewerName != "":
 
@@ -1540,6 +1543,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
     def slotCopyInDATA(self):
         """
         """
+        logging.debug("slotCopyInDATA")
         sobj = self._singleSelectedObject()
         if sobj != None:
             path = CFDSTUDYGUI_DataModel._GetPath(sobj)
@@ -1566,6 +1570,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
     def slotCopyInSRC(self):
         """
         """
+        logging.debug("slotCopyInSRC")
         sobj = self._singleSelectedObject()
         if sobj != None:
             path = CFDSTUDYGUI_DataModel._GetPath(sobj)
@@ -1597,6 +1602,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
     def slotMoveToDRAFT(self):
         """
         """
+        logging.debug("slotMoveToDRAFT")
         sobj = self._singleSelectedObject()
         if not sobj == None:
             path = CFDSTUDYGUI_DataModel._GetPath(sobj)
@@ -1652,6 +1658,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         """
         Not used now, but will be used when PARAVIS API will run correctly
         """
+        logging.debug("slotExportInParavis")
 
         sobj = self._singleSelectedObject()
         if not sobj == None:
@@ -1700,6 +1707,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
              (we can have several meshes into a med file)
 
         """
+        logging.debug("slotExportInSMESH")
         waitCursor = QCursor(Qt.WaitCursor)
         QApplication.setOverrideCursor(waitCursor)
 
@@ -1730,6 +1738,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         Changed on November 2010 for the popup menu: SMESH Mesh objects can have the slotDisplayMESH directly
         the old code with referenced objects is deleted
         """
+        logging.debug("slotDisplayMESH")
         waitCursor = QCursor(Qt.WaitCursor)
         QApplication.setOverrideCursor(waitCursor)
 
@@ -1765,6 +1774,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         Changed on November 2010 for the popup menu: SMESH Group Mesh objects can have the slotDisplayMESHGroups directly
         the old code with referenced objects is deleted
         """
+        logging.debug("slotDisplayMESHGroups")
         waitCursor = QCursor(Qt.WaitCursor)
         QApplication.setOverrideCursor(waitCursor)
 
@@ -1791,6 +1801,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
     def slotDisplayOnlyMESHGroups(self):
         """
         """
+        logging.debug("slotDisplayOnlyMESHGroups")
         waitCursor = QCursor(Qt.WaitCursor)
         QApplication.setOverrideCursor(waitCursor)
 
@@ -1813,6 +1824,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
     def slotHideMESHGroups(self):
         """
         """
+        logging.debug("slotHideMESHGroups")
         waitCursor = QCursor(Qt.WaitCursor)
         QApplication.setOverrideCursor(waitCursor)
 
@@ -1840,6 +1852,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         """
         Changed on November 2010 for the popup menu: SMESH Mesh objects can have the slotHideMESH directly
         """
+        logging.debug("slotHideMESH")
         waitCursor = QCursor(Qt.WaitCursor)
         QApplication.setOverrideCursor(waitCursor)
 
@@ -2101,6 +2114,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
 
 
     def slotUpdateCasePath(self):
+        logging.debug("slotUpdateCasePath")
         sobj = self._singleSelectedObject()
         if sobj == None:
             return
@@ -2119,6 +2133,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
     def slotMeshConvertToMed(self):
         """
         """
+        logging.debug("slotMeshConvertToMed")
         study = CFDSTUDYGUI_DataModel._getStudy()
 
         sg = CFDSTUDYGUI_DataModel.sg
@@ -2271,6 +2286,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         """
         Redirects B{OpenShell} method to GUI of current solver
         """
+        logging.debug("slotOpenShell")
         self._SolverGUI.onOpenShell()
 
 
@@ -2278,6 +2294,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         """
         Redirects B{Display Current Case} method to GUI of current solver
         """
+        logging.debug("slotDisplayCurrentCase")
         self._SolverGUI.onDisplayCase()
 
 
@@ -2285,6 +2302,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         """
         Manage and edit user SRC files of the currently open CASE.
         """
+        logging.debug("slotDisplayCurrentCase")
         self._SolverGUI.onEditSRCFiles()
 
 
@@ -2292,6 +2310,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         """
         View log files of the currently open CASE.
         """
+        logging.debug("slotViewLogFiles")
         self._SolverGUI.onViewLogFiles()
 
 
@@ -2299,6 +2318,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         """
         Test compilation of user SRC files.
         """
+        logging.debug("slotCheckUsersCompilation")
         self._SolverGUI.onCheckSRCFiles()
 
 
@@ -2308,6 +2328,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         distant host.
         Widget is in C++ and compiled with SALOME, hence the Popen call.
         """
+        logging.debug("slotFileTransfer")
         popen = subprocess.Popen("remotefilebrowser", stdout=subprocess.PIPE)
         popen.wait()
 
@@ -2315,6 +2336,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         """
         Manage and edit user SRC files of the currently open CASE.
         """
+        logging.debug("slotLaunchSolver")
         self._SolverGUI.onLaunchSolver()
 
 
@@ -2322,58 +2344,71 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         """
         Transfer the CFD model to OpenTURNS
         """
+        logging.debug("slotLaunchOT")
         self._SolverGUI.onLaunchOT()
 
     def slotHelpAbout(self):
         """
         Redirects B{About QDialog} display to GUI of current solver
         """
+        logging.debug("slotHelpAbout")
         self._SolverGUI.onHelpAbout()
 
 
     def slotHelpLicense(self):
+        logging.debug("slotHelpLicense")
         self._SolverGUI.onSaturneHelpLicense()
 
 
     def slotHelpUserGuide(self):
+        logging.debug("slotHelpUserGuide")
         self._SolverGUI.onSaturneHelpManual()
 
 
     def slotHelpTutorial(self):
+        logging.debug("slotHelpTutorial")
         self._SolverGUI.onSaturneHelpTutorial()
 
 
     def slotHelpTheory(self):
+        logging.debug("slotHelpTheory")
         self._SolverGUI.onSaturneHelpKernel()
 
 
     def slotHelpRefcard(self):
+        logging.debug("slotHelpRefcard")
         self._SolverGUI.onSaturneHelpRefcard()
 
 
     def slotHelpDoxygen(self):
+        logging.debug("slotHelpDoxygen")
         self._SolverGUI.onSaturneHelpDoxygen()
 
 
     def slotHelpNCUserGuide(self):
+        logging.debug("slotHelpNCUserGuide")
         self._SolverGUI.onNeptuneHelpManual()
 
 
     def slotHelpNCTutorial(self):
+        logging.debug("slotHelpNCTutorial")
         self._SolverGUI.onNeptuneHelpTutorial()
 
 
     def slotHelpNCTheory(self):
+        logging.debug("slotHelpNCTheory")
         self._SolverGUI.onNeptuneHelpKernel()
 
 
     def slotHelpNCDoxygen(self):
+        logging.debug("slotHelpNCDoxygen")
         self._SolverGUI.onNeptuneHelpDoxygen()
 
     def slotOpenSyrthesCaseFile(self):
         """
         OpenSyrthesGui
         """
+        logging.debug("slotOpenSyrthesCaseFile")
         sobj = self._singleSelectedObject()
         if not sobj == None:
             import salome
@@ -2398,6 +2433,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         """
         Export Syr syrthes file in SMESH
         """
+        logging.debug("slotExportSyrInSmesh")
         waitCursor = QCursor(Qt.WaitCursor)
         QApplication.setOverrideCursor(waitCursor)
 
@@ -2479,6 +2515,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         """
         Returns action by id from solver action maps of module
         """
+        logging.debug("solverAction")
         action_id = None
 
         if theId in self._SolverActionIdMap:
