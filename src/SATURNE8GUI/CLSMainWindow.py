@@ -151,31 +151,33 @@ class CLSMainWindow(QMainWindow):
         logging.debug("syrdesc %s", syrdesc)
         return syrdesc
 
-    def detailsMeshGroups(self, medFile, liste):
+    def detailsMeshGroups(self, medFile, meshItem, liste):
         """
-        Generate tree items for each group in a mesh, with Saturne references.
-
+        Generate tree items for each group in a mesh
+        
         :param string medFile: path of the med file.
+        :param QTreeWidgetItem meshItem: QTreeWidgetItem associated to the meshFile
         :param list liste: a list of (parent, entry, name, offset) for each child
                            of the mesh in SALOME study (@see utilsstudy.DumpMesh)
         """
         logging.debug("detailsMeshGroups %s %s", medFile, liste)
         # --- the med file must already registered in the the tree as a conduction or radiation mesh
-        meshItem = None
-        if medFile in self.saturneCondMeshes.keys():
-            meshItem = self.saturneCondMeshes[medFile]
-        elif medFile in self.saturneRayMeshes.keys():
-            meshItem = self.saturneRayMeshes[medFile]
+        # meshItem = None
+        # if medFile in self.saturneCondMeshes.keys():
+        #     meshItem = self.saturneCondMeshes[medFile]
+        # elif medFile in self.saturneRayMeshes.keys():
+        #     meshItem = self.saturneRayMeshes[medFile]
         if meshItem is None:
+            logging.debug("meshItem is None")
             return
         # --- the .syr_desc file associated to the mesh has been produced by the med2saturne converter
         #     get all the Saturne references in a list
-        syrdesc = self.readSyrDesc(medFile)
-        refList = []
-        for k1, dicType in syrdesc.items():
-            for k2, ref in dicType.items():
-                refList.append(int(ref))
-        logging.debug("refList: %s", refList)
+        # syrdesc = self.readSyrDesc(medFile)
+        # refList = []
+        # for k1, dicType in syrdesc.items():
+        #     for k2, ref in dicType.items():
+        #         refList.append(int(ref))
+        # logging.debug("refList: %s", refList)
         groupTypes = ("faces", "nodes", "edges", "volumes")
         parentItem = meshItem
         for (parent, entry, name, offset) in liste:
@@ -192,24 +194,22 @@ class CLSMainWindow(QMainWindow):
                 meshItem.addChild(groupTypeItem)
                 parentItem = groupTypeItem
             # --- offset 2 gives groupType(parent), group entry and name in Salome Study.
-            #     Groups with missing references in .syr_desc are given a new reference
-            #     by incrementing the max reference value found.
             else:
-                ref = ''
-                for aType in groupTypes:
-                    if aType in parent.lower():
-                        if name in syrdesc[aType]:
-                            ref = syrdesc[aType][name]
-                        else:
-                            refint = 1  # for the case empty list of Saturne references
-                            if len(refList):
-                                refList.sort()
-                                refint = refList[-1] + 1
-                            refList.append(refint)
-                            ref = str(refint)
+                # ref = ''
+                # for aType in groupTypes:
+                #     if aType in parent.lower():
+                #         if name in syrdesc[aType]:
+                #             ref = syrdesc[aType][name]
+                #         else:
+                #             refint = 1  # for the case empty list of Saturne references
+                #             if len(refList):
+                #                 refList.sort()
+                #                 refint = refList[-1] + 1
+                #             refList.append(refint)
+                #             ref = str(refint)
                 groupItem = QTreeWidgetItem()
                 groupItem.setText(col.name, name)
-                groupItem.setText(col.ref, ref)
+                # groupItem.setText(col.ref, ref)
                 groupItem.setText(col.entry, entry)
                 self.entryItems[entry] = groupItem
                 parentItem.addChild(groupItem)

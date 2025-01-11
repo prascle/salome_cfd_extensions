@@ -81,6 +81,7 @@ class ClientGui():
 
         self.currentEntry = ""
         self.currentFile = ""
+        self.selectedItem = None
 
         self.meshNames = {}  # mesh name from entry (without path and ext)
         self.meshPaths = {}  # entry from mesh path
@@ -413,7 +414,7 @@ class ClientGui():
             logging.debug("OpeningFile %s", caseName)
             self.widget.OpeningFile(caseName, getSalomePyQt().getDesktop())
 
-    def importSaturneMesh(self, fileMed):
+    def importMedMesh(self, fileMed):
         """
         Import a mesh from a med file into SMESH and display the mesh,
         or just display the mesh if the med file is already loaded
@@ -423,7 +424,7 @@ class ClientGui():
         :return: mesh entry in study
         :rtype: string
         """
-        logging.debug("importSaturneMesh %s", fileMed)
+        logging.debug("importMedMesh %s", fileMed)
         if not fileMed:
             return ""
         entryMesh = ""
@@ -448,7 +449,7 @@ class ClientGui():
             logging.debug("entryMesh %s", entryMesh)
             self.meshPaths[fileMed] = entryMesh
             self.meshNames[entryMesh] = name
-            self.clsmainw.detailsMeshGroups(fileMed, liste)
+            self.clsmainw.detailsMeshGroups(fileMed, self.selectedItem, liste)
         logging.debug("entryMesh %s", entryMesh)
         return entryMesh
 
@@ -474,7 +475,7 @@ class ClientGui():
         """
         """
         logging.debug("actLoadMesh %s", self.currentFile)
-        self.importSaturneMesh(self.currentFile)
+        self.importMedMesh(self.currentFile)
 
     def actShow(self):
         """
@@ -484,7 +485,7 @@ class ClientGui():
         fileMed = self.currentFile
         getSalomePyQt().activateViewManagerAndView(self._VTKViewer)
         if fileMed:
-            entryMesh = self.importSaturneMesh(fileMed)
+            entryMesh = self.importMedMesh(fileMed)
             salome.sg.Display(entryMesh)
         elif entry:
             salome.sg.Display(entry)
@@ -499,7 +500,7 @@ class ClientGui():
         fileMed = self.currentFile
         getSalomePyQt().activateViewManagerAndView(self._VTKViewer)
         if fileMed:
-            entryMesh = self.importSaturneMesh(fileMed)
+            entryMesh = self.importMedMesh(fileMed)
             salome.sg.DisplayOnly(entryMesh)
         if entry:
             salome.sg.DisplayOnly(entry)
@@ -535,9 +536,11 @@ class ClientGui():
         menu = QMenu()
         self.currentEntry = ""
         self.currentFile = ""
+        self.selectedItem = None
         items = self.clsmainw.ui.tw_gauche.selectedItems()
         if len(items) > 0:
             item = items[0]
+            self.selectedItem = item
             self.ah.customPopup(item, menu)
             # if item.text(col.name) == "Saturne cases":
             #     menu.addAction("create or load case", self.createOrLoadCase)

@@ -1086,7 +1086,9 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         """
         self.selectedItem = item
         idText = item.text(self.col.id)
-        id = int(idText)
+        id = 0
+        if id is not None:
+            id = int(idText)
         logging.debug("customPopup %s",id)
         if id == CFDSTUDYGUI_DataModel.dict_object["Study"]:
             popup.addAction(self.commonAction(AddCaseAction))
@@ -1711,24 +1713,31 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         waitCursor = QCursor(Qt.WaitCursor)
         QApplication.setOverrideCursor(waitCursor)
 
-        sobj = self._singleSelectedObject()
-        if not sobj == None:
-            path = CFDSTUDYGUI_DataModel._GetPath(sobj)
-            if smeshBuilder and re.match(".*\.med$", sobj.GetName()):
-                smesh = smeshBuilder.New()
-                aMeshes, aStatus = smesh.CreateMeshesFromMED(path)
-                if not aStatus:
-                    QApplication.restoreOverrideCursor()
-                    mess = cfdstudyMess.trMessage(self.tr("EXPORT_IN_SMESH_ACTION_WARNING"),[])
-                    cfdstudyMess.warningMessage(mess)
-                    return
+        if self.selectedItem is not None:
+            path = self.selectedItem.text(self.col.details)
+            entry = self.getClientGui().importMedMesh(path)
+            self.selectedItem.setText(self.col.entry, entry)
+            
+        # sobj = self._singleSelectedObject()
+        # if not sobj == None:
+        #     path = CFDSTUDYGUI_DataModel._GetPath(sobj)
+        #     if smeshBuilder and re.match(".*\.med$", sobj.GetName()):
+        #         smesh = smeshBuilder.New()
+        #         aMeshes, aStatus = smesh.CreateMeshesFromMED(path)
+        #         if not aStatus:
+        #             QApplication.restoreOverrideCursor()
+        #             mess = cfdstudyMess.trMessage(self.tr("EXPORT_IN_SMESH_ACTION_WARNING"),[])
+        #             cfdstudyMess.warningMessage(mess)
+        #             return
 
-                (reppath,fileName)=   os.path.split(path)
-                for aMeshDC in aMeshes:
-                    aMeshDC.SetAutoColor(1)
-                    mesh = aMeshDC.GetMesh()
+        #         (reppath,fileName)=   os.path.split(path)
+        #         for aMeshDC in aMeshes:
+        #             aMeshDC.SetAutoColor(1)
+        #             mesh = aMeshDC.GetMesh()
 
-            sg.updateObjBrowser()
+        #     sg.updateObjBrowser()
+        
+        
 
         QApplication.restoreOverrideCursor()
 
