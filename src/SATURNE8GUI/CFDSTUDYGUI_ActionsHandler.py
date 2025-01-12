@@ -1884,43 +1884,54 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         QApplication.restoreOverrideCursor()
 
 
-    def OpenCFD_GUI(self,sobj):
+    def OpenCFD_GUI(self,item):
         """
         Open into Salome the CFD GUI from an XML file whose name is sobj.GetName()
         """
         logging.debug("OpenCFD_GUI")
         import os
-        if sobj != None:
-            if not os.path.exists(CFDSTUDYGUI_DataModel._GetPath(sobj)):
-                mess = cfdstudyMess.trMessage(self.tr("ENV_DLG_INVALID_FILE"),[CFD_Code(),CFDSTUDYGUI_DataModel._GetPath(sobj)])+ self.tr("STMSG_UPDATE_STUDY_INCOMING")
-                cfdstudyMess.aboutMessage(mess)
-                self.updateObjBrowser()
-                return
-            if CFDSTUDYGUI_DataModel.checkType(sobj, CFDSTUDYGUI_DataModel.dict_object["DATAfileXML"]):
-                aXmlFileName = sobj.GetName()
-                aCase = CFDSTUDYGUI_DataModel.GetCase(sobj)
-                aStudy = CFDSTUDYGUI_DataModel.GetStudyByObj(sobj)
-                if aCase:
-                    aCaseName = aCase.GetName()
-                else:
-                    mess = cfdstudyMess.trMessage(self.tr("INFO_DLG_NO_CASE_INTO_OB"),[aXmlFileName])
-                    cfdstudyMess.criticalMessage(mess)
-                    return
-                if aStudy:
-                    aStudyName = aStudy.GetName()
-                else:
-                    mess = cfdstudyMess.trMessage(self.tr("INFO_DLG_NO_CFD_STUDY_INTO_OB"),[aXmlFileName])
-                    cfdstudyMess.warningMessage(mess)
-                    return
-                if CFDSTUDYGUI_SolverGUI.findDockWindow(aXmlFileName, aCaseName,aStudyName):
-                    mess = cfdstudyMess.trMessage(self.tr("ALREADY_OPEN"),[aStudyName,aCaseName,aXmlFileName])
-                    cfdstudyMess.aboutMessage(mess)
-                    return
+        id = item.text(self.col.id)
+        if id != str(CFDSTUDYGUI_DataModel.dict_object["DATAfileXML"]):
+            logging.debug("wrong type of file")
+            return
+        caseItem = CFDSTUDYGUI_DataModel.getCFDTW().findCaseItem(item)
+        studyItem = CFDSTUDYGUI_DataModel.getCFDTW().findStudyItem(caseItem)
+        aXmlFileName = item.text(self.col.name)
+        aCaseName = caseItem.text(self.col.name)
+        aStudyName = studyItem.text(self.col.name)
+        aCase = CFDSTUDYGUI_DataModel.getCFDTW().getObjFromTwi(caseItem)
+        # if sobj != None:
+        #     if not os.path.exists(CFDSTUDYGUI_DataModel._GetPath(sobj)):
+        #         mess = cfdstudyMess.trMessage(self.tr("ENV_DLG_INVALID_FILE"),[CFD_Code(),CFDSTUDYGUI_DataModel._GetPath(sobj)])+ self.tr("STMSG_UPDATE_STUDY_INCOMING")
+        #         cfdstudyMess.aboutMessage(mess)
+        #         self.updateObjBrowser()
+        #         return
+        #     if CFDSTUDYGUI_DataModel.checkType(sobj, CFDSTUDYGUI_DataModel.dict_object["DATAfileXML"]):
+        #         aXmlFileName = sobj.GetName()
+        #         aCase = CFDSTUDYGUI_DataModel.GetCase(sobj)
+        #         aStudy = CFDSTUDYGUI_DataModel.GetStudyByObj(sobj)
+        #         if aCase:
+        #             aCaseName = aCase.GetName()
+        #         else:
+        #             mess = cfdstudyMess.trMessage(self.tr("INFO_DLG_NO_CASE_INTO_OB"),[aXmlFileName])
+        #             cfdstudyMess.criticalMessage(mess)
+        #             return
+        #         if aStudy:
+        #             aStudyName = aStudy.GetName()
+        #         else:
+        #             mess = cfdstudyMess.trMessage(self.tr("INFO_DLG_NO_CFD_STUDY_INTO_OB"),[aXmlFileName])
+        #             cfdstudyMess.warningMessage(mess)
+        #             return
+                
+        if CFDSTUDYGUI_SolverGUI.findDockWindow(aXmlFileName, aCaseName,aStudyName):
+            mess = cfdstudyMess.trMessage(self.tr("ALREADY_OPEN"),[aStudyName,aCaseName,aXmlFileName])
+            cfdstudyMess.aboutMessage(mess)
+            return
 
-                # xml case file not already opened
-                wm = self._SolverGUI.ExecGUI(self.solverParentWidget,
-                                             aXmlFileName, aCase)
-                self.updateActions()
+        # xml case file not already opened
+        wm = self._SolverGUI.ExecGUI(self.solverParentWidget,
+                                        aXmlFileName, aCase)
+        self.updateActions()
 
 
     def slotOpenCFD_GUI(self):
@@ -1958,11 +1969,12 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
             iok = CFDSTUDYGUI_DataModel._SetCaseLocation(CasePath)
             studyObj = CFDSTUDYGUI_DataModel.FindStudyByPath(StudyPath)
             caseObj  = CFDSTUDYGUI_DataModel.getSObject(studyObj,CaseName)
-            DATAObj  = CFDSTUDYGUI_DataModel.getSObject(caseObj,"DATA")
-            XMLObj   = CFDSTUDYGUI_DataModel.getSObject(DATAObj,os.path.basename(xmlfileName))
+            caseTwi = CFDSTUDYGUI_DataModel.getCFDTW().entryToTwiMap[caseObj.GetID()]
+            DATATwi  = CFDSTUDYGUI_DataModel.getCFDTW().getTwi(caseTwi,"DATA")
+            XMLTwi   = CFDSTUDYGUI_DataModel.getCFDTW().getTwi(DATATwi,os.path.basename(xmlfileName))
             codeName = CFDSTUDYGUI_DataModel.getNameCodeFromXmlCasePath(xmlfileName)
-            self.OpenCFD_GUI(XMLObj)
-            self.updateActionsXmlFile(XMLObj)
+            self.OpenCFD_GUI(XMLTwi)
+            self.updateActionsXmlFileItem(XMLTwi)
 
 
     def checkCFDCaseDir(self,filepath) :

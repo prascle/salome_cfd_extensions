@@ -149,24 +149,32 @@ class CFDSTUDYGUI_SolverGUI(QObject):
         self._CurrentWindow = None
         self.dockMainWin = None
         self._isActive = False
+        from .clientgui import getClientGui
+        from .CLSMainWindow import col
+        self.col = col   
 
 
     def ExecGUI(self, WorkSpace, xmlFileName, aCase):
         """
         Executes GUI for solver relatively CFDCode
         """
-        logging.debug("CFDSTUDY_SolverGUI.ExecGUI: ")
+        logging.debug("CFDSTUDY_SolverGUI.ExecGUI: %s", xmlFileName)
         mw = None
         aTitle = xmlFileName
         aStartPath = None
+        caseTwi = None
         if aCase != None:
-            aChildList = CFDSTUDYGUI_DataModel.ScanChildren(aCase, "^DATA$")
-            if not len(aChildList) == 1:
+            caseTwi = CFDSTUDYGUI_DataModel.getCFDTW().entryToTwiMap[aCase.GetID()]
+        
+        if caseTwi:
+            dataTwi = CFDSTUDYGUI_DataModel.getCFDTW().getTwi(caseTwi, "DATA")
+            if dataTwi is None:
                 # no DATA folder
                 mess = "DATA directory is not present in the case"
                 QMessageBox.warning(None, "Warning: ", mess)
                 return None
-            aStartPath = CFDSTUDYGUI_DataModel._GetPath(aChildList[0])
+            aStartPath = dataTwi.text(self.col.details)
+            # aStartPath = CFDSTUDYGUI_DataModel._GetPath(aChildList[0])
             if aStartPath == '':
                 aStartPath = None  # To simplify further tests
 

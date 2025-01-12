@@ -310,6 +310,15 @@ class CFDTreeWidget():
         self.moduleFolder = getClientGui().getCLSMainWindow().getSaturneFolder()
         self.col = col   
         self.moduleFolder.setIcon(col.name, getQIcon("CFDSTUDY"))
+        self.entryToTwiMap = {}
+        
+    def getObjFromTwi(self, twItem):
+        for entry in self.entryToTwiMap:
+            if self.entryToTwiMap[entry] == twItem:
+                study   = _getStudy()
+                obj = study.FindObjectID(entry)
+                return obj
+        return None
 
     def setIdCon(self, twItem, category):
             twItem.setIcon(self.col.name, getQIcon(category))
@@ -790,8 +799,32 @@ class CFDTreeWidget():
             cur = cur.parent()
         logging.debug("************* outside Study ? *****************")
         return "USRSRCFile"
+    
+    def findCaseItem(self, twItem):
+        cur = twItem
+        while cur:
+            if cur.text(self.col.id) == str(dict_object["Case"]):
+                return cur
+            cur = cur.parent()
+        logging.debug("************* outside Case ? *****************")
+        return cur
+    
+    def findStudyItem(self, twItem):
+        cur = twItem
+        while cur:
+            if cur.text(self.col.id) == str(dict_object["Study"]):
+                return cur
+            cur = cur.parent()
+        logging.debug("************* outside Study ? *****************")
+        return cur
 
-
+    def getTwi(self, parentTwi, name):
+        nbChildren = parentTwi.childCount()
+        for i in range(nbChildren) :
+            child = parentTwi.child(i)
+            if child.text(self.col.name) == name:
+                return child
+        return None
     
 #-------------------------------------------------------------------------------
 # ObjectTR is a convenient object for traduction purpose
@@ -943,17 +976,18 @@ def _SetCaseLocation(theCasePath):
     _CreateItem(studyObject,aCaseName)
     caseObject = getSObject(studyObject,aCaseName)
     twiStudy = getCFDTW().findOrCreateStudyTWI(studyObject, theStudyPath)
+    getCFDTW().entryToTwiMap[studyObject.GetID()] = twiStudy
     twiCase = getCFDTW().findOrCreateCaseTWI(caseObject, twiStudy, theCasePath)
+    getCFDTW().entryToTwiMap[caseObject.GetID()] = twiCase
     getCFDTW().rebuildTWRecursively(twiCase)
-    UpdateSubTree(caseObject)
     if getSObject(studyObject,"MESH") == None:
         _CreateItem(studyObject,"MESH")
         meshObject = getSObject(studyObject,"MESH")
         if meshObject != None:
             meshPath = os.path.join(theStudyPath, "MESH")
             twiMesh = getCFDTW().findOrCreateMeshTWI(meshObject, twiStudy, meshPath)
+            getCFDTW().entryToTwiMap[meshObject.GetID()] = twiMesh
             getCFDTW().rebuildTWRecursively(twiMesh)
-            UpdateSubTree(meshObject)
 
 
 def _SetStudyLocation(theStudyPath, theCaseNames,theCreateOpt,
@@ -1012,7 +1046,9 @@ def _SetStudyLocation(theStudyPath, theCaseNames,theCreateOpt,
         attr.SetValue(aStudyName)
         attr = builder.FindOrCreateAttribute(studyObject, "AttributeComment")
         attr.SetValue(aStudyDir)
-        getCFDTW().findOrCreateStudyTWI(studyObject, theStudyPath)
+        twiStudy = getCFDTW().findOrCreateStudyTWI(studyObject, theStudyPath)
+        getCFDTW().entryToTwiMap[studyObject.GetID()] = twiStudy
+    
 
     if iok:
         UpdateSubTree(studyObject)
@@ -1117,13 +1153,17 @@ def UpdateSubTree(theObject=None):
     @param theObject: branch of a tree of data to update.
     """
     logging.debug("UpdateSubTree")
-    if theObject != None:
-        logging.debug("UpdateSubTree -> path: %s" % _GetPath(theObject))
-        _RebuildTreeRecursively(theObject)
-    else:
-        _UpdateStudy()
-    # --- update object browser from a thread different of the main thread is not safe !
-    sg.updateObjBrowser()
+    if theObject.GetID() in getCFDTW().entryToTwiMap:
+        twi = getCFDTW().entryToTwiMap[theObject.GetID()]
+    getCFDTW().rebuildTWRecursively(twi)
+    
+    # if theObject != None:
+    #     logging.debug("UpdateSubTree -> path: %s" % _GetPath(theObject))
+    #     _RebuildTreeRecursively(theObject)
+    # else:
+    #     _UpdateStudy()
+    # # --- update object browser from a thread different of the main thread is not safe !
+    # sg.updateObjBrowser()
 
 def closeCFDStudyTree(theObject):
     """
@@ -2134,8 +2174,7 @@ def getXmlCaseNameList(theCase):
                 XmlCaseNameList.append(iter.Value().GetName())
         iter.Next()
     return XmlCaseNameList
-
-
+    
 def ScanChildren(theObject, theRegExp):
     """
     Returns a list of children data from a parent branch data.
@@ -2426,6 +2465,8 @@ def getSObject(theParent,Name) :
             SObj = i
     return SObj
 
+#def getTwi(parentTwi, name):
+    
 
 #def publishInStudySalome(SO_father, objName, idElem):
     #"""
