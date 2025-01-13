@@ -55,12 +55,13 @@ class CLSMainWindow(QMainWindow):
         self.entryItems = {}         # Entry from tree item
         self.treeItemMenuMgr = None
         self.selectedEntry = None
+        self.selectedItem = None
         
     def getSaturneFolder(self):
         return self.saturneFolder
     
-    # def getCurrentSelectedItem(self):
-    #     return self.selectedEntry
+    def getCurrentSelectedItem(self):
+        return self.selectedItem
         
     # def findCurrentStudyItem(self):
     #     cur = self.selectedEntry
@@ -71,6 +72,16 @@ class CLSMainWindow(QMainWindow):
     #     logging.debug("************* outside Study ? *****************")
     #     return None    
 
+    def initialSelection(self, item):
+        """
+        Useful when tree widget is first filled with a study and nothing was selected,
+        to detect the current study from menu/toolbar
+        """
+        if not self.ui.tw_gauche.selectedItems():
+            logging.debug("set an initial selection on tree widget")
+            self.ui.tw_gauche.setCurrentItem(item)
+            self.treeSelectionChanged()
+    
     def initContextMenus(self, treeItemMenuMgr):
         """
         The specific actions menus for each tree item are defined in clientgui.treeItemMenuMgr
@@ -238,6 +249,7 @@ class CLSMainWindow(QMainWindow):
         """
         logging.debug("new tree selection")
         selectedItems = self.ui.tw_gauche.selectedItems()
+        self.selectedItem = selectedItems[0]
         listEntries = []
         for item in selectedItems:
             logging.debug("selection: %s %s", item.text(

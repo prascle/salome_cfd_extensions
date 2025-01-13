@@ -307,7 +307,8 @@ class CFDTreeWidget():
     def __init__(self):
         from .clientgui import getClientGui
         from .CLSMainWindow import col
-        self.moduleFolder = getClientGui().getCLSMainWindow().getSaturneFolder()
+        self.getClientGui = getClientGui
+        self.moduleFolder = self.getClientGui().getCLSMainWindow().getSaturneFolder()
         self.col = col   
         self.moduleFolder.setIcon(col.name, getQIcon("CFDSTUDY"))
         self.entryToTwiMap = {}
@@ -328,6 +329,15 @@ class CFDTreeWidget():
     def setIdCon(self, twItem, category):
             twItem.setIcon(self.col.name, getQIcon(category))
             twItem.setText(self.col.id, str(getTWIid(category)))
+
+    def findCurrentStudyItem(self):
+        cur = self.getClientGui().getCLSMainWindow().getCurrentSelectedItem()
+        while cur:
+            if cur.text(self.col.id) == str(dict_object["Study"]):
+                return cur
+            cur = cur.parent()
+        logging.debug("************* outside Study ? *****************")
+        return None    
     
     def findOrCreateStudyTWI(self, studyObject, studyPath):
         logging.debug("findOrCreateStudyTWI %s", studyPath)
@@ -347,6 +357,7 @@ class CFDTreeWidget():
         self.setIdCon(twiStudy, "Study")
         twiRoot.addChild(twiStudy)
         self.entryToTwiMap[entry] = studyObject
+        self.getClientGui().getCLSMainWindow().initialSelection(twiStudy)
         return twiStudy
 
     def findOrCreateCaseTWI(self, caseObject, twiStudy, casePath):
@@ -388,14 +399,14 @@ class CFDTreeWidget():
         return twiMesh
 
     def createTWItem(self, parentTWI, itemName, itemPath):
-        logging.debug("createTWItem %s", itemPath)
         col = self.col
+        logging.debug("createTWItem %s %s %s", itemPath, itemName, parentTWI.text(col.name))
         twItem = QTreeWidgetItem()
         twItem.setText(col.name, itemName)
         twItem.setText(col.details, itemPath)
         
         # --- parent is study
-        if parentTWI == self.moduleFolder:
+        if parentTWI == self.findCurrentStudyItem():
             if os.path.isdir(itemPath):
                 if CFDSTUDYGUI_Commons.isaCFDCase(itemPath):
                     self.setIdCon(twItem, "Case")
@@ -1078,7 +1089,7 @@ def _SetStudyLocation(theStudyPath, theCaseNames,theCreateOpt,
         twiStudy = getCFDTW().findOrCreateStudyTWI(studyObject, theStudyPath)
         getCFDTW().entryToTwiMap[studyObject.GetID()] = twiStudy
     
-    if iok:
+    if iok and theCaseNames:
         _CreateItem(studyObject,theCaseNames)
         caseObject = getSObject(studyObject,theCaseNames)
         twiStudy = getCFDTW().findOrCreateStudyTWI(studyObject, theStudyPath)
@@ -1088,7 +1099,9 @@ def _SetStudyLocation(theStudyPath, theCaseNames,theCreateOpt,
         getCFDTW().entryToTwiMap[caseObject.GetID()] = twiCase
         getCFDTW().rebuildTWRecursively(twiCase)
         
+    if iok:
         UpdateSubTree(studyObject)
+        
         # TODO handle number of procs required in a consistant manner for coupled cases
         # Better handled using models/BatchRunningModel
         # if "run.cfg" in os.listdir(theStudyPath) and theCreateOpt:
