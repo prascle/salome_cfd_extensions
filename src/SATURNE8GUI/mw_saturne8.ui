@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1062</width>
-    <height>718</height>
+    <width>1288</width>
+    <height>750</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -21,6 +21,12 @@
        <enum>Qt::Horizontal</enum>
       </property>
       <widget class="QTreeWidget" name="tw_gauche">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
        <column>
         <property name="text">
          <string notr="true">1</string>
@@ -41,7 +47,7 @@
         <item row="0" column="0">
          <widget class="QTabWidget" name="tw_central">
           <property name="currentIndex">
-           <number>0</number>
+           <number>1</number>
           </property>
           <widget class="QWidget" name="tabGeom">
            <attribute name="title">
@@ -78,6 +84,12 @@
        </layout>
       </widget>
       <widget class="QFrame" name="fr_droite">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
        <property name="frameShape">
         <enum>QFrame::StyledPanel</enum>
        </property>
@@ -122,7 +134,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1062</width>
+     <width>1288</width>
      <height>24</height>
     </rect>
    </property>

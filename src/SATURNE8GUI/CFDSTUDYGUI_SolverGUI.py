@@ -167,19 +167,18 @@ class CFDSTUDYGUI_SolverGUI(QObject):
             caseTwi = CFDSTUDYGUI_DataModel.getCFDTW().entryToTwiMap[aCase.GetID()]
         
         if caseTwi:
-            dataTwi = CFDSTUDYGUI_DataModel.getCFDTW().getTwi(caseTwi, "DATA")
+            dataTwi = CFDSTUDYGUI_DataModel.getCFDTW().getTwiChildWithName(caseTwi, "DATA")
             if dataTwi is None:
-                # no DATA folder
+                # --- no DATA folder
                 mess = "DATA directory is not present in the case"
                 QMessageBox.warning(None, "Warning: ", mess)
                 return None
             aStartPath = dataTwi.text(self.col.details)
-            # aStartPath = CFDSTUDYGUI_DataModel._GetPath(aChildList[0])
             if aStartPath == '':
                 aStartPath = None  # To simplify further tests
 
         if xmlFileName != None:
-            # check for already opened case
+            # --- check for already opened case
             if aCase != None:
                 if findDockWindow(aTitle, aCase.GetName(), aCase.GetFather().GetName()):
                     fileN = str(aCase.GetFather().GetName() + "." + aCase.GetName()) + '.' + str(aTitle)
@@ -215,12 +214,6 @@ class CFDSTUDYGUI_SolverGUI(QObject):
 
     def isActive(self):
         return self._isActive
-        # if _c_CFDGUI.getDocks() == {}:
-        #     self._CurrentWindow = None
-        # if self._CurrentWindow != None:
-        #     return True
-        # else:
-        #     return False
 
 
     def okToContinue(self):
@@ -434,7 +427,7 @@ class CFDSTUDYGUI_SolverGUI(QObject):
         aTitle = self.setWindowTitle_CFD(mw, aCase, Title)
         dsk = sgPyQt.getDesktop()
 
-        objectBrowserDockWindow = findObjectBrowserDockWindow()
+        #objectBrowserDockWindow = findObjectBrowserDockWindow()
 
         self.mainWin = QMainWindow()
         self.mainWin.setWindowTitle(aTitle)
@@ -468,7 +461,8 @@ class CFDSTUDYGUI_SolverGUI(QObject):
         #                                          xmlFileName)
         # if dockMain != None:
         #     dockMain.visibilityChanged["bool"].connect(self.resizeMainWindowDock)
-
+        #self.mainWin.adjustSize()
+        #self.mainWin.resize(900, 900)
         updateObjectBrowser()
         return mw
 
@@ -477,40 +471,40 @@ class CFDSTUDYGUI_SolverGUI(QObject):
         """
         called by closeStudy in CFDSTUDYGUI.py because the Object Browser size is stored into ~/.config/salome/SalomeApprc.xxx file xxx is the salome version
         """
-        logging.debug("resizeObjectBrowserDock")
-        dsk = sgPyQt.getDesktop()
-        if dsk != None:
-            objectBrowserDockWindow = findObjectBrowserDockWindow()
-            if objectBrowserDockWindow != None:
-                dsk.resizeDocks({objectBrowserDockWindow}, {300},Qt.Horizontal)
+        logging.debug("resizeObjectBrowserDock ***************************************************************************************")
+        # dsk = sgPyQt.getDesktop()
+        # if dsk != None:
+        #     objectBrowserDockWindow = findObjectBrowserDockWindow()
+        #     if objectBrowserDockWindow != None:
+        #         dsk.resizeDocks({objectBrowserDockWindow}, {300},Qt.Horizontal)
 
 
     def resizeMainWindowDock(self,visible):
         """
         visible referred to Object Browser dock widget
         """
-        logging.debug("resizeMainWindowDock")
-        dsk = sgPyQt.getDesktop()
-        if dsk != None:
-            dock = self.sender()
-            if visible:
-                dsk.resizeDocks({dock}, {900},Qt.Horizontal)
+        logging.debug("resizeMainWindowDock ********************************************************************************************")
+        # dsk = sgPyQt.getDesktop()
+        # if dsk != None:
+        #     dock = self.sender()
+        #     if visible:
+        #         dsk.resizeDocks({dock}, {900},Qt.Horizontal)
 
 
     def resizeObjectBrowserDock(self,visible):
         """
         visible referred to Object Browser dock widget
         """
-        logging.debug("resizeObjectBrowserDock")
-        dsk = sgPyQt.getDesktop()
-        if dsk != None:
-            if visible:
-                objectBrowserDockWindow = findObjectBrowserDockWindow()
-                dsk.resizeDocks({objectBrowserDockWindow}, {300},Qt.Horizontal)
+        logging.debug("resizeObjectBrowserDock ******************************************************************************************")
+        # dsk = sgPyQt.getDesktop()
+        # if dsk != None:
+        #     if visible:
+        #         objectBrowserDockWindow = findObjectBrowserDockWindow()
+        #         dsk.resizeDocks({objectBrowserDockWindow}, {300},Qt.Horizontal)
 
-            else:
-                if self.dockMainWin != None :
-                    dsk.resizeDocks({self.dockMainWin}, {900},Qt.Horizontal)
+        #     else:
+        #         if self.dockMainWin != None :
+        #             dsk.resizeDocks({self.dockMainWin}, {900},Qt.Horizontal)
 
 
     def hideDocks(self):
@@ -544,6 +538,7 @@ class CFDSTUDYGUI_SolverGUI(QObject):
         """
         Show all the dock windows of CFDSTUDY GUI, when activating Salome CFDSTUDY module
         """
+        logging.debug("connectDockWindows")
         if _c_CFDGUI != None:
             if _c_CFDGUI.d_CfdCases != []:
                 self.showDocks()

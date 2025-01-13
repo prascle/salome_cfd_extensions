@@ -5,9 +5,11 @@ import logging
 from enum import IntEnum
 
 import SalomePyQt
-from qtsalome import QMainWindow, QTreeWidgetItem, QAbstractItemView, Qt
+from qtsalome import QMainWindow, QTreeWidgetItem, QAbstractItemView, QSize, Qt
 
 from .mw_saturne8_ui import Ui_mw_Saturne
+
+# from . import CFDSTUDYGUI_DataModel
 
 col = IntEnum('column', [('name',    0),
                          ('ref',     1),
@@ -43,6 +45,7 @@ class CLSMainWindow(QMainWindow):
         self.saturneFolder.setText(col.details, "details")
         self.saturneFolder.setText(col.entry, "entry")
         self.saturneFolder.setText(col.id, "id")
+        self.ui.tw_gauche.hideColumn(col.ref)
         self.ui.tw_gauche.addTopLevelItem(self.saturneFolder)
         self.ui.tw_gauche.itemSelectionChanged.connect(
             self.treeSelectionChanged)
@@ -55,6 +58,18 @@ class CLSMainWindow(QMainWindow):
         
     def getSaturneFolder(self):
         return self.saturneFolder
+    
+    # def getCurrentSelectedItem(self):
+    #     return self.selectedEntry
+        
+    # def findCurrentStudyItem(self):
+    #     cur = self.selectedEntry
+    #     while cur:
+    #         if cur.text(self.col.id) == str(CFDSTUDYGUI_DataModel.dict_object["Study"]):
+    #             return cur
+    #         cur = cur.parent()
+    #     logging.debug("************* outside Study ? *****************")
+    #     return None    
 
     def initContextMenus(self, treeItemMenuMgr):
         """

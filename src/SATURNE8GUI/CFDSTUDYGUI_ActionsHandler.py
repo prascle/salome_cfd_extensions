@@ -878,7 +878,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         cur = twItem
         while cur:
             if cur.text(self.col.id) == str(CFDSTUDYGUI_DataModel.dict_object["Study"]):
-                return twItem
+                return cur
             cur = cur.parent()
         logging.debug("************* outside Study ? *****************")
         return None
@@ -890,12 +890,11 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         cur = twItem
         while cur:
             if cur.text(self.col.id) == str(CFDSTUDYGUI_DataModel.dict_object["Case"]):
-                return twItem
+                return cur
             cur = cur.parent()
         logging.debug("************* outside Study ? *****************")
         return None
-
-
+    
     def updateActions(self):
         """
         Updates all action according with current selection and study states.
@@ -1289,15 +1288,17 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         """
         Builds new CFD cases.
         """
-        logging.debug("slotAddCase")
+        entry = self.selectedItem.text(self.col.entry)
+        logging.debug("slotAddCase %s", entry)
         dialog = self.DialogCollector.SetTreeLocationDialog
         dialog.__init__()
         dialog.setCaseMode()
 
-        studyObj = self._singleSelectedObject()
-        if studyObj == None:
-            return
-
+        # studyObj = self._singleSelectedObject() changer ça !
+        # if studyObj == None:
+        #     return
+        # TODO: simplify, remove use of SALOME studyObj
+        studyObj = CFDSTUDYGUI_DataModel.getCFDTW().getObjFromEntry(entry)
         dialog.StudyPath = CFDSTUDYGUI_DataModel._GetPath(studyObj)
         dialog.StudyDirName.setText(os.path.dirname(CFDSTUDYGUI_DataModel._GetPath(studyObj)))
         dialog.StudyLineEdit.setText(studyObj.GetName())
@@ -1308,14 +1309,16 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
             return
         dialog.exec_()
         if self.DialogCollector.SetTreeLocationDialog.result() != QDialog.Accepted:
-            #reinitialization
+            # --- reinitialization
             dialog.setCaseMode()
             return
         _SetCFDCode(dialog.code)
-#Get existing case name list of a CFD study
+        # --- Get existing case name list of a CFD study
         ExistingCaseNameList = CFDSTUDYGUI_DataModel.GetCaseNameList(studyObj)
+        logging.debug("ExistingCaseNameList %s", ExistingCaseNameList)
         if dialog.CaseNames != "" :
             newCaseList = str(dialog.CaseNames).strip().split()
+            logging.debug("newCaseList %s", newCaseList)
             for i in newCaseList:
                 if i in ExistingCaseNameList:
                     mess = cfdstudyMess.trMessage(self.tr("CASE_ALREADY_EXISTS"),[i,CFDSTUDYGUI_DataModel._GetPath(studyObj)])
@@ -1970,8 +1973,8 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
             studyObj = CFDSTUDYGUI_DataModel.FindStudyByPath(StudyPath)
             caseObj  = CFDSTUDYGUI_DataModel.getSObject(studyObj,CaseName)
             caseTwi = CFDSTUDYGUI_DataModel.getCFDTW().entryToTwiMap[caseObj.GetID()]
-            DATATwi  = CFDSTUDYGUI_DataModel.getCFDTW().getTwi(caseTwi,"DATA")
-            XMLTwi   = CFDSTUDYGUI_DataModel.getCFDTW().getTwi(DATATwi,os.path.basename(xmlfileName))
+            DATATwi  = CFDSTUDYGUI_DataModel.getCFDTW().getTwiChildWithName(caseTwi,"DATA")
+            XMLTwi   = CFDSTUDYGUI_DataModel.getCFDTW().getTwiChildWithName(DATATwi,os.path.basename(xmlfileName))
             codeName = CFDSTUDYGUI_DataModel.getNameCodeFromXmlCasePath(xmlfileName)
             self.OpenCFD_GUI(XMLTwi)
             self.updateActionsXmlFileItem(XMLTwi)

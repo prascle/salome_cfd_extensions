@@ -315,10 +315,15 @@ class CFDTreeWidget():
     def getObjFromTwi(self, twItem):
         for entry in self.entryToTwiMap:
             if self.entryToTwiMap[entry] == twItem:
-                study   = _getStudy()
+                study = _getStudy()
                 obj = study.FindObjectID(entry)
                 return obj
         return None
+    
+    def getObjFromEntry(self, entry):
+        study = _getStudy()
+        obj = study.FindObjectID(entry)
+        return obj
 
     def setIdCon(self, twItem, category):
             twItem.setIcon(self.col.name, getQIcon(category))
@@ -328,34 +333,58 @@ class CFDTreeWidget():
         logging.debug("findOrCreateStudyTWI %s", studyPath)
         col = self.col
         twiRoot = self.moduleFolder
+        studyName = os.path.basename(studyPath) # = studyObject.GetName()
+        # --- check if study is already in tree
+        twiStudy = self.getTwiChildWithName(twiRoot, studyName)
+        if twiStudy:
+            return twiStudy
+        # --- create  
         twiStudy = QTreeWidgetItem()
-        twiStudy.setText(col.name, studyObject.GetName())
+        twiStudy.setText(col.name, studyName)
         twiStudy.setText(col.details, studyPath)
-        twiStudy.setText(col.entry, studyObject.GetID())
+        entry = studyObject.GetID()
+        twiStudy.setText(col.entry, entry)
         self.setIdCon(twiStudy, "Study")
         twiRoot.addChild(twiStudy)
+        self.entryToTwiMap[entry] = studyObject
         return twiStudy
 
     def findOrCreateCaseTWI(self, caseObject, twiStudy, casePath):
         logging.debug("findOrCreateCaseTWI %s", casePath)
         col = self.col
+        caseName = os.path.basename(casePath)
+        # --- check if case is already in tree
+        twiCase = self.getTwiChildWithName(twiStudy, caseName)
+        if twiCase:
+            return twiCase
+        # --- create  
         twiCase = QTreeWidgetItem()
-        twiCase.setText(col.name, caseObject.GetName())
+        twiCase.setText(col.name, caseName)
         twiCase.setText(col.details, casePath)
-        twiCase.setText(col.entry, caseObject.GetID())
+        entry = caseObject.GetID()
+        twiCase.setText(col.entry, entry)
         self.setIdCon(twiCase, "Case")
         twiStudy.addChild(twiCase)
+        self.entryToTwiMap[entry] = caseObject
         return twiCase
 
     def findOrCreateMeshTWI(self, meshObject, twiStudy, meshPath):
         logging.debug("findOrCreateMeshTWI %s", meshPath)
         col = self.col
+        meshName = os.path.basename(meshPath)
+        # --- check if case is already in tree
+        twiMesh = self.getTwiChildWithName(twiStudy, meshName)
+        if twiMesh:
+            return twiMesh
+        # --- create  
         twiMesh = QTreeWidgetItem()
         twiMesh.setText(col.name, meshObject.GetName())
         twiMesh.setText(col.details, meshPath)
-        twiMesh.setText(col.entry, meshObject.GetID())
+        entry = meshObject.GetID()
+        twiMesh.setText(col.entry, entry)
         self.setIdCon(twiMesh, "MESHFolder")
         twiStudy.addChild(twiMesh)
+        self.entryToTwiMap[entry] = meshObject
         return twiMesh
 
     def createTWItem(self, parentTWI, itemName, itemPath):
@@ -818,7 +847,7 @@ class CFDTreeWidget():
         logging.debug("************* outside Study ? *****************")
         return cur
 
-    def getTwi(self, parentTwi, name):
+    def getTwiChildWithName(self, parentTwi, name):
         nbChildren = parentTwi.childCount()
         for i in range(nbChildren) :
             child = parentTwi.child(i)
@@ -955,7 +984,7 @@ def _findOrCreateComponent():
     return father
     
 def _SetCaseLocation(theCasePath):
-    logging.debug("_SetCaseLocation")
+    logging.debug("_SetCaseLocation %s", theCasePath)
     study         = _getStudy()
     builder       = study.NewBuilder()
     father        = _findOrCreateComponent()
@@ -1002,7 +1031,7 @@ def _SetStudyLocation(theStudyPath, theCaseNames,theCreateOpt,
     @type theCaseNames: C{String}
     @param theCaseNames: unix pathes of the new CFD cases to be build.
     """
-    logging.debug("_SetStudyLocation")
+    logging.debug("_SetStudyLocation %s %s", theStudyPath, theCaseNames)
 
     iok = True
     if theCopyOpt:
@@ -1049,14 +1078,22 @@ def _SetStudyLocation(theStudyPath, theCaseNames,theCreateOpt,
         twiStudy = getCFDTW().findOrCreateStudyTWI(studyObject, theStudyPath)
         getCFDTW().entryToTwiMap[studyObject.GetID()] = twiStudy
     
-
     if iok:
+        _CreateItem(studyObject,theCaseNames)
+        caseObject = getSObject(studyObject,theCaseNames)
+        twiStudy = getCFDTW().findOrCreateStudyTWI(studyObject, theStudyPath)
+        getCFDTW().entryToTwiMap[studyObject.GetID()] = twiStudy
+        theCasePath = os.path.join(theStudyPath, theCaseNames)
+        twiCase = getCFDTW().findOrCreateCaseTWI(caseObject, twiStudy, theCasePath)
+        getCFDTW().entryToTwiMap[caseObject.GetID()] = twiCase
+        getCFDTW().rebuildTWRecursively(twiCase)
+        
         UpdateSubTree(studyObject)
         # TODO handle number of procs required in a consistant manner for coupled cases
         # Better handled using models/BatchRunningModel
-        if "run.cfg" in os.listdir(theStudyPath) and theCreateOpt:
-            if theNprocs != "":
-                pass
+        # if "run.cfg" in os.listdir(theStudyPath) and theCreateOpt:
+        #     if theNprocs != "":
+        #         pass
 
     return iok
 
@@ -1129,34 +1166,38 @@ def updateCasePath(theCasePath):
     return mess == ""
 
 
-def _UpdateStudy():
-    """
-    Updates CFD study tree of data from the root.
-    """
-    logging.debug("_UpdateStudy")
-    study   = _getStudy()
-    component = study.FindComponent(__MODULE_NAME__)
-    if component == None:
-        return
+# def _UpdateStudy():
+#     """
+#     Updates CFD study tree of data from the root.
+#     """
+#     logging.debug("_UpdateStudy")
+#     study   = _getStudy()
+#     component = study.FindComponent(__MODULE_NAME__)
+#     if component == None:
+#         return
 
-    iter  = study.NewChildIterator(component)
-    while iter.More():
-        _RebuildTreeRecursively(iter.Value())
-        iter.Next()
+#     iter  = study.NewChildIterator(component)
+#     while iter.More():
+#         _RebuildTreeRecursively(iter.Value())
+#         iter.Next()
 
 
-def UpdateSubTree(theObject=None):
+def UpdateSubTree(theObject):
     """
     Updates CFD study sub-tree from the argument object.
 
     @type theObject: C{SObject}
     @param theObject: branch of a tree of data to update.
     """
-    logging.debug("UpdateSubTree")
-    if theObject.GetID() in getCFDTW().entryToTwiMap:
-        twi = getCFDTW().entryToTwiMap[theObject.GetID()]
-    getCFDTW().rebuildTWRecursively(twi)
-    
+    entry = ""
+    if theObject:
+        entry = theObject.GetID()
+    logging.debug("UpdateSubTree %s", entry)
+    if theObject:
+        if theObject.GetID() in getCFDTW().entryToTwiMap:
+            twi = getCFDTW().entryToTwiMap[theObject.GetID()]
+            getCFDTW().rebuildTWRecursively(twi)
+            
     # if theObject != None:
     #     logging.debug("UpdateSubTree -> path: %s" % _GetPath(theObject))
     #     _RebuildTreeRecursively(theObject)
