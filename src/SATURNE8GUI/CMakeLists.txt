@@ -45,6 +45,7 @@ SET(_lib_SCRIPTS
   CFDSTUDYGUI_SolverGUI.py
   clientgui.py
   CLSMainWindow.py
+  constants.py
   initlog.py
   __init__.py
   SATURNE8_DataModel.py

@@ -2,20 +2,20 @@
 
 import os
 import logging
-from enum import IntEnum
+# from enum import IntEnum
 
 import SalomePyQt
 from qtsalome import QMainWindow, QTreeWidgetItem, QAbstractItemView, QSize, Qt
 
 from .mw_saturne8_ui import Ui_mw_Saturne
 
-# from . import CFDSTUDYGUI_DataModel
+from .constants import col
 
-col = IntEnum('column', [('name',    0),
-                         ('ref',     1),
-                         ('details', 2),
-                         ('entry',   3),
-                         ('id',      4)])
+# col = IntEnum('column', [('name',    0),
+#                          ('ref',     1),
+#                          ('details', 2),
+#                          ('entry',   3),
+#                          ('id',      4)])
 
 _sgPyQt = None
 

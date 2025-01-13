@@ -100,6 +100,7 @@ from . import CFDSTUDYGUI_SolverGUI
 from . import CFDSTUDYGUI_Commons
 from .CFDSTUDYGUI_CommandMgr import runCommand
 from .CFDSTUDYGUI_Message import cfdstudyMess
+from .constants import col
 from code_saturne.base.cs_exec_environment import separate_args
 
 #-------------------------------------------------------------------------------
@@ -356,7 +357,7 @@ class CFDTreeWidget():
         twiStudy.setText(col.entry, entry)
         self.setIdCon(twiStudy, "Study")
         twiRoot.addChild(twiStudy)
-        self.entryToTwiMap[entry] = studyObject
+        self.entryToTwiMap[entry] = twiStudy
         self.getClientGui().getCLSMainWindow().initialSelection(twiStudy)
         return twiStudy
 
@@ -376,7 +377,7 @@ class CFDTreeWidget():
         twiCase.setText(col.entry, entry)
         self.setIdCon(twiCase, "Case")
         twiStudy.addChild(twiCase)
-        self.entryToTwiMap[entry] = caseObject
+        self.entryToTwiMap[entry] = twiCase
         return twiCase
 
     def findOrCreateMeshTWI(self, meshObject, twiStudy, meshPath):
@@ -395,7 +396,7 @@ class CFDTreeWidget():
         twiMesh.setText(col.entry, entry)
         self.setIdCon(twiMesh, "MESHFolder")
         twiStudy.addChild(twiMesh)
-        self.entryToTwiMap[entry] = meshObject
+        self.entryToTwiMap[entry] = twiMesh
         return twiMesh
 
     def createTWItem(self, parentTWI, itemName, itemPath):
@@ -410,6 +411,7 @@ class CFDTreeWidget():
             if os.path.isdir(itemPath):
                 if CFDSTUDYGUI_Commons.isaCFDCase(itemPath):
                     self.setIdCon(twItem, "Case")
+                    _CreateItem(self.getObjFromEntry(parentTWI.text(col.entry)), itemName)
                 else:
                     boo = False
                     dirList = os.listdir(itemPath)
@@ -993,7 +995,7 @@ def _findOrCreateComponent():
         except:
             pass
     return father
-    
+ 
 def _SetCaseLocation(theCasePath):
     logging.debug("_SetCaseLocation %s", theCasePath)
     study         = _getStudy()
@@ -1016,9 +1018,9 @@ def _SetCaseLocation(theCasePath):
     _CreateItem(studyObject,aCaseName)
     caseObject = getSObject(studyObject,aCaseName)
     twiStudy = getCFDTW().findOrCreateStudyTWI(studyObject, theStudyPath)
-    getCFDTW().entryToTwiMap[studyObject.GetID()] = twiStudy
+    #getCFDTW().entryToTwiMap[studyObject.GetID()] = twiStudy
     twiCase = getCFDTW().findOrCreateCaseTWI(caseObject, twiStudy, theCasePath)
-    getCFDTW().entryToTwiMap[caseObject.GetID()] = twiCase
+    #getCFDTW().entryToTwiMap[caseObject.GetID()] = twiCase
     getCFDTW().rebuildTWRecursively(twiCase)
     if getSObject(studyObject,"MESH") == None:
         _CreateItem(studyObject,"MESH")
@@ -1026,9 +1028,9 @@ def _SetCaseLocation(theCasePath):
         if meshObject != None:
             meshPath = os.path.join(theStudyPath, "MESH")
             twiMesh = getCFDTW().findOrCreateMeshTWI(meshObject, twiStudy, meshPath)
-            getCFDTW().entryToTwiMap[meshObject.GetID()] = twiMesh
+            #getCFDTW().entryToTwiMap[meshObject.GetID()] = twiMesh
             getCFDTW().rebuildTWRecursively(twiMesh)
-
+ 
 
 def _SetStudyLocation(theStudyPath, theCaseNames,theCreateOpt,
                       theCopyOpt, theNameRef = "", theSyrthesOpt =False, theSyrthesCase = "",theNprocs=""):
@@ -1093,10 +1095,10 @@ def _SetStudyLocation(theStudyPath, theCaseNames,theCreateOpt,
         _CreateItem(studyObject,theCaseNames)
         caseObject = getSObject(studyObject,theCaseNames)
         twiStudy = getCFDTW().findOrCreateStudyTWI(studyObject, theStudyPath)
-        getCFDTW().entryToTwiMap[studyObject.GetID()] = twiStudy
+        #getCFDTW().entryToTwiMap[studyObject.GetID()] = twiStudy
         theCasePath = os.path.join(theStudyPath, theCaseNames)
         twiCase = getCFDTW().findOrCreateCaseTWI(caseObject, twiStudy, theCasePath)
-        getCFDTW().entryToTwiMap[caseObject.GetID()] = twiCase
+        #getCFDTW().entryToTwiMap[caseObject.GetID()] = twiCase
         getCFDTW().rebuildTWRecursively(twiCase)
         
     if iok:
@@ -2199,62 +2201,41 @@ def GetCaseList(theStudy):
 
     return CaseList
 
-def getXmlCaseNameList(theCase):
+def getXmlCaseNameList(caseItem):
     """
-    Returns a list of xml file names from case aCase
+    Returns a list of xml file names in the DATA folder of a case
     """
-    XmlCaseNameList = []
-    if not checkType(theCase, dict_object["Case"]):
-        return XmlCaseNameList
     aChildList = []
-
-    aChildList = ScanChildren(theCase, "^DATA$")
+    aChildList = ScanChildren(caseItem, "^DATA$")
     if len(aChildList) != 1:
-        # no DATA folder
+        # --- no DATA folder
         print("There are no data folder in selected by user case")
         return
 
-    aDataObj =  aChildList[0]
-    aDataPath = _GetPath(aDataObj)
-    study   = _getStudy()
-    builder = study.NewBuilder()
-
-    iter  = study.NewChildIterator(aDataObj)
-
-    while iter.More():
-        aName = iter.Value().GetName()
-        if aName != "" :
-            if "XML" in subprocess.check_output(["file",_GetPath(iter.Value())]).decode():
-                XmlCaseNameList.append(iter.Value().GetName())
-        iter.Next()
+    dataItem =  aChildList[0]
+    aDataPath = dataItem.text(col.details)
+    nbChildren = dataItem.childCount()
+    XmlCaseNameList = []
+    for i in range(nbChildren):
+        childItem = dataItem.child(i)
+        path = childItem.text(col.details)
+        if "XML" in subprocess.check_output(["file", path]).decode():
+            XmlCaseNameList.append(childItem.text(col.name))
     return XmlCaseNameList
     
-def ScanChildren(theObject, theRegExp):
+def ScanChildren(twItem, theRegExp):
     """
     Returns a list of children data from a parent branch data.
     The list of the children is filtered whith a regular expression.
-
-    @type theObject: C{SObject}
-    @param theObject: parent data.
-    @type theRegExp: C{String}
-    @param theRegExp: regular expression to filter children data.
-    @return: list of branch of children data.
-    @rtype: C{list} of C{SObject}
     """
-    ChildList = []
-
-    study   = _getStudy()
-    builder = study.NewBuilder()
-
-    iter  = study.NewChildIterator(theObject)
-
-    while iter.More():
-        aName = iter.Value().GetName()
-        if not aName == "" and re.match(theRegExp, aName):
-            ChildList.append(iter.Value())
-        iter.Next()
-
-    return ChildList
+    children = []
+    nbChildren = twItem.childCount()
+    for i in range(nbChildren):
+        child = twItem.child(i)
+        name = child.text(col.name)
+        if re.match(theRegExp, name):
+            children.append(child)
+    return children
 
 
 def ScanChildNames(theObject, theRegExp):
@@ -2409,52 +2390,52 @@ def checkCaseLaunchGUI(theCase):
     return is_case
 
 
-def checkCode(theCase):
-    """
-    Checks if I{theCase} is code_saturne or neptune_cfd.
+# def checkCode(theCase):
+#     """
+#     Checks if I{theCase} is code_saturne or neptune_cfd.
 
-    @type theCase: C{SObject}
-    @param theCase: object from the Object Browser.
-    @rtype: C{CFD_Saturne} or C{CFD_Neptune}
-    @return: C{True} if C{theCase} has the script to start GUI in the DATA folder.
-    """
+#     @type theCase: C{SObject}
+#     @param theCase: object from the Object Browser.
+#     @rtype: C{CFD_Saturne} or C{CFD_Neptune}
+#     @return: C{True} if C{theCase} has the script to start GUI in the DATA folder.
+#     """
 
-    # TODO: this should be a feature od the code_saturne scripts
-    # (for exampe a sub-command of "code_saturne run" or code_saturne.info")
+#     # TODO: this should be a feature od the code_saturne scripts
+#     # (for exampe a sub-command of "code_saturne run" or code_saturne.info")
 
-    if not checkType(theCase, dict_object["Case"]):
-        return CFD_Code()
+#     if not checkType(theCase, dict_object["Case"]):
+#         return CFD_Code()
 
-    aChildList = ScanChildren(theCase, "^DATA$")
-    if not len(aChildList) == 1:
-        # no DATA folder
-        print("There is no data folder in selected case")
-        return CFD_Code()
+#     aChildList = ScanChildren(theCase, "^DATA$")
+#     if not len(aChildList) == 1:
+#         # no DATA folder
+#         print("There is no data folder in selected case")
+#         return CFD_Code()
 
-    aDataObj =  aChildList[0]
-    aDataPath = _GetPath(aDataObj)
+#     aDataObj =  aChildList[0]
+#     aDataPath = _GetPath(aDataObj)
 
-    # code_saturne is returned by default
-    # all xml files are read until NEPTUNE_CFD is found
-    # thus it will not work with a mix of saturne/neptune xml files
+#     # code_saturne is returned by default
+#     # all xml files are read until NEPTUNE_CFD is found
+#     # thus it will not work with a mix of saturne/neptune xml files
 
-    fileList = ScanChildren(aDataObj, "^.*$")
+#     fileList = ScanChildren(aDataObj, "^.*$")
 
-    for ifile in fileList:
-        filePath = _GetPath(ifile)
-        if os.path.isfile(filePath):
-            fd = os.open(filePath,os.O_RDONLY)
-            f = os.fdopen(fd)
-            l1 = f.readline()
-            if l1.startswith('''<?xml version="1.0" encoding="utf-8"?><NEPTUNE_CFD_GUI'''):
-                return CFD_Neptune
-            elif l1.startswith('''<?xml version="1.0" encoding="utf-8"?>''') :
-                l2 = f.readline()
-                if l2.startswith('''<NEPTUNE_CFD_GUI'''):
-                    return CFD_Neptune
-            f.close()
+#     for ifile in fileList:
+#         filePath = _GetPath(ifile)
+#         if os.path.isfile(filePath):
+#             fd = os.open(filePath,os.O_RDONLY)
+#             f = os.fdopen(fd)
+#             l1 = f.readline()
+#             if l1.startswith('''<?xml version="1.0" encoding="utf-8"?><NEPTUNE_CFD_GUI'''):
+#                 return CFD_Neptune
+#             elif l1.startswith('''<?xml version="1.0" encoding="utf-8"?>''') :
+#                 l2 = f.readline()
+#                 if l2.startswith('''<NEPTUNE_CFD_GUI'''):
+#                     return CFD_Neptune
+#             f.close()
 
-    return CFD_Saturne
+#     return CFD_Saturne
 
 
 def isLinkPathObject(theObject):

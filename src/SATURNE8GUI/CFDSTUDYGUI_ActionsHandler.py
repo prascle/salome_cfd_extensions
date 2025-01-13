@@ -68,6 +68,7 @@ from .CFDSTUDYGUI_Commons import _SetCFDCode, CFD_Code, BinCode, CFD_Saturne
 from .CFDSTUDYGUI_Commons import CFD_Neptune, sgPyQt, sg, CheckCFD_CodeEnv
 from . import CFDSTUDYGUI_SolverGUI
 from .CFDSTUDYGUI_Message import cfdstudyMess
+from .constants import col
 
 #-------------------------------------------------------------------------------
 # log config
@@ -1298,6 +1299,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         # if studyObj == None:
         #     return
         # TODO: simplify, remove use of SALOME studyObj
+        studyTwi = CFDSTUDYGUI_DataModel.getCFDTW().entryToTwiMap[entry]
         studyObj = CFDSTUDYGUI_DataModel.getCFDTW().getObjFromEntry(entry)
         dialog.StudyPath = CFDSTUDYGUI_DataModel._GetPath(studyObj)
         dialog.StudyDirName.setText(os.path.dirname(CFDSTUDYGUI_DataModel._GetPath(studyObj)))
@@ -1345,6 +1347,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
                                                               theSyrthesOpt  = False,
                                                               theSyrthesCase = "",
                                                               theNprocs      = "")
+        CFDSTUDYGUI_DataModel.getCFDTW().rebuildTWRecursively(studyTwi)
         self.updateObjBrowser()
 
 
@@ -1488,61 +1491,66 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
 
     def slotRemoveAction(self):
         logging.debug("slotRemoveAction")
-        listSobj = self._multipleSelectedObject()
-        study = CFDSTUDYGUI_DataModel._getStudy()
-        if listSobj != [] :
-            self.removeAction_multipleSobjects(listSobj)
+        if self.selectedItem is not None:
+            self.removeAction_obj(self.selectedItem)
+        # listSobj = self._multipleSelectedObject()
+        # study = CFDSTUDYGUI_DataModel._getStudy()
+        # if listSobj != [] :
+        #     self.removeAction_multipleSobjects(listSobj)
 
-    def removeAction_multipleSobjects(self,listSobj):
-        for sobj in listSobj:
-            if sobj != None:
-                self.removeAction_obj(sobj)
+    # def removeAction_multipleSobjects(self,listSobj):
+    #     for sobj in listSobj:
+    #         if sobj != None:
+    #             self.removeAction_obj(sobj)
 
-    def removeAction_obj(self,sobj):
+    def removeAction_obj(self, twItem):
         """
         Deletes file or folder from the Object Browser, and from the unix system files.
         Delete dock windows attached to a CFD Study if this study is deleted from the Object Browser.
         """
-        if sobj != None:
-            sobjpath = CFDSTUDYGUI_DataModel._GetPath(sobj)
-            if CFDSTUDYGUI_DataModel.checkType(sobj, CFDSTUDYGUI_DataModel.dict_object["Case"]):
-                mess = cfdstudyMess.trMessage(self.tr("REMOVE_ACTION_CONFIRM_MESS"),[sobjpath])
-            elif CFDSTUDYGUI_DataModel.checkType(sobj, CFDSTUDYGUI_DataModel.dict_object["RESUSubFolder"]):
-                mess = cfdstudyMess.trMessage(self.tr("REMOVE_RESU_SUB_FOLDER_ACTION_CONFIRM_MESS"),[sobjpath])
-            elif CFDSTUDYGUI_DataModel.checkType(sobj, CFDSTUDYGUI_DataModel.dict_object["RESUSubErrFolder"]):
-                mess = cfdstudyMess.trMessage(self.tr("REMOVE_RESU_SUB_FOLDER_ACTION_CONFIRM_MESS"),[sobjpath])
-            elif CFDSTUDYGUI_DataModel.checkType(sobj, CFDSTUDYGUI_DataModel.dict_object["RESU_COUPLINGSubFolder"]):
-                mess = cfdstudyMess.trMessage(self.tr("REMOVE_RESU_SUB_FOLDER_ACTION_CONFIRM_MESS"),[sobjpath])
-            else :
-                mess = cfdstudyMess.trMessage(self.tr("REMOVE_FILE_ACTION_CONFIRM_MESS"),[sobjpath])
+        itemPath = twItem.text(self.col.details)
+        itemId = 0
+        itemTextId = twItem.text(self.col.id)
+        if itemTextId:
+            itemId = int(itemTextId)
+        if itemPath:
+            if itemId == CFDSTUDYGUI_DataModel.dict_object["Case"]:
+                mess = cfdstudyMess.trMessage(self.tr("REMOVE_ACTION_CONFIRM_MESS"),[itemPath])
+            elif itemId == CFDSTUDYGUI_DataModel.dict_object["RESUSubFolder"]:
+                mess = cfdstudyMess.trMessage(self.tr("REMOVE_RESU_SUB_FOLDER_ACTION_CONFIRM_MESS"),[itemPath])
+            elif itemId == CFDSTUDYGUI_DataModel.dict_object["RESUSubErrFolder"]:
+                mess = cfdstudyMess.trMessage(self.tr("REMOVE_RESU_SUB_FOLDER_ACTION_CONFIRM_MESS"),[itemPath])
+            elif itemId == CFDSTUDYGUI_DataModel.dict_object["RESU_COUPLINGSubFolder"]:
+                mess = cfdstudyMess.trMessage(self.tr("REMOVE_RESU_SUB_FOLDER_ACTION_CONFIRM_MESS"),[itemPath])
+            else:
+                mess = cfdstudyMess.trMessage(self.tr("REMOVE_FILE_ACTION_CONFIRM_MESS"),[itemPath])
             if cfdstudyMess.warningMessage(mess) == QMessageBox.No:
                 return
-            if CFDSTUDYGUI_DataModel.checkType(sobj, CFDSTUDYGUI_DataModel.dict_object["Case"]):
-                c = CFDSTUDYGUI_DataModel.GetCase(sobj).GetName()
-                caseName  = sobj.GetName()
-                studyObj = CFDSTUDYGUI_DataModel.GetStudyByObj(sobj)
-                studyName = studyObj.GetName()
-
-                if c == caseName:
-                    XmlCaseNameList = CFDSTUDYGUI_DataModel.getXmlCaseNameList(sobj)
-                    if XmlCaseNameList != [] :
-                        for i in XmlCaseNameList :
-                            if CFDSTUDYGUI_SolverGUI.findDockWindow(i,caseName, studyName):
-                                self._SolverGUI.removeDockWindow(studyName, caseName,i)
-                    if CFDSTUDYGUI_SolverGUI.findDockWindow("unnamed", caseName, studyName):
-                        self._SolverGUI.removeDockWindow(studyName, caseName,"unnamed")
+            
+            if itemId == CFDSTUDYGUI_DataModel.dict_object["Case"]:
+                caseName = twItem.text(self.col.name)
+                studyName = twItem.parent().text(self.col.name)
+                XmlCaseNameList = CFDSTUDYGUI_DataModel.getXmlCaseNameList(twItem)
+                if XmlCaseNameList != [] :
+                    for i in XmlCaseNameList :
+                        if CFDSTUDYGUI_SolverGUI.findDockWindow(i,caseName, studyName):
+                            self._SolverGUI.removeDockWindow(studyName, caseName,i)
+                if CFDSTUDYGUI_SolverGUI.findDockWindow("unnamed", caseName, studyName):
+                    self._SolverGUI.removeDockWindow(studyName, caseName,"unnamed")
             watchCursor = QCursor(Qt.WaitCursor)
             QApplication.setOverrideCursor(watchCursor)
-#           As we remove case directory which can be the current working directory, we need to change the current working directory eitherwise there is a problem with os.getcwd() or equivalent
-            father = sobj.GetFather()
-            fatherpath = CFDSTUDYGUI_DataModel._GetPath(father)
+            # --- As we remove case directory which can be the current working directory, 
+            #     we need to change the current working directory otherwise there is a problem with os.getcwd() or equivalent
+            fatherItem = twItem.parent()
+            fatherpath = os.path.dirname(itemPath)
             os.chdir(fatherpath)
-            if os.path.isdir(sobjpath):
-                shutil.rmtree(sobjpath)
-            elif os.path.isfile(sobjpath):
-                os.remove(sobjpath)
+            if os.path.isdir(itemPath):
+                shutil.rmtree(itemPath)
+            elif os.path.isfile(itemPath):
+                os.remove(itemPath)
+            self.getClientGui().getCLSMainWindow().initialSelection(fatherItem)
             QApplication.restoreOverrideCursor()
-            self.updateObjBrowser(father)
+            CFDSTUDYGUI_DataModel.getCFDTW().rebuildTWRecursively(fatherItem)
 
 
     def slotCopyInDATA(self):
