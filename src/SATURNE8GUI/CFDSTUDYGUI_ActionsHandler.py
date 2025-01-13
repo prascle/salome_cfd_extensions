@@ -1889,7 +1889,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
 
     def OpenCFD_GUI(self,item):
         """
-        Open into Salome the CFD GUI from an XML file whose name is sobj.GetName()
+        Open into Salome the CFD GUI from an XML file, given it's tree item
         """
         logging.debug("OpenCFD_GUI")
         import os
@@ -1933,7 +1933,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
 
         # xml case file not already opened
         wm = self._SolverGUI.ExecGUI(self.solverParentWidget,
-                                        aXmlFileName, aCase)
+                                        aXmlFileName, caseItem)
         self.updateActions()
 
 
@@ -2074,67 +2074,79 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         """
         Build the command line for the GUI of Code_Saturne/NEPTUNE_CFD.
         Launch a new CFD GUI with popup menu on case object into SALOME Object browser
+        the selected item should be a caseItem (popup menu item only available in this case)
         """
-        logging.debug("slotLaunchGUI")
+        caseItem = self.selectedItem
+        itemName = caseItem.text(self.col.name)
+        logging.debug("slotLaunchGUI %s", itemName)
         #get current selection
-        sobj = self._singleSelectedObject()
-        if study:
-            aStudy = study
-        else:
-            aStudy = CFDSTUDYGUI_DataModel.GetStudyByObj(sobj)
+        idText = caseItem.text(self.col.id)
+        id = 0
+        if id is not None:
+            id = int(idText)
+        logging.debug("item id %s",id)
+        if  id == CFDSTUDYGUI_DataModel.dict_object["Case"]:
+            wm = self._SolverGUI.ExecGUI(self.solverParentWidget, None, caseItem)
+            self.updateActions()
 
-        if aStudy == None:
-            return
-        # get current case
-        if case:
-            aCase = case
-        else:
-            aCase = CFDSTUDYGUI_DataModel.GetCase(sobj)
-        import os
-        if not os.path.exists(CFDSTUDYGUI_DataModel._GetPath(aCase)):
-            mess = cfdstudyMess.trMessage(self.tr("ENV_DLG_INVALID_DIRECTORY"),[CFDSTUDYGUI_DataModel._GetPath(aCase)])+ self.tr("STMSG_UPDATE_STUDY_INCOMING")
-            cfdstudyMess.aboutMessage(mess)
-            self.updateObjBrowser()
-            return
+        # sobj = self._singleSelectedObject()
+        # if study:
+        #     aStudy = study
+        # else:
+        #     aStudy = CFDSTUDYGUI_DataModel.GetStudyByObj(sobj)
 
-        # get current case name
-        aCaseName = aCase.GetName()
-        aXmlFile = None
+        # if aStudy == None:
+        #     return
+        # # get current case
+        # if case:
+        #     aCase = case
+        # else:
+        #     aCase = CFDSTUDYGUI_DataModel.GetCase(sobj)
+        # import os
+        # if not os.path.exists(CFDSTUDYGUI_DataModel._GetPath(aCase)):
+        #     mess = cfdstudyMess.trMessage(self.tr("ENV_DLG_INVALID_DIRECTORY"),[CFDSTUDYGUI_DataModel._GetPath(aCase)])+ self.tr("STMSG_UPDATE_STUDY_INCOMING")
+        #     cfdstudyMess.aboutMessage(mess)
+        #     self.updateObjBrowser()
+        #     return
 
-        # object of DATA folder
-        aChildList = CFDSTUDYGUI_DataModel.ScanChildren(aCase, "^DATA$")
-        if not len(aChildList) == 1:
-            # no DATA folder
-            return
+        # # get current case name
+        # aCaseName = aCase.GetName()
+        # aXmlFile = None
 
-        aDataObj =  aChildList[0]
-        aDataPath = CFDSTUDYGUI_DataModel._GetPath(aDataObj)
-        # object of 'CFDSTUDYGUI' file
-        import sys
-        is_case = False
-        aChildList = CFDSTUDYGUI_DataModel.ScanChildren(aDataObj, "^run.cfg$")
-        if len(aChildList) == 1:
-            is_case = True
-        if not is_case:
-            aChildList = CFDSTUDYGUI_DataModel.ScanChildren(aCase, "^SRC$")
-            if len(aChildList) == 1:
-                is_case = True
-        if not is_case:
-            mess = cfdstudyMess.trMessage(self.tr("NO_CASE_STRUCTURE_FOUND"),[aCaseName])
-            cfdstudyMess.aboutMessage(mess)
-            return
-        elif CFD_Code() == CFD_Neptune:
-            if sys.platform.startswith("win"):
-                aChildList = CFDSTUDYGUI_DataModel.ScanChildren(aDataObj, "^NeptuneGUI.bat$")
-            else:
-                aChildList = CFDSTUDYGUI_DataModel.ScanChildren(aDataObj, "^NeptuneGUI$")
-            if len(aChildList) == 0:
-                # no 'CFDSTUDYGUI' file
-                mess = cfdstudyMess.trMessage(self.tr("NO_CASE_STRUCTURE_FOUND"),[aCaseName])
-                cfdstudyMess.aboutMessage(mess)
-                return
-        wm = self._SolverGUI.ExecGUI(self.solverParentWidget, None, aCase)
-        self.updateActions()
+        # # object of DATA folder
+        # aChildList = CFDSTUDYGUI_DataModel.ScanChildren(aCase, "^DATA$")
+        # if not len(aChildList) == 1:
+        #     # no DATA folder
+        #     return
+
+        # aDataObj =  aChildList[0]
+        # aDataPath = CFDSTUDYGUI_DataModel._GetPath(aDataObj)
+        # # object of 'CFDSTUDYGUI' file
+        # import sys
+        # is_case = False
+        # aChildList = CFDSTUDYGUI_DataModel.ScanChildren(aDataObj, "^run.cfg$")
+        # if len(aChildList) == 1:
+        #     is_case = True
+        # if not is_case:
+        #     aChildList = CFDSTUDYGUI_DataModel.ScanChildren(aCase, "^SRC$")
+        #     if len(aChildList) == 1:
+        #         is_case = True
+        # if not is_case:
+        #     mess = cfdstudyMess.trMessage(self.tr("NO_CASE_STRUCTURE_FOUND"),[aCaseName])
+        #     cfdstudyMess.aboutMessage(mess)
+        #     return
+        # elif CFD_Code() == CFD_Neptune:
+        #     if sys.platform.startswith("win"):
+        #         aChildList = CFDSTUDYGUI_DataModel.ScanChildren(aDataObj, "^NeptuneGUI.bat$")
+        #     else:
+        #         aChildList = CFDSTUDYGUI_DataModel.ScanChildren(aDataObj, "^NeptuneGUI$")
+        #     if len(aChildList) == 0:
+        #         # no 'CFDSTUDYGUI' file
+        #         mess = cfdstudyMess.trMessage(self.tr("NO_CASE_STRUCTURE_FOUND"),[aCaseName])
+        #         cfdstudyMess.aboutMessage(mess)
+        #         return
+        # wm = self._SolverGUI.ExecGUI(self.solverParentWidget, None, aCase)
+        # self.updateActions()
 
 
     def slotUpdateCasePath(self):

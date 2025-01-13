@@ -154,7 +154,7 @@ class CFDSTUDYGUI_SolverGUI(QObject):
         self.col = col   
 
 
-    def ExecGUI(self, WorkSpace, xmlFileName, aCase):
+    def ExecGUI(self, WorkSpace, xmlFileName, caseTwi):
         """
         Executes GUI for solver relatively CFDCode
         """
@@ -162,11 +162,13 @@ class CFDSTUDYGUI_SolverGUI(QObject):
         mw = None
         aTitle = xmlFileName
         aStartPath = None
-        caseTwi = None
-        if aCase != None:
-            caseTwi = CFDSTUDYGUI_DataModel.getCFDTW().entryToTwiMap[aCase.GetID()]
+        caseName = None
+        studyName = None
         
         if caseTwi:
+            caseName = caseTwi.text(self.col.name)
+            studyTwi = caseTwi.parent()
+            studyName = studyTwi.text(self.col.name)
             dataTwi = CFDSTUDYGUI_DataModel.getCFDTW().getTwiChildWithName(caseTwi, "DATA")
             if dataTwi is None:
                 # --- no DATA folder
@@ -177,16 +179,16 @@ class CFDSTUDYGUI_SolverGUI(QObject):
             if aStartPath == '':
                 aStartPath = None  # To simplify further tests
 
-        if xmlFileName != None:
+        if xmlFileName:
             # --- check for already opened case
-            if aCase != None:
-                if findDockWindow(aTitle, aCase.GetName(), aCase.GetFather().GetName()):
-                    fileN = str(aCase.GetFather().GetName() + "." + aCase.GetName()) + '.' + str(aTitle)
+            if caseTwi:
+                 if findDockWindow(aTitle, caseName, studyName):
+                    fileN = str(studyName + "." + caseName()) + '.' + str(aTitle)
                     mess = "Case file " + fileN + " is already opened"
                     QMessageBox.warning(None, "Warning: ", mess)
                     return
         else:
-            if aStartPath != None:
+            if aStartPath:
                 run_conf_path = os.path.join(aStartPath, 'run.cfg')
                 if os.path.isfile(run_conf_path):
                     run_conf = cs_run_conf.run_conf(run_conf_path)
@@ -194,17 +196,11 @@ class CFDSTUDYGUI_SolverGUI(QObject):
             if xmlFileName == None:
                 aTitle = 'setup.xml'
 
-            if aCase != None:
-                if findDockWindow(aTitle, aCase.GetName(), aCase.GetFather().GetName()):
-                    mess = "A case is already opened"
-                    QMessageBox.warning(None, "Warning: ",mess)
-                    return
-
-        if aCase != None:
-            if aStartPath != None and aStartPath != '':
+        if caseTwi:
+            if aStartPath:
                 os.chdir(aStartPath)
         logging.debug("aStartPath: %s", aStartPath)
-        mw = self.launchGUI(WorkSpace, aCase, xmlFileName)
+        mw = self.launchGUI(WorkSpace, caseTwi, xmlFileName)
         if mw != None:
             self._CurrentWindow = mw
         self._isActive =True
@@ -382,16 +378,16 @@ class CFDSTUDYGUI_SolverGUI(QObject):
         cs_info.main(argv_info, package(name='neptune_cfd'))
 
 
-    def setWindowTitle_CFD(self,mw,aCase,baseTitleName):
-        if aCase != None:
-            fatherName = aCase.GetFather().GetName()
-            aTitle = str(fatherName + "." + aCase.GetName()) + '.' + str(baseTitleName)
-            if mw != None:
-                mw.setWindowTitle(aTitle)
+    def setWindowTitle_CFD(self,mw,caseTwi,baseTitleName):
+        caseName = caseTwi.text(self.col.name)
+        studyName =caseTwi.parent().text(self.col.name)
+        aTitle = studyName + '.' + caseName + '.' + baseTitleName
+        if mw != None:
+            mw.setWindowTitle(aTitle)
         return aTitle
 
 
-    def launchGUI(self, WorkSpace, aCase, xmlFileName):
+    def launchGUI(self, WorkSpace, caseTwi, xmlFileName):
         """
         mw.dockWidgetBrowser is the Browser of the CFD MainView
         """
@@ -415,7 +411,7 @@ class CFDSTUDYGUI_SolverGUI(QObject):
 
         case, splash = process_cmd_line(args)
         try:
-            mw = MainView(pkg, case, aCase)
+            mw = MainView(pkg, case, caseTwi)
         except:
             mess = "Error in Opening CFD GUI"
             QMessageBox.warning(None, "Warning", mess, QMessageBox.Ok,
@@ -424,7 +420,7 @@ class CFDSTUDYGUI_SolverGUI(QObject):
 
         # Put the standard panel of the MainView inside a QDockWidget
         # in the SALOME Desktop
-        aTitle = self.setWindowTitle_CFD(mw, aCase, Title)
+        aTitle = self.setWindowTitle_CFD(mw, caseTwi, Title)
         dsk = sgPyQt.getDesktop()
 
         #objectBrowserDockWindow = findObjectBrowserDockWindow()
