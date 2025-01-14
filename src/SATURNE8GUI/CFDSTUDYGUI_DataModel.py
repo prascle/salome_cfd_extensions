@@ -326,6 +326,16 @@ class CFDTreeWidget():
         study = _getStudy()
         obj = study.FindObjectID(entry)
         return obj
+    
+    def removeObjFromTwi(self, twi):
+        entry = twi.text(col.entry)
+        if entry:
+            obj = self.getObjFromEntry(entry)
+            if obj:
+                study   = _getStudy()
+                builder = study.NewBuilder()
+                builder.RemoveObjectWithChildren(obj)
+            self.entryToTwiMap.pop(entry)
 
     def setIdCon(self, twItem, category):
             twItem.setIcon(self.col.name, getQIcon(category))
@@ -411,7 +421,11 @@ class CFDTreeWidget():
             if os.path.isdir(itemPath):
                 if CFDSTUDYGUI_Commons.isaCFDCase(itemPath):
                     self.setIdCon(twItem, "Case")
-                    _CreateItem(self.getObjFromEntry(parentTWI.text(col.entry)), itemName)
+                    obj = _CreateItem(self.getObjFromEntry(parentTWI.text(col.entry)), itemName)
+                    if obj:
+                        entry = obj.GetID()
+                        twItem.setText(col.entry, entry)
+                        self.entryToTwiMap[entry] = twItem
                 else:
                     boo = False
                     dirList = os.listdir(itemPath)
@@ -795,24 +809,25 @@ class CFDTreeWidget():
         nbChildren = twItem.childCount()
         childPaths = {}
         for i in range(nbChildren):
-            c = twItem.child(i)
-            p = c.text(col.details)
-            childPaths[p] = c
+            itm = twItem.child(i)
+            pth = itm.text(col.details)
+            childPaths[pth] = itm
         
         for aName in lst:
             aPath = os.path.join(itemPath, aName)
             if aPath not in childPaths:
                 nc = self.createTWItem(twItem, aName, aPath)
         
-        for k, v in childPaths.items():
-            aName = os.path.basename(k)
+        for pth, itm in childPaths.items():
+            aName = os.path.basename(pth)
             if aName not in lst:
-                twItem.removeChild(v)
+                self.removeObjFromTwi(itm)
+                twItem.removeChild(itm)
         
         nbChildren = twItem.childCount()
         for i in range(nbChildren):
-            c = twItem.child(i)
-            self.rebuildTWRecursively(c)
+            itm = twItem.child(i)
+            self.rebuildTWRecursively(itm)
         logging.debug("rebuildTWRecursively %s END", itemPath)
 
     def detectUSERSitem(self, twItem):
@@ -1393,6 +1408,7 @@ def _CreateObject(theFather, theBuilder, theName):
     attr = theBuilder.FindOrCreateAttribute(newChild, "AttributeName")
     attr.SetValue(theName)
     _FillObject(newChild, theFather, theBuilder)
+    return newChild
 
 
 def _CreateItem(theFather,theNewName) :
@@ -1404,7 +1420,9 @@ def _CreateItem(theFather,theNewName) :
     logging.debug("_CreateItem: NewItem = %s with Parent = %s" % (theNewName,theFather.GetName()))
     if theNewName not in ScanChildNames(theFather,  ".*") :
         theBuilder = _getNewBuilder()
-        _CreateObject(theFather, theBuilder, theNewName)
+        newChild = _CreateObject(theFather, theBuilder, theNewName)
+        return newChild
+    return None
 
 
 def getNameCodeFromXmlCasePath(XMLCasePath) :
@@ -2237,6 +2255,30 @@ def ScanChildren(twItem, theRegExp):
             children.append(child)
     return children
 
+def ScanChildrenObj(theObject, theRegExp):
+    """
+    Returns a list of children data from a parent branch data.
+    The list of the children is filtered whith a regular expression.
+
+    @type theObject: C{SObject}
+    @param theObject: parent data.
+    @type theRegExp: C{String}
+    @param theRegExp: regular expression to filter children data.
+    @return: list of branch of children data.
+    @rtype: C{list} of C{SObject}
+    """
+    ChildList = []
+    study   = _getStudy()
+    builder = study.NewBuilder()
+    iter  = study.NewChildIterator(theObject)
+
+    while iter.More():
+        aName = iter.Value().GetName()
+        if not aName == "" and re.match(theRegExp, aName):
+            ChildList.append(iter.Value())
+        iter.Next()
+
+    return ChildList
 
 def ScanChildNames(theObject, theRegExp):
     """
@@ -2493,7 +2535,7 @@ def setCaseInProcess(theCasePath, isInProcess):
 
 
 def getSObject(theParent,Name) :
-    Sobjlist = ScanChildren(theParent,  ".*")
+    Sobjlist = ScanChildrenObj(theParent,  ".*")
     SObj = None
     for i in Sobjlist :
         if i.GetName() == Name :
