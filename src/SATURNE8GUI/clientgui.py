@@ -130,7 +130,9 @@ class ClientGui():
         #                            menuSaturne8, 10)
         # getSalomePyQt().createMenu(separator,
         #                            menuSaturne8, -1, 10)
-        
+    
+    def getVTKViewer(self):
+        return self._VTKViewer
 
     def initialize(self):
         """

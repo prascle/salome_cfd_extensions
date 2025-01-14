@@ -198,6 +198,13 @@ dict_object["SRCSYRFolder"]             = 100108
 dict_object["USRSRCSYRFile"]            = 100109
 dict_object["CouplingStudy"]            = 100110
 dict_object["OpenSyrthesCaseFile"]      = 100111
+
+dict_object["Display"]   = 100200
+dict_object["Show"]      = 100201
+dict_object["ShowOnly"]  = 100202
+dict_object["Hide"]      = 100203
+dict_object["FitAll"]    = 100204
+
 d_dirMesh      = {}
 MESHSubFolder = "MESHSubFolder"
 MESHSubFolder_int = 200000

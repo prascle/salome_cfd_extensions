@@ -102,6 +102,12 @@ CopyInSRCAction               = 25
 CloseStudyAction              = 27
 DisplayImageAction            = 28
 
+#display action
+ShowAction                    = 30
+ShowOnlyAction                = 31
+HideAction                    = 32
+FitAllAction                  = 33
+
 #export/convert actions
 ExportInParaViSAction         = 40
 ExportInSMESHAction           = 41
@@ -370,13 +376,6 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         action_id = sgPyQt.actionId(action)
         self._ActionMap[action_id] = action
         self._CommonActionIdMap[ViewAction] = action_id
-        # action = QAction(ObjectTR.tr("VIEW_ACTION_TEXT"), sgPyQt.getDesktop())
-        # action.setToolTip(ObjectTR.tr("VIEW_ACTION_TIP"))
-        # #action.setIcon(ObjectTR.tr("VIEW_ACTION_ICON"))
-        # action.triggered.connect(self.slotViewAction)
-        # action_id = 123456
-        # self._ActionMap[action_id] = action
-        # self._CommonActionIdMap[ViewAction] = action_id
 
         action = sgPyQt.createAction(-1,\
                                       ObjectTR.tr("EDIT_ACTION_TEXT"),\
@@ -460,6 +459,55 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         action_id = sgPyQt.actionId(action)
         self._ActionMap[action_id] = action
         self._CommonActionIdMap[DisplayMESHAction] = action_id
+
+        action = sgPyQt.createAction(-1,\
+                                      "Show",\
+                                      "Show the mesh or submesh in 3D View",\
+                                      "Show the mesh or submesh in 3D View",\
+                                      ObjectTR.tr("MESH_OBJ_ICON"))
+        action.triggered.connect(self.slotShow)
+        action_id = sgPyQt.actionId(action)
+        self._ActionMap[action_id] = action
+        self._CommonActionIdMap[ShowAction] = action_id
+
+        action = sgPyQt.createAction(-1,\
+                                      "Show only",\
+                                      "Show only the mesh or submesh in 3D View",\
+                                      "Show only the mesh or submesh in 3D View",\
+                                      ObjectTR.tr("MESH_OBJ_ICON"))
+        action.triggered.connect(self.slotShowOnly)
+        action_id = sgPyQt.actionId(action)
+        self._ActionMap[action_id] = action
+        self._CommonActionIdMap[ShowOnlyAction] = action_id  
+
+        action = sgPyQt.createAction(-1,\
+                                      "Hide",\
+                                      "Hide the mesh or submesh in 3D View",\
+                                      "Hide the mesh or submesh in 3D View",\
+                                      ObjectTR.tr("MESH_OBJ_ICON"))
+        action.triggered.connect(self.slotHide)
+        action_id = sgPyQt.actionId(action)
+        self._ActionMap[action_id] = action
+        self._CommonActionIdMap[HideAction] = action_id  
+    
+        action = sgPyQt.createAction(-1,\
+                                      "Fit all",\
+                                      "Fit all in 3D View",\
+                                      "Fit all in 3D View",\
+                                      ObjectTR.tr("MESH_OBJ_ICON"))
+        action.triggered.connect(self.slotFitAll)
+        action_id = sgPyQt.actionId(action)
+        self._ActionMap[action_id] = action
+        self._CommonActionIdMap[FitAllAction] = action_id  
+
+        # action = QAction("show", sgPyQt.getDesktop())
+        # action.setToolTip("Show the mesh or submesh in 3D View")
+        # action.setIcon(ObjectTR.tr("MESH_OBJ_ICON"))
+        # action.triggered.connect(self.slotViewAction)
+        # action_id = 123456
+        # self._ActionMap[action_id] = action
+        # self._CommonActionIdMap[ViewAction] = action_id
+
 
 # popup added to hide the mesh.
 
@@ -902,33 +950,13 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         This function connected to selection change signal.
         """
         logging.debug("updateActions")
-        # component = CFDSTUDYGUI_DataModel._getComponent()
-        # if component == None:
-        #     #disable all actions except Study Location
-        #     for i in self._CommonActionIdMap:
-        #         if not i == InfoCFDSTUDYAction:
-        #             if i == SetStudyAction or i == OpenAnExistingCase:
-        #                 self.commonAction(i).setEnabled(True)
-        #             else:
-        #                 self.commonAction(i).setEnabled(False)
-        # else:
-        #     #enable all actions
-        #     for i in self._CommonActionIdMap:
-        #         if not i == InfoCFDSTUDYAction:
-        #             self.commonAction(i).setEnabled(True)
 
         #enable all actions
         for i in self._CommonActionIdMap:
             if not i == InfoCFDSTUDYAction:
                  self.commonAction(i).setEnabled(True)
 
-        # selection handler
-        # sobj = self._singleSelectedObject()
-        # if sobj == None : #multiple selection not authorized
         items = self.getClientGui().getTWSelectedItems()
-        # item = None
-        # if len(items):
-        #     item = items[0]
         
         if len(items) != 1:
             logging.debug("no selection or multiple selection")
@@ -939,17 +967,13 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
                     else:
                         self.commonAction(i).setEnabled(False)#multiple selection not authorized
 
-        # if sobj != None:
         if len(items) == 1:
             item = items[0]
             id = item.text(self.col.id)
             logging.debug("single selection %s", id)
-            # isStudy = CFDSTUDYGUI_DataModel.checkType(sobj, CFDSTUDYGUI_DataModel.dict_object["Study"])
             isStudy = (id == str(CFDSTUDYGUI_DataModel.dict_object["Study"]))
             self.commonAction(AddCaseAction).setEnabled(isStudy)
-            # aStudy = CFDSTUDYGUI_DataModel.GetStudyByObj(sobj)
             aStudy = self.findStudyItem(item)
-            #aCase = CFDSTUDYGUI_DataModel.GetCase(sobj)
             aCase = self.findCaseItem(item)
 
             if aCase != None:
@@ -962,8 +986,6 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
 
             if aStudy != None and aCase != None:
                 logging.debug("aStudy != None and aCase != None")
-                # boo = CFDSTUDYGUI_DataModel.checkType(sobj, CFDSTUDYGUI_DataModel.dict_object["DATALaunch"]) or 
-                #       CFDSTUDYGUI_DataModel.checkType(sobj, CFDSTUDYGUI_DataModel.dict_object["Case"])
                 boo = (id == str(CFDSTUDYGUI_DataModel.dict_object["DATALaunch"])) or \
                       (id == str(CFDSTUDYGUI_DataModel.dict_object["Case"]))
                 self.commonAction(LaunchGUIAction).setEnabled(boo)
@@ -993,12 +1015,9 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
             self.solverAction(NCSolverHelpTheory).setEnabled(False)
             self.solverAction(NCSolverHelpDoxygen).setEnabled(False)
 
-        # if sobj != None:
         if len(items) == 1:
             item = items[0]
             self.updateActionsXmlFileItem(item)
-            # if CFDSTUDYGUI_DataModel.checkType(sobj.GetFather(), CFDSTUDYGUI_DataModel.dict_object["CouplingStudy"]) and \
-            #    CFDSTUDYGUI_DataModel.checkType(sobj, CFDSTUDYGUI_DataModel.dict_object["Case"]):
             if (id == str(CFDSTUDYGUI_DataModel.dict_object["Case"])):
                 idParent = item.parent().text(self.col.id)
                 if (idParent == str(CFDSTUDYGUI_DataModel.dict_object["CouplingStudy"])):  
@@ -1007,19 +1026,15 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
                 if (idParent == str(CFDSTUDYGUI_DataModel.dict_object["Study"])):  
                     self.commonAction(RemoveAction).setEnabled(True)
                     self.commonAction(RemoveAction).setVisible(True)
-            # if CFDSTUDYGUI_DataModel.checkType(sobj.GetFather(), CFDSTUDYGUI_DataModel.dict_object["Study"]) and \
-            #    CFDSTUDYGUI_DataModel.checkType(sobj, CFDSTUDYGUI_DataModel.dict_object["Case"]):
-            #     self.commonAction(RemoveAction).setEnabled(True)
-            #     self.commonAction(RemoveAction).setVisible(True)
-            # if CFDSTUDYGUI_DataModel.checkType(sobj, CFDSTUDYGUI_DataModel.dict_object["RESUSubFolder"]):
             if (id == str(CFDSTUDYGUI_DataModel.dict_object["RESUSubFolder"])):
                 self.commonAction(RemoveAction).setVisible(True)
-            # if CFDSTUDYGUI_DataModel.checkType(sobj, CFDSTUDYGUI_DataModel.dict_object["RESUSubErrFolder"]):
             if (id == str(CFDSTUDYGUI_DataModel.dict_object["RESUSubErrFolder"])):
                 self.commonAction(RemoveAction).setVisible(True)
-            # if CFDSTUDYGUI_DataModel.checkType(sobj, CFDSTUDYGUI_DataModel.dict_object["RESU_COUPLINGSubFolder"]):
             if (id == str(CFDSTUDYGUI_DataModel.dict_object["RESU_COUPLINGSubFolder"])):
                 self.commonAction(RemoveAction).setVisible(True)
+                
+        for act in (ShowAction, ShowOnlyAction, HideAction, FitAllAction):
+            self.commonAction(act).setVisible(True)
 
 
     def updateActionsXmlFileItem(self, item) :
@@ -1211,35 +1226,43 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         elif id == "VTKViewer":
             popup.addAction(self.commonAction(DisplayTypeSHADED))
             popup.addAction(self.commonAction(DisplayTypeWIREFRAME))
-        else:
+                  
+        # else:
+        #     # TODO: simplify
+        #     for sobj in self._multipleSelectedObject():
+        #         if sobj != None:
+        #             if sobj.GetFatherComponent().GetName() == "Mesh":
+        #                 if sobj.GetFather().GetName() == "Mesh":
+        #                     #Comment: mesh under Mesh module root in the Object browser
 
-            for sobj in self._multipleSelectedObject():
-                if sobj != None:
-                    if sobj.GetFatherComponent().GetName() == "Mesh":
-                        if sobj.GetFather().GetName() == "Mesh":
-                            #Comment: mesh under Mesh module root in the Object browser
+        #                     CFDSTUDYGUI_DataModel.SetAutoColor(sobj.GetFather())
 
-                            CFDSTUDYGUI_DataModel.SetAutoColor(sobj.GetFather())
+        #                     for i in [DisplayMESHAction, HideMESHAction]:
+        #                         popup.addAction(self.commonAction(i))
+        #                         self.commonAction(i).setEnabled(True)
 
-                            for i in [DisplayMESHAction, HideMESHAction]:
-                                popup.addAction(self.commonAction(i))
-                                self.commonAction(i).setEnabled(True)
+        #                 meshGroupObject, group = CFDSTUDYGUI_DataModel.getMeshFromGroup(sobj) # on teste et on recupere le groupe
 
-                        meshGroupObject, group = CFDSTUDYGUI_DataModel.getMeshFromGroup(sobj) # on teste et on recupere le groupe
+        #                 if meshGroupObject != None:
+        #                     if len(self.l_color) == 0:
+        #                         self.l_color = self.ul_color
+        #                     if len(self.l_color) != 0:
+        #                         a = self.l_color[0]
+        #                         self.ul_color.append(a)
+        #                         self.l_color.remove(a)
+        #                         x,y,z=a
+        #                         group.SetColor(SALOMEDS.Color(x,y,z))
 
-                        if meshGroupObject != None:
-                            if len(self.l_color) == 0:
-                                self.l_color = self.ul_color
-                            if len(self.l_color) != 0:
-                                a = self.l_color[0]
-                                self.ul_color.append(a)
-                                self.l_color.remove(a)
-                                x,y,z=a
-                                group.SetColor(SALOMEDS.Color(x,y,z))
-
-                            for i in [DisplayGroupMESHAction, DisplayOnlyGroupMESHAction, HideGroupMESHAction]:
-                                popup.addAction(self.commonAction(i))
-                                self.commonAction(i).setEnabled(True)
+        #                     for i in [DisplayGroupMESHAction, DisplayOnlyGroupMESHAction, HideGroupMESHAction]:
+        #                         popup.addAction(self.commonAction(i))
+        #                         self.commonAction(i).setEnabled(True)
+           
+        if id ==id == CFDSTUDYGUI_DataModel.dict_object["MEDFile"] \
+             or id == CFDSTUDYGUI_DataModel.dict_object["Display"]:
+            popup.addAction(self.commonAction(ShowAction))
+            popup.addAction(self.commonAction(ShowOnlyAction))
+            popup.addAction(self.commonAction(HideAction))
+            popup.addAction(self.commonAction(FitAllAction))
 
 
     def slotStudyLocation(self):
@@ -1788,7 +1811,48 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
                 cfdstudyMess.warningMessage(mess)
         QApplication.restoreOverrideCursor()
 
+    def slotShow(self):
+        """
+        """
+        item = self.selectedItem
+        entry = item.text(col.entry)
+        logging.debug("menu show %s", entry)
+        sgPyQt.activateViewManagerAndView(self.getClientGui().getVTKViewer())
+        if entry:
+            salome.sg.Display(entry)
+        salome.sg.FitAll()
 
+    def slotShowOnly(self):
+        """
+        """
+        item = self.selectedItem
+        entry = item.text(col.entry)
+        logging.debug("menu show only%s", entry)
+        sgPyQt.activateViewManagerAndView(self.getClientGui().getVTKViewer())
+        if entry:
+            salome.sg.DisplayOnly(entry)
+        salome.sg.FitAll()
+
+    def slotHide(self):
+        """
+        """
+        item = self.selectedItem
+        entry = item.text(col.entry)
+        logging.debug("menu hide %s", entry)
+        if entry:
+            sgPyQt.activateViewManagerAndView(self.getClientGui().getVTKViewer())
+            isVisible = salome.sg.IsInCurrentView(entry)
+            logging.debug("isInCurrentView %s, %s", entry, isVisible)
+            logging.debug(" hide mesh %s", entry)
+            salome.sg.Erase(entry)
+            
+    def slotFitAll(self):
+        item = self.selectedItem
+        entry = item.text(col.entry)
+        sgPyQt.activateViewManagerAndView(self.getClientGui().getVTKViewer())
+        logging.debug("menu FitAll %s", entry)
+        salome.sg.FitAll()
+            
     def slotDisplayMESHGroups(self):
         """
         Changed on November 2010 for the popup menu: SMESH Group Mesh objects can have the slotDisplayMESHGroups directly

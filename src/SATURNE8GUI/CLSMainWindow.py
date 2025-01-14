@@ -2,7 +2,6 @@
 
 import os
 import logging
-# from enum import IntEnum
 
 import SalomePyQt
 from qtsalome import QMainWindow, QTreeWidgetItem, QAbstractItemView, QSize, Qt
@@ -10,12 +9,6 @@ from qtsalome import QMainWindow, QTreeWidgetItem, QAbstractItemView, QSize, Qt
 from .mw_saturne8_ui import Ui_mw_Saturne
 
 from .constants import col
-
-# col = IntEnum('column', [('name',    0),
-#                          ('ref',     1),
-#                          ('details', 2),
-#                          ('entry',   3),
-#                          ('id',      4)])
 
 _sgPyQt = None
 
@@ -62,15 +55,6 @@ class CLSMainWindow(QMainWindow):
     
     def getCurrentSelectedItem(self):
         return self.selectedItem
-        
-    # def findCurrentStudyItem(self):
-    #     cur = self.selectedEntry
-    #     while cur:
-    #         if cur.text(self.col.id) == str(CFDSTUDYGUI_DataModel.dict_object["Study"]):
-    #             return cur
-    #         cur = cur.parent()
-    #     logging.debug("************* outside Study ? *****************")
-    #     return None    
 
     def initialSelection(self, item):
         """
@@ -186,24 +170,11 @@ class CLSMainWindow(QMainWindow):
         :param list liste: a list of (parent, entry, name, offset) for each child
                            of the mesh in SALOME study (@see utilsstudy.DumpMesh)
         """
+        from .CFDSTUDYGUI_DataModel import dict_object
         logging.debug("detailsMeshGroups %s %s", medFile, liste)
-        # --- the med file must already registered in the the tree as a conduction or radiation mesh
-        # meshItem = None
-        # if medFile in self.saturneCondMeshes.keys():
-        #     meshItem = self.saturneCondMeshes[medFile]
-        # elif medFile in self.saturneRayMeshes.keys():
-        #     meshItem = self.saturneRayMeshes[medFile]
         if meshItem is None:
             logging.debug("meshItem is None")
             return
-        # --- the .syr_desc file associated to the mesh has been produced by the med2saturne converter
-        #     get all the Saturne references in a list
-        # syrdesc = self.readSyrDesc(medFile)
-        # refList = []
-        # for k1, dicType in syrdesc.items():
-        #     for k2, ref in dicType.items():
-        #         refList.append(int(ref))
-        # logging.debug("refList: %s", refList)
         groupTypes = ("faces", "nodes", "edges", "volumes")
         parentItem = meshItem
         for (parent, entry, name, offset) in liste:
@@ -221,22 +192,11 @@ class CLSMainWindow(QMainWindow):
                 parentItem = groupTypeItem
             # --- offset 2 gives groupType(parent), group entry and name in Salome Study.
             else:
-                # ref = ''
-                # for aType in groupTypes:
-                #     if aType in parent.lower():
-                #         if name in syrdesc[aType]:
-                #             ref = syrdesc[aType][name]
-                #         else:
-                #             refint = 1  # for the case empty list of Saturne references
-                #             if len(refList):
-                #                 refList.sort()
-                #                 refint = refList[-1] + 1
-                #             refList.append(refint)
-                #             ref = str(refint)
                 groupItem = QTreeWidgetItem()
                 groupItem.setText(col.name, name)
                 # groupItem.setText(col.ref, ref)
                 groupItem.setText(col.entry, entry)
+                groupItem.setText(col.id, str(dict_object["Display"]))
                 self.entryItems[entry] = groupItem
                 parentItem.addChild(groupItem)
         self.ui.tw_gauche.expandItem(meshItem)
