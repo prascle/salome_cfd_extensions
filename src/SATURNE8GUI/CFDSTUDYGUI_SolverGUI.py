@@ -395,6 +395,7 @@ class CFDSTUDYGUI_SolverGUI(QObject):
         from code_saturne.gui.cs_gui import process_cmd_line
         from code_saturne.gui.base.MainView import MainView
         from code_saturne.base.cs_package import package
+        from .clientgui import getClientGui
 
         self.Workspace = WorkSpace
 
@@ -436,6 +437,7 @@ class CFDSTUDYGUI_SolverGUI(QObject):
         lbl = li.widget()
         lbl.setText(aTitle)
         self.Workspace.addWidget(self.mainWin, 1, 0, -1, -1)
+        getClientGui().getCLSMainWindow().setHSplitterSizes(300, 600, 750)
 
         # self.dockMainWin = QDockWidget(aTitle)
         # self.dockMainWin.setWidget(self.mainWin)

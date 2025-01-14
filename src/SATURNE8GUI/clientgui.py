@@ -89,47 +89,6 @@ class ClientGui():
 
         self.casesToReload = []
 
-        # self.dict_command = {
-        #     951: self.loadfile,
-        #     952: self.savefile,
-        #     970: self.createOrLoadCase,
-        # }
-
-        # self.dict_actions = {
-        #     "loadfile":      951,
-        #     "savefile":      952,
-        #     "createOrLoadCase": 970,
-        # }
-
-        # # Load File, Save File actions
-        # getSalomePyQt().createAction(self.dict_actions["loadfile"],
-        #                              "Load text File",
-        #                              "Load text file")
-        # getSalomePyQt().createAction(self.dict_actions["savefile"],
-        #                              "Save text File",
-        #                              "Save text file")
-        # # Separator
-        # separator = getSalomePyQt().createSeparator()
-        # getSalomePyQt().createAction(self.dict_actions["createOrLoadCase"],
-        #                              "Create or Load a Saturne Case",
-        #                              "Create or Load a Saturne Case")
-        # # Separator
-        # separator = getSalomePyQt().createSeparator()
-
-        # # Get Menu 'File'
-        # menuFile = getSalomePyQt().createMenu("File", -1, -1)
-        # # Add actions in the menu 'File'
-        # getSalomePyQt().createMenu(separator,                     menuFile, -1, 10)
-        # getSalomePyQt().createMenu(self.dict_actions["loadfile"], menuFile, 10)
-        # getSalomePyQt().createMenu(self.dict_actions["savefile"], menuFile, 10)
-        # getSalomePyQt().createMenu(separator,                     menuFile, -1, 10)
-        # # Create 'Saturne8' menu
-        # menuSaturne8 = getSalomePyQt().createMenu("Saturne8", -1, -1, 50)
-        # # Add actions in the menu 'Saturne8'
-        # getSalomePyQt().createMenu(self.dict_actions["createOrLoadCase"],
-        #                            menuSaturne8, 10)
-        # getSalomePyQt().createMenu(separator,
-        #                            menuSaturne8, -1, 10)
     
     def getVTKViewer(self):
         return self._VTKViewer
@@ -297,14 +256,6 @@ class ClientGui():
         """
         """
         logging.debug("OnGUIEvent: %s", commandID)
-        # if commandID in self.dict_command:
-        #     logging.debug("OnGUIEvent: %s", commandID)
-        #     try:
-        #         self.dict_command[commandID]()
-        #     except:
-        #         traceback.print_exc()
-        # else:
-        #     logging.warning("the command is not implemented: %s", commandID)
 
     def onSelectionUpdated(self, entryList):
         """
@@ -369,28 +320,6 @@ class ClientGui():
         if self.widget is not None:
             self.widget.close()
 
-    # def createOrLoadCase(self, withoutDialog=False):
-    #     """
-    #     """
-    #     showDialog = not withoutDialog
-    #     logging.debug("createOrLoadCase %s", showDialog)
-    #     first = True
-    #     if self.widget is None:
-    #         sct.saturneIHMContext.setDataFile("")
-    #         self.widget = MainView(
-    #             getSalomePyQt().getDesktop(), True, showDialog)
-    #         self.widget.titleChanged.connect(self.updateSaturneTitle)
-    #     else:
-    #         first = False
-    #         self.widget.New_File()
-    #     self.widget.saturneIHMCollector.DialogNew.welcomeRejected.connect(
-    #         self.closeWelcomeDialog)
-
-    #     if first:
-    #         self.clsmainw.ui.pb_createLoadCase.hide()
-    #         self.clsmainw.ui.gl_fr_droite.removeItem(
-    #             self.clsmainw.ui.hl_pb_createLoadCase)
-    #         self.clsmainw.ui.gl_fr_droite.addWidget(self.widget, 1, 0, -1, -1)
 
     def unloadCase(self, caseName):
         """

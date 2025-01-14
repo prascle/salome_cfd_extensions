@@ -49,6 +49,9 @@ class CLSMainWindow(QMainWindow):
         self.treeItemMenuMgr = None
         self.selectedEntry = None
         self.selectedItem = None
+    
+    def setHSplitterSizes(self, l1, l2, l3):
+        self.ui.splitter.setSizes([l1,l2,l3])
         
     def getSaturneFolder(self):
         return self.saturneFolder
