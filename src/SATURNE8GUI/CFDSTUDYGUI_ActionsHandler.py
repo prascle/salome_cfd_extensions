@@ -209,8 +209,6 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         
         from .clientgui import getClientGui
         self.getClientGui = getClientGui
-        from .CLSMainWindow import col
-        self.col = col   
  
         self.l_color = [(1,0,0),(0,1,0),(0,0,1),(1,1,0),(1,0,1),(0,1,1),]
         self.ul_color = []
@@ -926,7 +924,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         """
         cur = twItem
         while cur:
-            if cur.text(self.col.id) == str(CFDSTUDYGUI_DataModel.dict_object["Study"]):
+            if cur.text(col.id) == str(CFDSTUDYGUI_DataModel.dict_object["Study"]):
                 return cur
             cur = cur.parent()
         logging.debug("************* outside Study ? *****************")
@@ -938,7 +936,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         """
         cur = twItem
         while cur:
-            if cur.text(self.col.id) == str(CFDSTUDYGUI_DataModel.dict_object["Case"]):
+            if cur.text(col.id) == str(CFDSTUDYGUI_DataModel.dict_object["Case"]):
                 return cur
             cur = cur.parent()
         logging.debug("************* outside Study ? *****************")
@@ -969,7 +967,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
 
         if len(items) == 1:
             item = items[0]
-            id = item.text(self.col.id)
+            id = item.text(col.id)
             logging.debug("single selection %s", id)
             isStudy = (id == str(CFDSTUDYGUI_DataModel.dict_object["Study"]))
             self.commonAction(AddCaseAction).setEnabled(isStudy)
@@ -1019,7 +1017,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
             item = items[0]
             self.updateActionsXmlFileItem(item)
             if (id == str(CFDSTUDYGUI_DataModel.dict_object["Case"])):
-                idParent = item.parent().text(self.col.id)
+                idParent = item.parent().text(col.id)
                 if (idParent == str(CFDSTUDYGUI_DataModel.dict_object["CouplingStudy"])):  
                     self.commonAction(RemoveAction).setEnabled(False)
                     self.commonAction(RemoveAction).setVisible(False)
@@ -1038,7 +1036,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
 
 
     def updateActionsXmlFileItem(self, item) :
-        id = item.text(self.col.id)
+        id = item.text(col.id)
         logging.debug("updateActionsXmlFile %s", id)
         isStudy = (id == str(CFDSTUDYGUI_DataModel.dict_object["Study"]))
         self.commonAction(AddCaseAction).setEnabled(isStudy)
@@ -1100,7 +1098,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         @param popup: popup menu from the Object Browser.
         """
         self.selectedItem = item
-        idText = item.text(self.col.id)
+        idText = item.text(col.id)
         id = 0
         if id is not None:
             id = int(idText)
@@ -1312,7 +1310,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         """
         Builds new CFD cases.
         """
-        entry = self.selectedItem.text(self.col.entry)
+        entry = self.selectedItem.text(col.entry)
         logging.debug("slotAddCase %s", entry)
         dialog = self.DialogCollector.SetTreeLocationDialog
         dialog.__init__()
@@ -1427,7 +1425,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
             # if sobj is not None:
             #     path = CFDSTUDYGUI_DataModel._GetPath(sobj)
             if self.selectedItem is not None:
-                path = self.selectedItem.text(self.col.details)
+                path = self.selectedItem.text(col.details)
                 try:
                     if re.match(".*emacs$", viewerName):
                         subprocess.Popen([viewerName, path, "-f", "toggle-read-only"])
@@ -1531,9 +1529,9 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         Deletes file or folder from the Object Browser, and from the unix system files.
         Delete dock windows attached to a CFD Study if this study is deleted from the Object Browser.
         """
-        itemPath = twItem.text(self.col.details)
+        itemPath = twItem.text(col.details)
         itemId = 0
-        itemTextId = twItem.text(self.col.id)
+        itemTextId = twItem.text(col.id)
         if itemTextId:
             itemId = int(itemTextId)
         if itemPath:
@@ -1551,8 +1549,8 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
                 return
             
             if itemId == CFDSTUDYGUI_DataModel.dict_object["Case"]:
-                caseName = twItem.text(self.col.name)
-                studyName = twItem.parent().text(self.col.name)
+                caseName = twItem.text(col.name)
+                studyName = twItem.parent().text(col.name)
                 XmlCaseNameList = CFDSTUDYGUI_DataModel.getXmlCaseNameList(twItem)
                 if XmlCaseNameList != [] :
                     for i in XmlCaseNameList :
@@ -1748,9 +1746,9 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         QApplication.setOverrideCursor(waitCursor)
 
         if self.selectedItem is not None:
-            path = self.selectedItem.text(self.col.details)
+            path = self.selectedItem.text(col.details)
             entry = self.getClientGui().importMedMesh(path)
-            self.selectedItem.setText(self.col.entry, entry)
+            self.selectedItem.setText(col.entry, entry)
             
         # sobj = self._singleSelectedObject()
         # if not sobj == None:
@@ -1965,38 +1963,16 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         """
         logging.debug("OpenCFD_GUI")
         import os
-        id = item.text(self.col.id)
+        id = item.text(col.id)
         if id != str(CFDSTUDYGUI_DataModel.dict_object["DATAfileXML"]):
             logging.debug("wrong type of file")
             return
         caseItem = CFDSTUDYGUI_DataModel.getCFDTW().findCaseItem(item)
         studyItem = CFDSTUDYGUI_DataModel.getCFDTW().findStudyItem(caseItem)
-        aXmlFileName = item.text(self.col.name)
-        aCaseName = caseItem.text(self.col.name)
-        aStudyName = studyItem.text(self.col.name)
+        aXmlFileName = item.text(col.name)
+        aCaseName = caseItem.text(col.name)
+        aStudyName = studyItem.text(col.name)
         aCase = CFDSTUDYGUI_DataModel.getCFDTW().getObjFromTwi(caseItem)
-        # if sobj != None:
-        #     if not os.path.exists(CFDSTUDYGUI_DataModel._GetPath(sobj)):
-        #         mess = cfdstudyMess.trMessage(self.tr("ENV_DLG_INVALID_FILE"),[CFD_Code(),CFDSTUDYGUI_DataModel._GetPath(sobj)])+ self.tr("STMSG_UPDATE_STUDY_INCOMING")
-        #         cfdstudyMess.aboutMessage(mess)
-        #         self.updateObjBrowser()
-        #         return
-        #     if CFDSTUDYGUI_DataModel.checkType(sobj, CFDSTUDYGUI_DataModel.dict_object["DATAfileXML"]):
-        #         aXmlFileName = sobj.GetName()
-        #         aCase = CFDSTUDYGUI_DataModel.GetCase(sobj)
-        #         aStudy = CFDSTUDYGUI_DataModel.GetStudyByObj(sobj)
-        #         if aCase:
-        #             aCaseName = aCase.GetName()
-        #         else:
-        #             mess = cfdstudyMess.trMessage(self.tr("INFO_DLG_NO_CASE_INTO_OB"),[aXmlFileName])
-        #             cfdstudyMess.criticalMessage(mess)
-        #             return
-        #         if aStudy:
-        #             aStudyName = aStudy.GetName()
-        #         else:
-        #             mess = cfdstudyMess.trMessage(self.tr("INFO_DLG_NO_CFD_STUDY_INTO_OB"),[aXmlFileName])
-        #             cfdstudyMess.warningMessage(mess)
-        #             return
                 
         if CFDSTUDYGUI_SolverGUI.findDockWindow(aXmlFileName, aCaseName,aStudyName):
             mess = cfdstudyMess.trMessage(self.tr("ALREADY_OPEN"),[aStudyName,aCaseName,aXmlFileName])
@@ -2149,10 +2125,10 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         the selected item should be a caseItem (popup menu item only available in this case)
         """
         caseItem = self.selectedItem
-        itemName = caseItem.text(self.col.name)
+        itemName = caseItem.text(col.name)
         logging.debug("slotLaunchGUI %s", itemName)
         #get current selection
-        idText = caseItem.text(self.col.id)
+        idText = caseItem.text(col.id)
         id = 0
         if id is not None:
             id = int(idText)
@@ -2160,65 +2136,6 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         if  id == CFDSTUDYGUI_DataModel.dict_object["Case"]:
             wm = self._SolverGUI.ExecGUI(self.solverParentWidget, None, caseItem)
             self.updateActions()
-
-        # sobj = self._singleSelectedObject()
-        # if study:
-        #     aStudy = study
-        # else:
-        #     aStudy = CFDSTUDYGUI_DataModel.GetStudyByObj(sobj)
-
-        # if aStudy == None:
-        #     return
-        # # get current case
-        # if case:
-        #     aCase = case
-        # else:
-        #     aCase = CFDSTUDYGUI_DataModel.GetCase(sobj)
-        # import os
-        # if not os.path.exists(CFDSTUDYGUI_DataModel._GetPath(aCase)):
-        #     mess = cfdstudyMess.trMessage(self.tr("ENV_DLG_INVALID_DIRECTORY"),[CFDSTUDYGUI_DataModel._GetPath(aCase)])+ self.tr("STMSG_UPDATE_STUDY_INCOMING")
-        #     cfdstudyMess.aboutMessage(mess)
-        #     self.updateObjBrowser()
-        #     return
-
-        # # get current case name
-        # aCaseName = aCase.GetName()
-        # aXmlFile = None
-
-        # # object of DATA folder
-        # aChildList = CFDSTUDYGUI_DataModel.ScanChildren(aCase, "^DATA$")
-        # if not len(aChildList) == 1:
-        #     # no DATA folder
-        #     return
-
-        # aDataObj =  aChildList[0]
-        # aDataPath = CFDSTUDYGUI_DataModel._GetPath(aDataObj)
-        # # object of 'CFDSTUDYGUI' file
-        # import sys
-        # is_case = False
-        # aChildList = CFDSTUDYGUI_DataModel.ScanChildren(aDataObj, "^run.cfg$")
-        # if len(aChildList) == 1:
-        #     is_case = True
-        # if not is_case:
-        #     aChildList = CFDSTUDYGUI_DataModel.ScanChildren(aCase, "^SRC$")
-        #     if len(aChildList) == 1:
-        #         is_case = True
-        # if not is_case:
-        #     mess = cfdstudyMess.trMessage(self.tr("NO_CASE_STRUCTURE_FOUND"),[aCaseName])
-        #     cfdstudyMess.aboutMessage(mess)
-        #     return
-        # elif CFD_Code() == CFD_Neptune:
-        #     if sys.platform.startswith("win"):
-        #         aChildList = CFDSTUDYGUI_DataModel.ScanChildren(aDataObj, "^NeptuneGUI.bat$")
-        #     else:
-        #         aChildList = CFDSTUDYGUI_DataModel.ScanChildren(aDataObj, "^NeptuneGUI$")
-        #     if len(aChildList) == 0:
-        #         # no 'CFDSTUDYGUI' file
-        #         mess = cfdstudyMess.trMessage(self.tr("NO_CASE_STRUCTURE_FOUND"),[aCaseName])
-        #         cfdstudyMess.aboutMessage(mess)
-        #         return
-        # wm = self._SolverGUI.ExecGUI(self.solverParentWidget, None, aCase)
-        # self.updateActions()
 
 
     def slotUpdateCasePath(self):

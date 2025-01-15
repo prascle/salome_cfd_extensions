@@ -57,16 +57,9 @@ from .CFDSTUDYGUI_Commons import CFD_Code, CFD_Saturne, CFD_Neptune, getCFDSolve
 from .CFDSTUDYGUI_Commons import LoggingMgr
 from . import CFDSTUDYGUI_DataModel
 from .CFDSTUDYGUI_Management import CFDGUI_Management
+from .constants import col
 from code_saturne.base import cs_info
 from code_saturne.base import cs_run_conf
-
-#-------------------------------------------------------------------------------
-# log config
-#-------------------------------------------------------------------------------
-
-# logging.basicConfig()
-# log = logging.getLogger("CFDSTUDYGUI_SolverGUI")
-# log.setLevel(logging.NOTSET)
 
 #-------------------------------------------------------------------------------
 # Global definitions
@@ -150,8 +143,6 @@ class CFDSTUDYGUI_SolverGUI(QObject):
         self.dockMainWin = None
         self._isActive = False
         from .clientgui import getClientGui
-        from .CLSMainWindow import col
-        self.col = col   
 
 
     def ExecGUI(self, WorkSpace, xmlFileName, caseTwi):
@@ -166,16 +157,16 @@ class CFDSTUDYGUI_SolverGUI(QObject):
         studyName = None
         
         if caseTwi:
-            caseName = caseTwi.text(self.col.name)
+            caseName = caseTwi.text(col.name)
             studyTwi = caseTwi.parent()
-            studyName = studyTwi.text(self.col.name)
+            studyName = studyTwi.text(col.name)
             dataTwi = CFDSTUDYGUI_DataModel.getCFDTW().getTwiChildWithName(caseTwi, "DATA")
             if dataTwi is None:
                 # --- no DATA folder
                 mess = "DATA directory is not present in the case"
                 QMessageBox.warning(None, "Warning: ", mess)
                 return None
-            aStartPath = dataTwi.text(self.col.details)
+            aStartPath = dataTwi.text(col.details)
             if aStartPath == '':
                 aStartPath = None  # To simplify further tests
 
@@ -379,8 +370,8 @@ class CFDSTUDYGUI_SolverGUI(QObject):
 
 
     def setWindowTitle_CFD(self,mw,caseTwi,baseTitleName):
-        caseName = caseTwi.text(self.col.name)
-        studyName =caseTwi.parent().text(self.col.name)
+        caseName = caseTwi.text(col.name)
+        studyName =caseTwi.parent().text(col.name)
         aTitle = studyName + '.' + caseName + '.' + baseTitleName
         if mw != None:
             mw.setWindowTitle(aTitle)

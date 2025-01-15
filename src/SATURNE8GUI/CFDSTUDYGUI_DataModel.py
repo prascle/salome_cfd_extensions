@@ -314,10 +314,8 @@ class CFDTreeWidget():
     
     def __init__(self):
         from .clientgui import getClientGui
-        from .CLSMainWindow import col
         self.getClientGui = getClientGui
         self.moduleFolder = self.getClientGui().getCLSMainWindow().getSaturneFolder()
-        self.col = col   
         self.moduleFolder.setIcon(col.name, getQIcon("CFDSTUDY"))
         self.entryToTwiMap = {}
         
@@ -345,13 +343,13 @@ class CFDTreeWidget():
             self.entryToTwiMap.pop(entry)
 
     def setIdCon(self, twItem, category):
-            twItem.setIcon(self.col.name, getQIcon(category))
-            twItem.setText(self.col.id, str(getTWIid(category)))
+            twItem.setIcon(col.name, getQIcon(category))
+            twItem.setText(col.id, str(getTWIid(category)))
 
     def findCurrentStudyItem(self):
         cur = self.getClientGui().getCLSMainWindow().getCurrentSelectedItem()
         while cur:
-            if cur.text(self.col.id) == str(dict_object["Study"]):
+            if cur.text(col.id) == str(dict_object["Study"]):
                 return cur
             cur = cur.parent()
         logging.debug("************* outside Study ? *****************")
@@ -359,7 +357,6 @@ class CFDTreeWidget():
     
     def findOrCreateStudyTWI(self, studyObject, studyPath):
         logging.debug("findOrCreateStudyTWI %s", studyPath)
-        col = self.col
         twiRoot = self.moduleFolder
         studyName = os.path.basename(studyPath) # = studyObject.GetName()
         # --- check if study is already in tree
@@ -380,7 +377,6 @@ class CFDTreeWidget():
 
     def findOrCreateCaseTWI(self, caseObject, twiStudy, casePath):
         logging.debug("findOrCreateCaseTWI %s", casePath)
-        col = self.col
         caseName = os.path.basename(casePath)
         # --- check if case is already in tree
         twiCase = self.getTwiChildWithName(twiStudy, caseName)
@@ -399,7 +395,6 @@ class CFDTreeWidget():
 
     def findOrCreateMeshTWI(self, meshObject, twiStudy, meshPath):
         logging.debug("findOrCreateMeshTWI %s", meshPath)
-        col = self.col
         meshName = os.path.basename(meshPath)
         # --- check if case is already in tree
         twiMesh = self.getTwiChildWithName(twiStudy, meshName)
@@ -417,7 +412,6 @@ class CFDTreeWidget():
         return twiMesh
 
     def createTWItem(self, parentTWI, itemName, itemPath):
-        col = self.col
         logging.debug("createTWItem %s %s %s", itemPath, itemName, parentTWI.text(col.name))
         twItem = QTreeWidgetItem()
         twItem.setText(col.name, itemName)
@@ -802,17 +796,28 @@ class CFDTreeWidget():
         return twItem
             
     def rebuildTWRecursively(self, twItem):
-        col = self.col
+        """
+        Compare the children (if any) of the tree item with the content of the
+        corresponding folder on the disk.
+        Create the items corresponding to new files or directories on the disk,
+        remove the items corresponding to files or directories that are no more
+        on the disk.
+        """
+        # --- find the path corresponding to the current item. 
+        #     Do not consider items with no path (for instance, mesh groups).
+        
         itemPath = twItem.text(col.details)
         logging.debug("rebuildTWRecursively %s", itemPath)
         if itemPath is None:
             return
         
+        # --- if the item path exists and is a directory, get the names of the files on disk in this directory
         lst = []
         if os.path.isdir(itemPath):
             lst = os.listdir(itemPath)
         lst.sort()
         
+        # --- get the paths of children of the item
         nbChildren = twItem.childCount()
         childPaths = {}
         for i in range(nbChildren):
@@ -820,17 +825,24 @@ class CFDTreeWidget():
             pth = itm.text(col.details)
             childPaths[pth] = itm
         
+        # --- find the new paths on disk, create the corresponding tree items as new children of the current item
         for aName in lst:
             aPath = os.path.join(itemPath, aName)
             if aPath not in childPaths:
                 nc = self.createTWItem(twItem, aName, aPath)
         
+        # --- find the items corresponding to files or directories no longer present on the disk and are removed
+        #     only the items coresponding to a file or directory are taken into account,
+        #     (the items corresponding to mesh groups have no path, and are not removed)
         for pth, itm in childPaths.items():
             aName = os.path.basename(pth)
             if aName not in lst:
-                self.removeObjFromTwi(itm)
-                twItem.removeChild(itm)
+                itmPth = itm.text(col.details)
+                if itmPth:
+                    self.removeObjFromTwi(itm)
+                    twItem.removeChild(itm)
         
+        # --- recursive call with the updated children of the item 
         nbChildren = twItem.childCount()
         for i in range(nbChildren):
             itm = twItem.child(i)
@@ -843,9 +855,9 @@ class CFDTreeWidget():
         """
         cur = twItem
         while cur:
-            if cur.text(self.col.id) == str(dict_object["USERSFolder"]):
+            if cur.text(col.id) == str(dict_object["USERSFolder"]):
                 return True
-            elif cur.text(self.col.id) == str(dict_object["Study"]):
+            elif cur.text(col.id) == str(dict_object["Study"]):
                 return False
             cur = cur.parent()
         logging.debug("************* outside Study ? *****************")
@@ -858,7 +870,7 @@ class CFDTreeWidget():
         """
         cur = twItem
         while cur:
-            if cur.text(self.col.id) == str(dict_object["SRCFolder"]):
+            if cur.text(col.id) == str(dict_object["SRCFolder"]):
                 return "USRSRCFile"
             cur = cur.parent()
         logging.debug("************* outside Study ? *****************")
@@ -867,7 +879,7 @@ class CFDTreeWidget():
     def findCaseItem(self, twItem):
         cur = twItem
         while cur:
-            if cur.text(self.col.id) == str(dict_object["Case"]):
+            if cur.text(col.id) == str(dict_object["Case"]):
                 return cur
             cur = cur.parent()
         logging.debug("************* outside Case ? *****************")
@@ -876,7 +888,7 @@ class CFDTreeWidget():
     def findStudyItem(self, twItem):
         cur = twItem
         while cur:
-            if cur.text(self.col.id) == str(dict_object["Study"]):
+            if cur.text(col.id) == str(dict_object["Study"]):
                 return cur
             cur = cur.parent()
         logging.debug("************* outside Study ? *****************")
@@ -886,7 +898,7 @@ class CFDTreeWidget():
         nbChildren = parentTwi.childCount()
         for i in range(nbChildren) :
             child = parentTwi.child(i)
-            if child.text(self.col.name) == name:
+            if child.text(col.name) == name:
                 return child
         return None
     
