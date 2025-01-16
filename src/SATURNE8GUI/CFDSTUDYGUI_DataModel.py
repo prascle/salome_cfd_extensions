@@ -319,6 +319,12 @@ class CFDTreeWidget():
                 return obj
         return None
     
+    def getTwiFromEntry(self, entry):
+        if entry in self.entryToTwiMap:
+            return self.entryToTwiMap[entry]
+        else:
+            return None
+        
     def getObjFromEntry(self, entry):
         study = _getStudy()
         obj = study.FindObjectID(entry)
@@ -950,13 +956,13 @@ def _getStudy():
     return __study__
 
 #--------------------------------------------------------------------------
-__engine__ = None
-def _getEngine():
-    global __engine__
-    if __engine__ is None:
-        __engine__ = getLCC().FindOrLoadComponent( "FactoryServerPy", __MODULE_NAME__ )
-        pass
-    return __engine__
+# __engine__ = None
+# def _getEngine():
+#     global __engine__
+#     if __engine__ is None:
+#         __engine__ = getLCC().FindOrLoadComponent( "FactoryServerPy", __MODULE_NAME__ )
+#         pass
+#     return __engine__
 
 
 def _getNewBuilder():
@@ -976,24 +982,24 @@ def _getComponent():
     return study.FindComponent(__MODULE_NAME__)
 
 
-def _hasChildren(sobj):
-    """
-    Returns 1 if object has children.
+# def _hasChildren(sobj):
+#     """
+#     Returns 1 if object has children.
 
-    @type sobj: C{SObject}
-    @param sobj: branch of the tree
-    @return: 1 if I{sobj} has children, 0 if not.
-    @rtype: C{int}
-    """
-    if sobj:
-        study = _getStudy()
-        iter  = study.NewChildIterator(sobj)
-        while iter.More():
-            name = iter.Value().GetName()
-            if name:
-                return 1
-            iter.Next()
-    return 0
+#     @type sobj: C{SObject}
+#     @param sobj: branch of the tree
+#     @return: 1 if I{sobj} has children, 0 if not.
+#     @rtype: C{int}
+#     """
+#     if sobj:
+#         study = _getStudy()
+#         iter  = study.NewChildIterator(sobj)
+#         while iter.More():
+#             name = iter.Value().GetName()
+#             if name:
+#                 return 1
+#             iter.Next()
+#     return 0
 
 
 def _findOrCreateComponent():
@@ -1016,10 +1022,10 @@ def _findOrCreateComponent():
         attr = builder.FindOrCreateAttribute(father, "AttributePixMap")
         attr.SetPixMap("CFDSTUDY.png")
 
-        try:
-            builder.DefineComponentInstance(father, _getEngine())
-        except:
-            pass
+        # try:
+        #     builder.DefineComponentInstance(father, _getEngine())
+        # except:
+        #     pass
     return father
  
 def _SetCaseLocation(theCasePath):
@@ -1221,151 +1227,13 @@ def closeCFDStudyTree(theObject):
     Close a CFD Study from the Object browser
     """
     logging.debug("closeCFDStudyTree")
-    if theObject == None:
-        return
-    study   = _getStudy()
-    builder = study.NewBuilder()
-    builder.RemoveObjectWithChildren(theObject)
+    # TODO : check usage
+    # if theObject == None:
+    #     return
+    # study   = _getStudy()
+    # builder = study.NewBuilder()
+    # builder.RemoveObjectWithChildren(theObject)
     return
-
-# def _RebuildTreeRecursively(theObject):
-#     """
-#     Builds or rebuilds a branch of the tree of data for the Object Browser.
-
-#     @type theObject: C{SObject}
-#     @param theObject: branch of a tree of data
-#     """
-#     # SObject is the main constituent of SALOMEDS-based data structure.
-#     # If you are familiar with CAF (Cascade Application Framework) - the
-#     # analogy of SObject would be TDF_Label class. It can be understood as
-#     # a branch of a tree of data, or as a record in a database table. Usually
-#     # it does not store the data itself, it uses child Attributes - successors
-#     # of SALOMEDS::GenericAttribute - for storing specific data, properties
-#     # of the object.
-#     #
-#     # type(SObject) -> SALOMEDS._objref_SObject instance
-#     #
-#     if theObject == None:
-#         return
-#     logging.debug("_RebuildTreeRecursively -> %s childs: %s" % (theObject.GetName(), ScanChildNames(theObject,  ".*")))
-#     theObjectPath = _GetPath(theObject)
-
-#     if theObjectPath == None:
-#         return
-
-#     study   = _getStudy()
-#     builder = study.NewBuilder()
-#     attr = builder.FindOrCreateAttribute(theObject, "AttributeLocalID")
-#     # clean the SObject, if the corresponding file or directory
-#     # does not exist any more in the file system
-
-#     if os.path.isfile(theObjectPath) and attr.Value() == dict_object["MEDFile"]:
-#         return
-
-#     if not os.path.isdir(theObjectPath) and not os.path.isfile(theObjectPath):
-#         builder.RemoveObjectWithChildren(theObject)
-#         return
-
-#     # build a list of file from the file system
-#     dirList = _GetDirList(theObject)
-#     # build a list and a dictionary of childs SObject from the current SObject
-#     objList = []
-#     objMap  = {}
-
-#     iter  = study.NewChildIterator(theObject)
-#     while iter.More():
-#         v = iter.Value()
-#         n = v.GetName()
-#         objList.append(n)
-#         objMap[n] = v
-#         iter.Next()
-
-#     objList.sort()
-#     objIndex = 0
-#     dirIndex = 0
-#     # Case with empty list of existing SObject: every SObject must be build
-#     if len(objList) == 0:
-#         while dirIndex < len(dirList):
-#             #append new objects
-#             if Trace() : print("Whole append new Item: ", dirList[dirIndex])
-#             _CreateObject(theObject, builder, dirList[dirIndex])
-#             dirIndex+=1
-
-#     # Case with empty list of file: every SObject must be clean
-#     elif len(dirList) == 0:
-#         builder.RemoveObjectWithChildren(theObject)
-#         logging.debug("_RebuildTreeRecursively 3: %s childs: %s" % (theObject.GetName(), ScanChildNames(theObject,  ".*")))
-
-#     else:
-#         objEnd = False
-#         dirEnd = False
-#         while True:
-#             objName = objList[objIndex]
-#             dirName = dirList[dirIndex]
-
-#             if dirName < objName:
-#                 if not dirEnd:
-#                     #append new object
-#                     if Trace(): print("1 Append new Item: ", dirName)
-#                     logging.debug("_RebuildTreeRecursively 4: dirName = %s objName = %s" %(dirName,objName))
-#                     _CreateObject(theObject, builder, dirName)
-#                     dirIndex+=1
-
-#                     if objEnd and dirIndex == len(dirList):
-#                         break
-#                 else:
-#                     if Trace(): print("1 Remove Item from tree: ", objName)
-#                     builder.RemoveObjectWithChildren(objMap[objName])
-#                     objIndex+=1
-
-#                     if objIndex == len(objList):
-#                         break
-
-#             elif dirName > objName:
-#                 #remove object if no end
-#                 if not objEnd:
-#                     if Trace(): print("2 Remove Item from tree: ", objName)
-#                     builder.RemoveObjectWithChildren(objMap[objName])
-#                     objIndex+=1
-
-#                     if dirEnd and objIndex == len(objList):
-#                         break
-
-#                 else:
-#                     #append new item at the end
-#                     if Trace(): print("2 Append new Item: ", dirName)
-#                     logging.debug("_RebuildTreeRecursively 5: dirName = %s objName = %s" %(dirName,objName))
-#                     _CreateObject(theObject, builder, dirName)
-#                     dirIndex+=1
-
-#                     if dirIndex == len(dirList):
-#                         break
-
-#             else:
-#                 # no changes
-#                 _FillObject(objMap[objName], theObject, builder)
-#                 dirIndex+=1
-#                 objIndex+=1
-
-#             if dirIndex != len(dirList) or objIndex != len(objList):
-#                 if dirIndex == len(dirList):
-#                     dirEnd = True
-#                     dirIndex-=1
-
-#                 if objIndex == len(objList):
-#                     objEnd = True
-#                     objIndex-=1
-
-#             if dirIndex == len(dirList) and objIndex == len(objList):
-#                 break
-
-#     # recursively calling
-#     iter  = study.NewChildIterator(theObject)
-#     while iter.More():
-#         if iter.Value().GetName():
-#             _RebuildTreeRecursively(iter.Value())
-#         iter.Next()
-#     logging.debug("_RebuildTreeRecursively -> %s END" % (theObject.GetName()))
 
 
 def _CreateObject(theFather, theBuilder, theName):
@@ -2297,85 +2165,85 @@ def getType(theObject):
     attr = builder.FindOrCreateAttribute(theObject, "AttributeLocalID")
     return attr.Value()
 
-def hasTheSameType(ListObject):
-    if ListObject == []:
-        return False
-    typListBool = True
-    typListBoolRESUSub = None
-    typList = []
-    typ     = getType(list(ListObject)[0])
-    typList.append(typ)
-    if len(ListObject)> 1:
-        for SObject in list(ListObject)[1:]:
-            typListBool = typListBool and getType(SObject) == typ
-            typList.append(getType(SObject))
-        if not typListBool:
-            typListBoolRESUSub = True
-            for ty in typList:
-                typListBoolRESUSub = typListBoolRESUSub and (ty == dict_object["RESUSubFolder"] or ty == dict_object["RESUSubErrFolder"] or ty == dict_object["RESU_COUPLINGSubFolder"])
-    if typListBoolRESUSub != None:
-        if typListBoolRESUSub == True:
-            return typListBoolRESUSub
-    else :
-        return typListBool
+# def hasTheSameType(ListObject):
+#     if ListObject == []:
+#         return False
+#     typListBool = True
+#     typListBoolRESUSub = None
+#     typList = []
+#     typ     = getType(list(ListObject)[0])
+#     typList.append(typ)
+#     if len(ListObject)> 1:
+#         for SObject in list(ListObject)[1:]:
+#             typListBool = typListBool and getType(SObject) == typ
+#             typList.append(getType(SObject))
+#         if not typListBool:
+#             typListBoolRESUSub = True
+#             for ty in typList:
+#                 typListBoolRESUSub = typListBoolRESUSub and (ty == dict_object["RESUSubFolder"] or ty == dict_object["RESUSubErrFolder"] or ty == dict_object["RESU_COUPLINGSubFolder"])
+#     if typListBoolRESUSub != None:
+#         if typListBoolRESUSub == True:
+#             return typListBoolRESUSub
+#     else :
+#         return typListBool
 
-def isACFDSTUDYListObject(ListObject):
-    if ListObject == []:
-        return False
-    typListBool = True
-    for sobj in ListObject :
-        typListBool = typListBool and sobj.GetFatherComponent().GetName() == "CFDSTUDY"
-    return typListBool
+# def isACFDSTUDYListObject(ListObject):
+#     if ListObject == []:
+#         return False
+#     typListBool = True
+#     for sobj in ListObject :
+#         typListBool = typListBool and sobj.GetFatherComponent().GetName() == "CFDSTUDY"
+#     return typListBool
 
-def isASmeshListObject(ListObject):
-    if ListObject == []:
-        return False
-    typListBool = True
-    for sobj in ListObject :
-        if sobj.GetFatherComponent().GetName() == "Mesh":
-            if getMeshFromMesh(sobj) == None:
-                meshGroupObject,group = getMeshFromGroup(sobj)
-                typListBool = typListBool and meshGroupObject != None
-            else:
-                typListBool = True
-        else:
-           return False
-    return typListBool
+# def isASmeshListObject(ListObject):
+#     if ListObject == []:
+#         return False
+#     typListBool = True
+#     for sobj in ListObject :
+#         if sobj.GetFatherComponent().GetName() == "Mesh":
+#             if getMeshFromMesh(sobj) == None:
+#                 meshGroupObject,group = getMeshFromGroup(sobj)
+#                 typListBool = typListBool and meshGroupObject != None
+#             else:
+#                 typListBool = True
+#         else:
+#            return False
+#     return typListBool
 
-def checkType(theObject, theType):
-    """
-    Checks if I{theObject} has the type ("AttributeLocalID") I{theType}.
+# def checkType(theObject, theType):
+#     """
+#     Checks if I{theObject} has the type ("AttributeLocalID") I{theType}.
 
-    @type theObject: C{SObject}
-    @param theObject: object from the Object Browser.
-    @type theType: C{String}
-    @param theType: type of the object in the Object Browser.
-    @rtype: C{True} or C{False}
-    @return: C{True} if C{theObject} has the type I{theType}.
-    """
-    if theObject == None or theType == None:
-        return False
-    if theObject != None and theType!= None :
-        return getType(theObject) == theType
+#     @type theObject: C{SObject}
+#     @param theObject: object from the Object Browser.
+#     @type theType: C{String}
+#     @param theType: type of the object in the Object Browser.
+#     @rtype: C{True} or C{False}
+#     @return: C{True} if C{theObject} has the type I{theType}.
+#     """
+#     if theObject == None or theType == None:
+#         return False
+#     if theObject != None and theType!= None :
+#         return getType(theObject) == theType
 
 
-def checkPreMEDType(theObject):
-    """
-    Checks if I{theObject} is a mesh file, that can be converted to med format.
+# def checkPreMEDType(theObject):
+#     """
+#     Checks if I{theObject} is a mesh file, that can be converted to med format.
 
-    @type theObject: C{SObject}
-    @param theObject: object from the Object Browser.
-    @rtype: C{True} or C{False}
-    @return: C{True} if C{theObject} is a mesh file, that can be converted to med.
-    """
-    return checkType(theObject, dict_object["DESFile"]) or \
-           checkType(theObject, dict_object["CGNSFile"]) or \
-           checkType(theObject, dict_object["CcmFile"]) or \
-           checkType(theObject, dict_object["CaseFile"]) or \
-           checkType(theObject, dict_object["NeuFile"]) or \
-           checkType(theObject, dict_object["MSHFile"]) or \
-           checkType(theObject, dict_object["HexFile"]) or \
-           checkType(theObject, dict_object["UnvFile"])
+#     @type theObject: C{SObject}
+#     @param theObject: object from the Object Browser.
+#     @rtype: C{True} or C{False}
+#     @return: C{True} if C{theObject} is a mesh file, that can be converted to med.
+#     """
+#     return checkType(theObject, dict_object["DESFile"]) or \
+#            checkType(theObject, dict_object["CGNSFile"]) or \
+#            checkType(theObject, dict_object["CcmFile"]) or \
+#            checkType(theObject, dict_object["CaseFile"]) or \
+#            checkType(theObject, dict_object["NeuFile"]) or \
+#            checkType(theObject, dict_object["MSHFile"]) or \
+#            checkType(theObject, dict_object["HexFile"]) or \
+#            checkType(theObject, dict_object["UnvFile"])
 
 
 def checkCaseLaunchGUI(theCase):
@@ -2387,7 +2255,9 @@ def checkCaseLaunchGUI(theCase):
     @rtype: C{True} or C{False}
     @return: C{True} if C{theCase} has the script to start GUI in the DATA folder.
     """
-    if not checkType(theCase, dict_object["Case"]):
+    
+    caseItem = getCFDTW().getTwiFromEntry(theCase.GetID())
+    if caseItem.text(col.id) != str(dict_object["Case"]):
         return False
 
     aChildList = ScanChildren(theCase, "^DATA$")
@@ -2551,14 +2421,14 @@ def getOrLoadObject(item):
     first loading it with the corresponding engine.
     """
     object = item.GetObject()
-    if object is None: # the engine has not been loaded yet
-        sComponent = item.GetFatherComponent()
-        study   = _getStudy()
-        builder = study.NewBuilder()
-        engine = _getEngine()
-        if engine is None:
-            print("Cannot load component ", __MODULE_NAME__)
-        object = item.GetObject()
+    # if object is None: # the engine has not been loaded yet
+    #     sComponent = item.GetFatherComponent()
+    #     study   = _getStudy()
+    #     builder = study.NewBuilder()
+    #     engine = _getEngine()
+    #     if engine is None:
+    #         print("Cannot load component ", __MODULE_NAME__)
+    #     object = item.GetObject()
     return object
 
 def getMeshFromMesh(meshSobjItem) :

@@ -26,7 +26,7 @@ import logging
 import os
 
 from .CLSMainWindow import getSalomePyQt
-
+from . import CFDSTUDYGUI_DataModel
 
 def processText(text):
     '''
@@ -54,21 +54,36 @@ class SATURNE8_DataModel:
         logging.debug("SATURNE8_DataModel.__init__")
         self.myObjects = {}
 
-    def getSaturne8Cases(self):
+    def getSaturne8Studies(self):
         '''
-        Return the list of Saturne8 cases:
+        Return the list of CFD Studies cases:
         Salome Study entries that are direct children of the module.
         '''
-        logging.debug("get Salome Study children")
+        # === Only with light Study objects (texts) ===
+        logging.debug("get Module children in Salome Study (CFD Studies)")
         children = getSalomePyQt().getChildren()
         for child in children:
             logging.debug("child: %s", child)
         logging.debug("done")
         return children
+        
+        # === Light module and Standard Study Object: problem! (several tries) ===
+        # # Scomp = CFDSTUDYGUI_DataModel._getComponent()
+        # study =  getSalomePyQt().getStudy()
+        # logging.debug("study")
+        # entries = study.getChildren()
+        # logging.debug("SALOME Study component entries %s", entries)
+        # # children = []
+        # logging.debug("---")
+        # # children = getSalomePyQt().getChildren(Scomp)
+        # # logging.debug("nb children %s", len(children))
+        # # for child in children:
+        # #     logging.debug("child: %s", str(child))
+        # logging.debug("done")
 
     def findInStudy(self, text):
         logging.debug("findInStudy %s", text)
-        caseObjs = self.getSaturne8Cases()
+        caseObjs = self.getSaturne8Studies()
         for entry in caseObjs:
             if entry not in self.myObjects:
                 logging.critical(
@@ -119,7 +134,7 @@ class SATURNE8_DataModel:
         """
         logging.debug("saveFile %s", filename)
         with open(filename, mode='w', encoding='utf-8') as f:
-            caseEntries = self.getSaturne8Cases()
+            caseEntries = self.getSaturne8Studies()
             for entry in caseEntries:
                 logging.debug("entry: %s", entry)
                 caseObj = self.myObjects[entry]

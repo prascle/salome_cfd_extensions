@@ -96,7 +96,7 @@ class ClientGui():
     def initialize(self):
         """
         """
-        logging.debug("initialize")
+        logging.debug("initialize")       
         
         # ObjectTR is a convenient object for traduction purpose
         
@@ -188,6 +188,9 @@ class ClientGui():
             self.ah.createActions()
         if self._dataModel is None:
             self._dataModel = SATURNE8_DataModel()
+        # self._dataModel.findOrCreateObject("une entree bidon")
+        # values = self._dataModel.getSaturne8Studies()
+        # logging.debug(values)
 
         if len(self.casesToReload) and self.widget is None:  # when reload study
             # self.createOrLoadCase(True)
