@@ -1100,7 +1100,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         self.selectedItem = item
         idText = item.text(col.id)
         id = 0
-        if id is not None:
+        if idText:
             id = int(idText)
         logging.debug("customPopup %s",id)
         if id == CFDSTUDYGUI_DataModel.dict_object["Study"]:
@@ -1328,7 +1328,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         if not os.path.exists(dialog.StudyPath):
             mess = cfdstudyMess.trMessage(self.tr("ENV_DLG_INVALID_DIRECTORY"),[dialog.StudyPath])+self.tr("STMSG_UPDATE_STUDY_INCOMING")
             cfdstudyMess.aboutMessage(mess)
-            self.updateObjBrowser()
+            CFDSTUDYGUI_DataModel.UpdateSubTree(studyTwi)
             return
         dialog.exec_()
         if self.DialogCollector.SetTreeLocationDialog.result() != QDialog.Accepted:
@@ -1369,7 +1369,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
                                                               theSyrthesCase = "",
                                                               theNprocs      = "")
         CFDSTUDYGUI_DataModel.getCFDTW().rebuildTWRecursively(studyTwi)
-        self.updateObjBrowser()
+        CFDSTUDYGUI_DataModel.UpdateSubTree(studyTwi)
 
 
     def slotInfo(self):
@@ -1390,11 +1390,11 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         of the CFD studies in the Object Browser.
         """
         logging.debug("slotUpdateObjectBrowser")
-        sobj = self._singleSelectedObject()
-        if sobj != None:
-            self.updateObjBrowser(sobj)
+        twi = self.selectedItem
+        if twi:
+            CFDSTUDYGUI_DataModel.UpdateSubTree(twi)
         else:
-            self.updateObjBrowser()
+            CFDSTUDYGUI_DataModel.UpdateSubTree()
 
 
     def updateObjBrowser(self, Object=None):
@@ -1407,8 +1407,10 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         logging.debug("updateObjBrowser")
         cursor = QCursor(Qt.BusyCursor)
         QApplication.setOverrideCursor(cursor)
-
-        CFDSTUDYGUI_DataModel.UpdateSubTree(Object)
+        
+        if Object:
+            twi = CFDSTUDYGUI_DataModel.getCFDTW().entryToTwiMap[Object.GetID()]
+            CFDSTUDYGUI_DataModel.UpdateSubTree(twi)
 
         QApplication.restoreOverrideCursor()
 
@@ -1493,21 +1495,23 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         Delete dock windows cases attached to a CFD Study if this study is being closed from the Object Browser.
         """
         logging.debug("slotCloseStudyAction")
-        theStudy = self._singleSelectedObject()
+        studyTwi = self.selectedItem
         caseList = []
-        xmlcaseList= []
-        if theStudy != None:
-            theStudypath = CFDSTUDYGUI_DataModel._GetPath(theStudy)
+        if studyTwi:
+            theStudypath = studyTwi.text(col.details)
             mess = cfdstudyMess.trMessage(self.tr("CLOSE_ACTION_CONFIRM_MESS"),[theStudypath])
             if cfdstudyMess.warningMessage(mess) == QMessageBox.No:
                 return
-        caseList = CFDSTUDYGUI_DataModel.GetCaseList(theStudy)
-        if caseList != []:
-            for aCase in caseList:
-                self._SolverGUI.removeDockWindowfromStudyAndCaseNames(theStudy.GetName(), aCase.GetName())
-        CFDSTUDYGUI_DataModel.closeCFDStudyTree(theStudy)
-
-        self.updateObjBrowser()
+            #TODO: rewrite (remove studyTwi from tree)
+            theStudy = CFDSTUDYGUI_DataModel.getCFDTW().getObjFromTwi(studyTwi)
+            caseList = CFDSTUDYGUI_DataModel.GetCaseList(theStudy)
+            if caseList != []:
+                for aCase in caseList:
+                    self._SolverGUI.removeDockWindowfromStudyAndCaseNames(theStudy.GetName(), aCase.GetName())
+            CFDSTUDYGUI_DataModel.closeCFDStudyTree(theStudy)
+            
+            self.getClientGui().getCLSMainWindow().removeItem(studyTwi)
+            
 
 
     def slotRemoveAction(self):
@@ -1573,7 +1577,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
             QApplication.restoreOverrideCursor()
             CFDSTUDYGUI_DataModel.getCFDTW().rebuildTWRecursively(fatherItem)
 
-
+    # TODO verif utilisation, reecrire avec twi
     def slotCopyInDATA(self):
         """
         """
@@ -1601,6 +1605,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
                     self.updateObjBrowser(parent)
 
 
+    # TODO verif utilisation, reecrire avec twi
     def slotCopyInSRC(self):
         """
         """
@@ -1633,6 +1638,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
                                       os.path.join(parentPath,newName))
                         self.updateObjBrowser(parent)
 
+    # TODO verif utilisation, reecrire avec twi
     def slotMoveToDRAFT(self):
         """
         """
@@ -1729,17 +1735,8 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
 
     def slotExportInSMESH(self):
         """
-        smesh_component         is a smeshDC.smeshDC instance
-        SO_SMESH_COMPONENT         is a SALOMEDS._objref_SComponent instance
-        aMeshes                 is a list of smeshDC.Mesh instances of the meshes into the med file
-        meshDC.GetMesh()         is a Corba SMESH._objref_SMESH_Mesh instance
-        SO_SMESH                 is a SALOMEDS._objref_SObject instance representing mesh object into
-                                      Object browser under SMESH Component
-        Create Med structure of the med file whose complete name is path,
-             into smesh component and puplication of the mesh into Object Browser
-             aMeshes is a list of smeshDC.Mesh instances of the meshes into the med file
-             (we can have several meshes into a med file)
-
+        Open the selected MED file in SMESH
+        Fill the tree widget with all the mesh groups present in the MED file.
         """
         logging.debug("slotExportInSMESH")
         waitCursor = QCursor(Qt.WaitCursor)
@@ -1749,27 +1746,6 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
             path = self.selectedItem.text(col.details)
             entry = self.getClientGui().importMedMesh(path)
             self.selectedItem.setText(col.entry, entry)
-            
-        # sobj = self._singleSelectedObject()
-        # if not sobj == None:
-        #     path = CFDSTUDYGUI_DataModel._GetPath(sobj)
-        #     if smeshBuilder and re.match(".*\.med$", sobj.GetName()):
-        #         smesh = smeshBuilder.New()
-        #         aMeshes, aStatus = smesh.CreateMeshesFromMED(path)
-        #         if not aStatus:
-        #             QApplication.restoreOverrideCursor()
-        #             mess = cfdstudyMess.trMessage(self.tr("EXPORT_IN_SMESH_ACTION_WARNING"),[])
-        #             cfdstudyMess.warningMessage(mess)
-        #             return
-
-        #         (reppath,fileName)=   os.path.split(path)
-        #         for aMeshDC in aMeshes:
-        #             aMeshDC.SetAutoColor(1)
-        #             mesh = aMeshDC.GetMesh()
-
-        #     sg.updateObjBrowser()
-        
-        
 
         QApplication.restoreOverrideCursor()
 
@@ -1990,13 +1966,17 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         Open into Salome the CFD GUI from an XML file whose name is sobj.GetName()
         """
         logging.debug("slotOpenCFD_GUI")
-        sobj = self._singleSelectedObject()
+        # TODO: rewrite
+        item = self.selectedItem
+        sobj = None
+        if item:
+            sobj = CFDSTUDYGUI_DataModel.getCFDTW().getObjFromEntry(item.text(col.entry))
         if sobj != None:
             import os
             if not os.path.exists(CFDSTUDYGUI_DataModel._GetPath(sobj)):
                 mess = cfdstudyMess.trMessage(self.tr("ENV_DLG_INVALID_FILE"),[CFD_Code(),CFDSTUDYGUI_DataModel._GetPath(sobj)])+self.tr("STMSG_UPDATE_STUDY_INCOMING")
                 cfdstudyMess.aboutMessage(mess)
-                self.updateObjBrowser()
+                CFDSTUDYGUI_DataModel.UpdateSubTree(item)
                 return
             self.OpenCFD_GUI(sobj)
 

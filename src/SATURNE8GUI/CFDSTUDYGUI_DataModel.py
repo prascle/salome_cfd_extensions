@@ -104,14 +104,6 @@ from .constants import col
 from code_saturne.base.cs_exec_environment import separate_args
 
 #-------------------------------------------------------------------------------
-# log config
-#-------------------------------------------------------------------------------
-
-# logging.basicConfig()
-# log = logging.getLogger("CFDSTUDYGUI_DataModel")
-# log.setLevel(logging.NOTSET)
-
-#-------------------------------------------------------------------------------
 # Module name. Attribut "AttributeName" for the related SObject.
 #-------------------------------------------------------------------------------
 
@@ -1098,8 +1090,9 @@ def _SetStudyLocation(theStudyPath, theCaseNames,theCreateOpt,
     builder = study.NewBuilder()
     father  = _findOrCreateComponent()
     studyObject = FindStudyByPath(theStudyPath)
+    twiStudy = None
     if studyObject == None:
-        #obtain name and dir for new study
+        # --- obtain name and dir for new study
         lst = os.path.split(theStudyPath)
         aStudyDir = lst[0]
         aStudyName = lst[1]
@@ -1124,19 +1117,19 @@ def _SetStudyLocation(theStudyPath, theCaseNames,theCreateOpt,
         attr.SetValue(aStudyDir)
         twiStudy = getCFDTW().findOrCreateStudyTWI(studyObject, theStudyPath)
         getCFDTW().entryToTwiMap[studyObject.GetID()] = twiStudy
+    else:
+        twiStudy = getCFDTW().entryToTwiMap[studyObject.GetID()]
     
     if iok and theCaseNames:
         _CreateItem(studyObject,theCaseNames)
         caseObject = getSObject(studyObject,theCaseNames)
         twiStudy = getCFDTW().findOrCreateStudyTWI(studyObject, theStudyPath)
-        #getCFDTW().entryToTwiMap[studyObject.GetID()] = twiStudy
         theCasePath = os.path.join(theStudyPath, theCaseNames)
         twiCase = getCFDTW().findOrCreateCaseTWI(caseObject, twiStudy, theCasePath)
-        #getCFDTW().entryToTwiMap[caseObject.GetID()] = twiCase
         getCFDTW().rebuildTWRecursively(twiCase)
         
     if iok:
-        UpdateSubTree(studyObject)
+        UpdateSubTree(twiStudy)
         
         # TODO handle number of procs required in a consistant manner for coupled cases
         # Better handled using models/BatchRunningModel
@@ -1215,45 +1208,13 @@ def updateCasePath(theCasePath):
     return mess == ""
 
 
-# def _UpdateStudy():
-#     """
-#     Updates CFD study tree of data from the root.
-#     """
-#     logging.debug("_UpdateStudy")
-#     study   = _getStudy()
-#     component = study.FindComponent(__MODULE_NAME__)
-#     if component == None:
-#         return
-
-#     iter  = study.NewChildIterator(component)
-#     while iter.More():
-#         _RebuildTreeRecursively(iter.Value())
-#         iter.Next()
-
-
-def UpdateSubTree(theObject):
+def UpdateSubTree(twItem):
     """
-    Updates CFD study sub-tree from the argument object.
-
-    @type theObject: C{SObject}
-    @param theObject: branch of a tree of data to update.
+    Update recursively Tree Widget from the given item
     """
-    entry = ""
-    if theObject:
-        entry = theObject.GetID()
-    logging.debug("UpdateSubTree %s", entry)
-    if theObject:
-        if theObject.GetID() in getCFDTW().entryToTwiMap:
-            twi = getCFDTW().entryToTwiMap[theObject.GetID()]
-            getCFDTW().rebuildTWRecursively(twi)
+    if twItem:
+        getCFDTW().rebuildTWRecursively(twItem)
             
-    # if theObject != None:
-    #     logging.debug("UpdateSubTree -> path: %s" % _GetPath(theObject))
-    #     _RebuildTreeRecursively(theObject)
-    # else:
-    #     _UpdateStudy()
-    # # --- update object browser from a thread different of the main thread is not safe !
-    # sg.updateObjBrowser()
 
 def closeCFDStudyTree(theObject):
     """
@@ -1267,144 +1228,144 @@ def closeCFDStudyTree(theObject):
     builder.RemoveObjectWithChildren(theObject)
     return
 
-def _RebuildTreeRecursively(theObject):
-    """
-    Builds or rebuilds a branch of the tree of data for the Object Browser.
+# def _RebuildTreeRecursively(theObject):
+#     """
+#     Builds or rebuilds a branch of the tree of data for the Object Browser.
 
-    @type theObject: C{SObject}
-    @param theObject: branch of a tree of data
-    """
-    # SObject is the main constituent of SALOMEDS-based data structure.
-    # If you are familiar with CAF (Cascade Application Framework) - the
-    # analogy of SObject would be TDF_Label class. It can be understood as
-    # a branch of a tree of data, or as a record in a database table. Usually
-    # it does not store the data itself, it uses child Attributes - successors
-    # of SALOMEDS::GenericAttribute - for storing specific data, properties
-    # of the object.
-    #
-    # type(SObject) -> SALOMEDS._objref_SObject instance
-    #
-    if theObject == None:
-        return
-    logging.debug("_RebuildTreeRecursively -> %s childs: %s" % (theObject.GetName(), ScanChildNames(theObject,  ".*")))
-    theObjectPath = _GetPath(theObject)
+#     @type theObject: C{SObject}
+#     @param theObject: branch of a tree of data
+#     """
+#     # SObject is the main constituent of SALOMEDS-based data structure.
+#     # If you are familiar with CAF (Cascade Application Framework) - the
+#     # analogy of SObject would be TDF_Label class. It can be understood as
+#     # a branch of a tree of data, or as a record in a database table. Usually
+#     # it does not store the data itself, it uses child Attributes - successors
+#     # of SALOMEDS::GenericAttribute - for storing specific data, properties
+#     # of the object.
+#     #
+#     # type(SObject) -> SALOMEDS._objref_SObject instance
+#     #
+#     if theObject == None:
+#         return
+#     logging.debug("_RebuildTreeRecursively -> %s childs: %s" % (theObject.GetName(), ScanChildNames(theObject,  ".*")))
+#     theObjectPath = _GetPath(theObject)
 
-    if theObjectPath == None:
-        return
+#     if theObjectPath == None:
+#         return
 
-    study   = _getStudy()
-    builder = study.NewBuilder()
-    attr = builder.FindOrCreateAttribute(theObject, "AttributeLocalID")
-    # clean the SObject, if the corresponding file or directory
-    # does not exist any more in the file system
+#     study   = _getStudy()
+#     builder = study.NewBuilder()
+#     attr = builder.FindOrCreateAttribute(theObject, "AttributeLocalID")
+#     # clean the SObject, if the corresponding file or directory
+#     # does not exist any more in the file system
 
-    if os.path.isfile(theObjectPath) and attr.Value() == dict_object["MEDFile"]:
-        return
+#     if os.path.isfile(theObjectPath) and attr.Value() == dict_object["MEDFile"]:
+#         return
 
-    if not os.path.isdir(theObjectPath) and not os.path.isfile(theObjectPath):
-        builder.RemoveObjectWithChildren(theObject)
-        return
+#     if not os.path.isdir(theObjectPath) and not os.path.isfile(theObjectPath):
+#         builder.RemoveObjectWithChildren(theObject)
+#         return
 
-    # build a list of file from the file system
-    dirList = _GetDirList(theObject)
-    # build a list and a dictionary of childs SObject from the current SObject
-    objList = []
-    objMap  = {}
+#     # build a list of file from the file system
+#     dirList = _GetDirList(theObject)
+#     # build a list and a dictionary of childs SObject from the current SObject
+#     objList = []
+#     objMap  = {}
 
-    iter  = study.NewChildIterator(theObject)
-    while iter.More():
-        v = iter.Value()
-        n = v.GetName()
-        objList.append(n)
-        objMap[n] = v
-        iter.Next()
+#     iter  = study.NewChildIterator(theObject)
+#     while iter.More():
+#         v = iter.Value()
+#         n = v.GetName()
+#         objList.append(n)
+#         objMap[n] = v
+#         iter.Next()
 
-    objList.sort()
-    objIndex = 0
-    dirIndex = 0
-    # Case with empty list of existing SObject: every SObject must be build
-    if len(objList) == 0:
-        while dirIndex < len(dirList):
-            #append new objects
-            if Trace() : print("Whole append new Item: ", dirList[dirIndex])
-            _CreateObject(theObject, builder, dirList[dirIndex])
-            dirIndex+=1
+#     objList.sort()
+#     objIndex = 0
+#     dirIndex = 0
+#     # Case with empty list of existing SObject: every SObject must be build
+#     if len(objList) == 0:
+#         while dirIndex < len(dirList):
+#             #append new objects
+#             if Trace() : print("Whole append new Item: ", dirList[dirIndex])
+#             _CreateObject(theObject, builder, dirList[dirIndex])
+#             dirIndex+=1
 
-    # Case with empty list of file: every SObject must be clean
-    elif len(dirList) == 0:
-        builder.RemoveObjectWithChildren(theObject)
-        logging.debug("_RebuildTreeRecursively 3: %s childs: %s" % (theObject.GetName(), ScanChildNames(theObject,  ".*")))
+#     # Case with empty list of file: every SObject must be clean
+#     elif len(dirList) == 0:
+#         builder.RemoveObjectWithChildren(theObject)
+#         logging.debug("_RebuildTreeRecursively 3: %s childs: %s" % (theObject.GetName(), ScanChildNames(theObject,  ".*")))
 
-    else:
-        objEnd = False
-        dirEnd = False
-        while True:
-            objName = objList[objIndex]
-            dirName = dirList[dirIndex]
+#     else:
+#         objEnd = False
+#         dirEnd = False
+#         while True:
+#             objName = objList[objIndex]
+#             dirName = dirList[dirIndex]
 
-            if dirName < objName:
-                if not dirEnd:
-                    #append new object
-                    if Trace(): print("1 Append new Item: ", dirName)
-                    logging.debug("_RebuildTreeRecursively 4: dirName = %s objName = %s" %(dirName,objName))
-                    _CreateObject(theObject, builder, dirName)
-                    dirIndex+=1
+#             if dirName < objName:
+#                 if not dirEnd:
+#                     #append new object
+#                     if Trace(): print("1 Append new Item: ", dirName)
+#                     logging.debug("_RebuildTreeRecursively 4: dirName = %s objName = %s" %(dirName,objName))
+#                     _CreateObject(theObject, builder, dirName)
+#                     dirIndex+=1
 
-                    if objEnd and dirIndex == len(dirList):
-                        break
-                else:
-                    if Trace(): print("1 Remove Item from tree: ", objName)
-                    builder.RemoveObjectWithChildren(objMap[objName])
-                    objIndex+=1
+#                     if objEnd and dirIndex == len(dirList):
+#                         break
+#                 else:
+#                     if Trace(): print("1 Remove Item from tree: ", objName)
+#                     builder.RemoveObjectWithChildren(objMap[objName])
+#                     objIndex+=1
 
-                    if objIndex == len(objList):
-                        break
+#                     if objIndex == len(objList):
+#                         break
 
-            elif dirName > objName:
-                #remove object if no end
-                if not objEnd:
-                    if Trace(): print("2 Remove Item from tree: ", objName)
-                    builder.RemoveObjectWithChildren(objMap[objName])
-                    objIndex+=1
+#             elif dirName > objName:
+#                 #remove object if no end
+#                 if not objEnd:
+#                     if Trace(): print("2 Remove Item from tree: ", objName)
+#                     builder.RemoveObjectWithChildren(objMap[objName])
+#                     objIndex+=1
 
-                    if dirEnd and objIndex == len(objList):
-                        break
+#                     if dirEnd and objIndex == len(objList):
+#                         break
 
-                else:
-                    #append new item at the end
-                    if Trace(): print("2 Append new Item: ", dirName)
-                    logging.debug("_RebuildTreeRecursively 5: dirName = %s objName = %s" %(dirName,objName))
-                    _CreateObject(theObject, builder, dirName)
-                    dirIndex+=1
+#                 else:
+#                     #append new item at the end
+#                     if Trace(): print("2 Append new Item: ", dirName)
+#                     logging.debug("_RebuildTreeRecursively 5: dirName = %s objName = %s" %(dirName,objName))
+#                     _CreateObject(theObject, builder, dirName)
+#                     dirIndex+=1
 
-                    if dirIndex == len(dirList):
-                        break
+#                     if dirIndex == len(dirList):
+#                         break
 
-            else:
-                # no changes
-                _FillObject(objMap[objName], theObject, builder)
-                dirIndex+=1
-                objIndex+=1
+#             else:
+#                 # no changes
+#                 _FillObject(objMap[objName], theObject, builder)
+#                 dirIndex+=1
+#                 objIndex+=1
 
-            if dirIndex != len(dirList) or objIndex != len(objList):
-                if dirIndex == len(dirList):
-                    dirEnd = True
-                    dirIndex-=1
+#             if dirIndex != len(dirList) or objIndex != len(objList):
+#                 if dirIndex == len(dirList):
+#                     dirEnd = True
+#                     dirIndex-=1
 
-                if objIndex == len(objList):
-                    objEnd = True
-                    objIndex-=1
+#                 if objIndex == len(objList):
+#                     objEnd = True
+#                     objIndex-=1
 
-            if dirIndex == len(dirList) and objIndex == len(objList):
-                break
+#             if dirIndex == len(dirList) and objIndex == len(objList):
+#                 break
 
-    # recursively calling
-    iter  = study.NewChildIterator(theObject)
-    while iter.More():
-        if iter.Value().GetName():
-            _RebuildTreeRecursively(iter.Value())
-        iter.Next()
-    logging.debug("_RebuildTreeRecursively -> %s END" % (theObject.GetName()))
+#     # recursively calling
+#     iter  = study.NewChildIterator(theObject)
+#     while iter.More():
+#         if iter.Value().GetName():
+#             _RebuildTreeRecursively(iter.Value())
+#         iter.Next()
+#     logging.debug("_RebuildTreeRecursively -> %s END" % (theObject.GetName()))
 
 
 def _CreateObject(theFather, theBuilder, theName):

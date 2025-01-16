@@ -49,6 +49,7 @@ class CLSMainWindow(QMainWindow):
         self.treeItemMenuMgr = None
         self.selectedEntry = None
         self.selectedItem = None
+        self.selectedParent = None
     
     def setHSplitterSizes(self, l1, l2, l3):
         self.ui.splitter.setSizes([l1,l2,l3])
@@ -58,6 +59,12 @@ class CLSMainWindow(QMainWindow):
     
     def getCurrentSelectedItem(self):
         return self.selectedItem
+    
+    def removeItem(self, item):
+        logging.debug("removeItem %s",item.text(col.name))
+        parent = item.parent()
+        self.selectedParent = parent
+        parent.removeChild(item)
 
     def initialSelection(self, item):
         """
@@ -212,7 +219,11 @@ class CLSMainWindow(QMainWindow):
         """
         logging.debug("new tree selection")
         selectedItems = self.ui.tw_gauche.selectedItems()
-        self.selectedItem = selectedItems[0]
+        if selectedItems:
+            self.selectedItem = selectedItems[0]
+            self.selectedParent = self.selectedItem.parent()
+        else:
+            self.selectedItem = self.selectedParent
         listEntries = []
         for item in selectedItems:
             logging.debug("selection: %s %s", item.text(

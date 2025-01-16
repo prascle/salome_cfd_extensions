@@ -7,7 +7,7 @@ salome.salome_init()
 theStudy = salome.myStudy
 
 
-def DumpMesh(aMeshName):
+def DumpMesh(aMeshName, fileMed):
     """
     Dump entries of a mesh
 
@@ -23,7 +23,7 @@ def DumpMesh(aMeshName):
     :param string aMeshName: the complete mesh path
     :return: list of [type, entry, name, offset]
     """
-    logging.info("DumpMesh")
+    logging.info("DumpMesh %s %s", aMeshName, fileMed)
     itcomp = salome.myStudy.NewComponentIterator()
     Builder = salome.myStudy.NewBuilder()
     liste = []
@@ -41,7 +41,11 @@ def DumpMesh(aMeshName):
                 if found:
                     name = AtName.Value()
                 if name == aMeshName:
-                    candidats.append(CSO)
+                    medFileInfo = CSO.GetObject().GetMesh().GetMEDFileInfo()
+                    fileName = medFileInfo.fileName
+                    logging.debug("medFileInfo.fileName %s", fileName)
+                    if fileName == fileMed:
+                        candidats.append(CSO)
                 it.Next()
         itcomp.Next()
     if len(candidats) > 0:

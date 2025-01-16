@@ -364,17 +364,24 @@ class ClientGui():
             entryMesh = self.meshPaths[fileMed]
         else:
             name = os.path.splitext(os.path.basename(fileMed))[0]
+            # --- when reopening a study, the mesh is maybe already loaded
+            existingFileMed = ""
             sobject = salome.myStudy.FindObject(name)
-            # --- when reopening a study, the mesh maybe already loaded
             if sobject:
+                medFileInfo = sobject.GetObject().GetMesh().GetMEDFileInfo()
+                existingFileMed = medFileInfo.fileName
+                logging.debug("Med file already in study %s", existingFileMed)
+            if existingFileMed == fileMed:
                 logging.debug("mesh already in study: %s", name)
                 entryMesh = sobject.GetID()
             else:
                 self.initSmesh()
                 ([aMesh], status) = self.smesh.CreateMeshesFromMED(fileMed)
+                medFileInfo = aMesh.GetMesh().GetMEDFileInfo()
+                logging.debug("medFileInfo %s", medFileInfo)
                 self.smesh.SetName(aMesh.GetMesh(), name)
             self.clsmainw.ui.tw_central.setCurrentIndex(1)
-            liste = DumpMesh(name)
+            liste = DumpMesh(name, fileMed)
             logging.debug("mesh published %s", liste)
             entryMesh = liste[0][1]
             logging.debug("entryMesh %s", entryMesh)

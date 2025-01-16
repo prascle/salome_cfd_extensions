@@ -55,14 +55,6 @@ from .CFDSTUDYGUI_QProcessDialog_ui import Ui_CFDSTUDYGUI_QProcessDialog
 from . import CFDSTUDYGUI_DataModel
 
 #-------------------------------------------------------------------------------
-# log config
-#-------------------------------------------------------------------------------
-
-# logging.basicConfig()
-# log = logging.getLogger("CFDSTUDYGUI_CommandMgr")
-# log.setLevel(logging.NOTSET)
-
-#-------------------------------------------------------------------------------
 # Classes definitions
 #-------------------------------------------------------------------------------
 
@@ -132,7 +124,6 @@ class CFDSTUDYGUI_QProcessDialog(QDialog, Ui_CFDSTUDYGUI_QProcessDialog):
         """
         if self.proc is None:
             return
-#MP        self.proc.setReadChannel(QProcess.Exception)
         self.proc.setReadChannel(QProcess.StandardError)
 
         while self.proc and self.proc.canReadLine():
@@ -145,7 +136,8 @@ class CFDSTUDYGUI_QProcessDialog(QDialog, Ui_CFDSTUDYGUI_QProcessDialog):
 
     def __finished(self):
         if self.objBr:
-            CFDSTUDYGUI_DataModel.UpdateSubTree(self.objBr)
+            twi = CFDSTUDYGUI_DataModel.getCFDTW().entryToTwiMap[self.objBr.GetID()]
+            CFDSTUDYGUI_DataModel.UpdateSubTree(twi)
         QApplication.restoreOverrideCursor()
         self.pushButton.setEnabled(True)
 
