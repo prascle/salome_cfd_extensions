@@ -35,7 +35,6 @@ def DumpMesh(aMeshName, fileMed):
             it = salome.myStudy.NewChildIterator(SO)
             while it.More():
                 CSO = it.Value()
-                # entry = CSO.GetID()
                 name = None
                 found, AtName = Builder.FindAttribute(CSO, "AttributeName")
                 if found:

@@ -365,13 +365,15 @@ class ClientGui():
         else:
             name = os.path.splitext(os.path.basename(fileMed))[0]
             # --- when reopening a study, the mesh is maybe already loaded
-            existingFileMed = ""
-            sobject = salome.myStudy.FindObject(name)
-            if sobject:
+            found = False
+            lso = salome.myStudy.FindObjectByName(name, "MESH")
+            for sobject in lso:
                 medFileInfo = sobject.GetObject().GetMesh().GetMEDFileInfo()
                 existingFileMed = medFileInfo.fileName
                 logging.debug("Med file already in study %s", existingFileMed)
-            if existingFileMed == fileMed:
+                if existingFileMed == fileMed:
+                    found = True
+            if found:
                 logging.debug("mesh already in study: %s", name)
                 entryMesh = sobject.GetID()
             else:
