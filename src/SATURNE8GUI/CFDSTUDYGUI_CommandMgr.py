@@ -136,7 +136,7 @@ class CFDSTUDYGUI_QProcessDialog(QDialog, Ui_CFDSTUDYGUI_QProcessDialog):
 
     def __finished(self):
         if self.objBr:
-            twi = CFDSTUDYGUI_DataModel.getCFDTW().entryToTwiMap[self.objBr.GetID()]
+            twi = CFDSTUDYGUI_DataModel.getCFDTW().entryToTwi[self.objBr.GetID()]
             CFDSTUDYGUI_DataModel.UpdateSubTree(twi)
         QApplication.restoreOverrideCursor()
         self.pushButton.setEnabled(True)

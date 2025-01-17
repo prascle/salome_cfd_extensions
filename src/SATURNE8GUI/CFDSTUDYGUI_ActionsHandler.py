@@ -64,6 +64,7 @@ from . import CFDSTUDYGUI_DataModel
 from . import CFDSTUDYGUI_Commons
 from . import CFDSTUDYGUI_CommandMgr
 # from CFDSTUDYGUI_Agents import *
+from .CFDSTUDYGUI_DataModel import getCFDTW
 from .CFDSTUDYGUI_Commons import _SetCFDCode, CFD_Code, BinCode, CFD_Saturne
 from .CFDSTUDYGUI_Commons import CFD_Neptune, sgPyQt, sg, CheckCFD_CodeEnv
 from . import CFDSTUDYGUI_SolverGUI
@@ -1282,10 +1283,10 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
             if os.path.exists(dialog.StudyPath):
                 boo = CFDSTUDYGUI_Commons.isaCFDCase(dialog.StudyPath)
                 if boo :
-                    iok = CFDSTUDYGUI_DataModel._SetCaseLocation(dialog.StudyPath)
+                    iok = getCFDTW()._SetCaseLocation(dialog.StudyPath)
                 else:
-                    iok = CFDSTUDYGUI_DataModel._SetStudyLocation(theStudyPath   = dialog.StudyPath,
-                                                          theCaseNames   = dialog.CaseNames,
+                    iok = getCFDTW()._SetStudyLocation(theStudyPath   = dialog.StudyPath,
+                                                          theCaseName   = dialog.CaseNames,
                                                           theCreateOpt   = dialog.CreateOption,
                                                           theCopyOpt     = dialog.CopyFromOption,
                                                           theNameRef     = dialog.CaseRefName,
@@ -1293,8 +1294,8 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
                                                           theSyrthesCase = dialog.SyrthesCase,
                                                           theNprocs      = dialog.Nprocs)
             else:
-                iok = CFDSTUDYGUI_DataModel._SetStudyLocation(theStudyPath   = dialog.StudyPath,
-                                                          theCaseNames   = dialog.CaseNames,
+                iok = getCFDTW()._SetStudyLocation(theStudyPath   = dialog.StudyPath,
+                                                          theCaseName   = dialog.CaseNames,
                                                           theCreateOpt   = dialog.CreateOption,
                                                           theCopyOpt     = dialog.CopyFromOption,
                                                           theNameRef     = dialog.CaseRefName,
@@ -1321,7 +1322,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         # if studyObj == None:
         #     return
         # TODO: simplify, remove use of SALOME studyObj
-        studyTwi = CFDSTUDYGUI_DataModel.getCFDTW().entryToTwiMap[entry]
+        studyTwi = CFDSTUDYGUI_DataModel.getCFDTW().entryToTwi[entry]
         studyObj = CFDSTUDYGUI_DataModel.getCFDTW().getObjFromEntry(entry)
         dialog.StudyPath = CFDSTUDYGUI_DataModel._GetPath(studyObj)
         dialog.StudyDirName.setText(os.path.dirname(CFDSTUDYGUI_DataModel._GetPath(studyObj)))
@@ -1348,8 +1349,8 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
                     mess = cfdstudyMess.trMessage(self.tr("CASE_ALREADY_EXISTS"),[i,CFDSTUDYGUI_DataModel._GetPath(studyObj)])
                     cfdstudyMess.aboutMessage(mess)
                 else :
-                    iok = CFDSTUDYGUI_DataModel._SetStudyLocation(theStudyPath   = dialog.StudyPath,
-                                                                  theCaseNames   = i,
+                    iok = getCFDTW()._SetStudyLocation(theStudyPath   = dialog.StudyPath,
+                                                                  theCaseName   = i,
                                                                   theCreateOpt   = dialog.CreateOption,
                                                                   theCopyOpt     = dialog.CopyFromOption,
                                                                   theNameRef     = dialog.CaseRefName,
@@ -1361,8 +1362,8 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
                 mess = cfdstudyMess.trMessage(self.tr("DEFAULT_CASE_ALREADY_EXISTS"),["CASE1",CFDSTUDYGUI_DataModel._GetPath(studyObj)])
                 cfdstudyMess.aboutMessage(mess)
             else :
-                iok = CFDSTUDYGUI_DataModel._SetStudyLocation(theStudyPath = dialog.StudyPath,
-                                                              theCaseNames   = "CASE1",
+                iok = getCFDTW()._SetStudyLocation(theStudyPath = dialog.StudyPath,
+                                                              theCaseName   = "CASE1",
                                                               theCreateOpt   = dialog.CreateOption,
                                                               theCopyOpt     = dialog.CopyFromOption,
                                                               theNameRef     = dialog.CaseRefName,
@@ -1410,7 +1411,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         QApplication.setOverrideCursor(cursor)
         
         if Object:
-            twi = CFDSTUDYGUI_DataModel.getCFDTW().entryToTwiMap[Object.GetID()]
+            twi = CFDSTUDYGUI_DataModel.getCFDTW().entryToTwi[Object.GetID()]
             CFDSTUDYGUI_DataModel.UpdateSubTree(twi)
 
         QApplication.restoreOverrideCursor()
@@ -1998,10 +1999,10 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         boo,StudyPath,CasePath = self.checkCFDCaseDir(xmlfileName)
         if boo and StudyPath != "" and CasePath != "" :
             CaseName = os.path.basename(CasePath)
-            iok = CFDSTUDYGUI_DataModel._SetCaseLocation(CasePath)
-            studyObj = CFDSTUDYGUI_DataModel.FindStudyByPath(StudyPath)
+            iok = getCFDTW()._SetCaseLocation(CasePath)
+            studyObj = getCFDTW().FindStudyObjectByPath(StudyPath)
             caseObj  = CFDSTUDYGUI_DataModel.getSObject(studyObj,CaseName)
-            caseTwi = CFDSTUDYGUI_DataModel.getCFDTW().entryToTwiMap[caseObj.GetID()]
+            caseTwi = CFDSTUDYGUI_DataModel.getCFDTW().entryToTwi[caseObj.GetID()]
             DATATwi  = CFDSTUDYGUI_DataModel.getCFDTW().getTwiChildWithName(caseTwi,"DATA")
             XMLTwi   = CFDSTUDYGUI_DataModel.getCFDTW().getTwiChildWithName(DATATwi,os.path.basename(xmlfileName))
             codeName = CFDSTUDYGUI_DataModel.getNameCodeFromXmlCasePath(xmlfileName)
@@ -2262,7 +2263,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
             boo,StudyPath,CasePath = self.checkCFDCaseDir(oldXmlFilePath)
             if boo and StudyPath != "" and CasePath != "" :
                 CaseName = os.path.basename(CasePath)
-                studyObj = CFDSTUDYGUI_DataModel.FindStudyByPath(StudyPath)
+                studyObj = getCFDTW().FindStudyObjectByPath(StudyPath)
                 caseObj  = CFDSTUDYGUI_DataModel.getSObject(studyObj,CaseName)
                 DATAObj  = CFDSTUDYGUI_DataModel.getSObject(caseObj,"DATA")
                 XMLObj   = CFDSTUDYGUI_DataModel.getSObject(DATAObj,os.path.basename(oldXmlFilePath))
@@ -2272,8 +2273,8 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
        # Open the save as CFD xml GUI
         boo,StudyPath,CasePath = self.checkCFDCaseDir(xmlFilePath)
         if boo and StudyPath != "" and CasePath != "" :
-            iok = CFDSTUDYGUI_DataModel._SetStudyLocation(theStudyPath   = StudyPath,
-                                                          theCaseNames   = CasePath,
+            iok = getCFDTW()._SetStudyLocation(theStudyPath   = StudyPath,
+                                                          theCaseName   = CasePath,
                                                           theCreateOpt   = False,
                                                           theCopyOpt     = False,
                                                           theNameRef     = "",
@@ -2281,7 +2282,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
                                                           theSyrthesCase = "",
                                                           theNprocs      = "")
             CaseName = os.path.basename(CasePath)
-            studyObj = CFDSTUDYGUI_DataModel.FindStudyByPath(StudyPath)
+            studyObj = getCFDTW().FindStudyObjectByPath(StudyPath)
             caseObj  = CFDSTUDYGUI_DataModel.getSObject(studyObj,CaseName)
             DATAObj  = CFDSTUDYGUI_DataModel.getSObject(caseObj,"DATA")
             XMLObj   = CFDSTUDYGUI_DataModel.getSObject(DATAObj,os.path.basename(xmlFilePath))

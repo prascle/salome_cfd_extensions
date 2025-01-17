@@ -285,620 +285,6 @@ icon_collection[dict_object["CouplingStudy"]]         = "CFDSTUDY_STUDY_OBJ_ICON
 
 _CFDTreeWidget = None
 
-def getCFDTW():
-    global _CFDTreeWidget
-    if _CFDTreeWidget is None:
-        _CFDTreeWidget = CFDTreeWidget()
-    return _CFDTreeWidget
-
-def getQIcon(category):
-    id = dict_object[category]
-    iconPath = os.path.join(os.getenv("SATURNE8_ROOT_DIR"), 
-                            "share/salome/resources/saturne8", 
-                            ObjectTR.tr(icon_collection[id]))
-    logging.debug("icon: %s %s", category, iconPath)
-    return QIcon(iconPath)
-
-def getTWIid(category):
-    return dict_object[category]
-
-class CFDTreeWidget():
-    
-    def __init__(self):
-        from .clientgui import getClientGui
-        self.getClientGui = getClientGui
-        self.moduleFolder = self.getClientGui().getCLSMainWindow().getSaturneFolder()
-        self.moduleFolder.setIcon(col.name, getQIcon("CFDSTUDY"))
-        self.entryToTwiMap = {}
-        
-    def getObjFromTwi(self, twItem):
-        for entry in self.entryToTwiMap:
-            if self.entryToTwiMap[entry] == twItem:
-                study = _getStudy()
-                obj = study.FindObjectID(entry)
-                return obj
-        return None
-    
-    def getTwiFromEntry(self, entry):
-        if entry in self.entryToTwiMap:
-            return self.entryToTwiMap[entry]
-        else:
-            return None
-        
-    def getObjFromEntry(self, entry):
-        study = _getStudy()
-        obj = study.FindObjectID(entry)
-        return obj
-    
-    def removeObjFromTwi(self, twi):
-        entry = twi.text(col.entry)
-        if entry:
-            obj = self.getObjFromEntry(entry)
-            if obj:
-                study   = _getStudy()
-                builder = study.NewBuilder()
-                builder.RemoveObjectWithChildren(obj)
-            self.entryToTwiMap.pop(entry)
-
-    def setIdCon(self, twItem, category):
-            twItem.setIcon(col.name, getQIcon(category))
-            twItem.setText(col.id, str(getTWIid(category)))
-
-    def findCurrentStudyItem(self):
-        cur = self.getClientGui().getCLSMainWindow().getCurrentSelectedItem()
-        while cur:
-            if cur.text(col.id) == str(dict_object["Study"]):
-                return cur
-            cur = cur.parent()
-        logging.debug("************* outside Study ? *****************")
-        return None    
-    
-    def findOrCreateStudyTWI(self, studyObject, studyPath):
-        logging.debug("findOrCreateStudyTWI %s", studyPath)
-        twiRoot = self.moduleFolder
-        studyName = os.path.basename(studyPath) # = studyObject.GetName()
-        # --- check if study is already in tree
-        twiStudy = self.getTwiChildWithName(twiRoot, studyName)
-        if twiStudy:
-            return twiStudy
-        # --- create  
-        twiStudy = QTreeWidgetItem()
-        twiStudy.setText(col.name, studyName)
-        twiStudy.setText(col.details, studyPath)
-        entry = studyObject.GetID()
-        twiStudy.setText(col.entry, entry)
-        self.setIdCon(twiStudy, "Study")
-        twiRoot.addChild(twiStudy)
-        self.entryToTwiMap[entry] = twiStudy
-        self.getClientGui().getCLSMainWindow().initialSelection(twiStudy)
-        return twiStudy
-
-    def findOrCreateCaseTWI(self, caseObject, twiStudy, casePath):
-        logging.debug("findOrCreateCaseTWI %s", casePath)
-        caseName = os.path.basename(casePath)
-        # --- check if case is already in tree
-        twiCase = self.getTwiChildWithName(twiStudy, caseName)
-        if twiCase:
-            return twiCase
-        # --- create  
-        twiCase = QTreeWidgetItem()
-        twiCase.setText(col.name, caseName)
-        twiCase.setText(col.details, casePath)
-        entry = caseObject.GetID()
-        twiCase.setText(col.entry, entry)
-        self.setIdCon(twiCase, "Case")
-        twiStudy.addChild(twiCase)
-        self.entryToTwiMap[entry] = twiCase
-        return twiCase
-
-    def findOrCreateMeshTWI(self, meshObject, twiStudy, meshPath):
-        logging.debug("findOrCreateMeshTWI %s", meshPath)
-        meshName = os.path.basename(meshPath)
-        # --- check if case is already in tree
-        twiMesh = self.getTwiChildWithName(twiStudy, meshName)
-        if twiMesh:
-            return twiMesh
-        # --- create  
-        twiMesh = QTreeWidgetItem()
-        twiMesh.setText(col.name, meshObject.GetName())
-        twiMesh.setText(col.details, meshPath)
-        entry = meshObject.GetID()
-        twiMesh.setText(col.entry, entry)
-        self.setIdCon(twiMesh, "MESHFolder")
-        twiStudy.addChild(twiMesh)
-        self.entryToTwiMap[entry] = twiMesh
-        return twiMesh
-
-    def createTWItem(self, parentTWI, itemName, itemPath):
-        logging.debug("createTWItem %s %s %s", itemPath, itemName, parentTWI.text(col.name))
-        twItem = QTreeWidgetItem()
-        twItem.setText(col.name, itemName)
-        twItem.setText(col.details, itemPath)
-        
-        # --- parent is study
-        if parentTWI == self.findCurrentStudyItem():
-            if os.path.isdir(itemPath):
-                if CFDSTUDYGUI_Commons.isaCFDCase(itemPath):
-                    self.setIdCon(twItem, "Case")
-                    obj = _CreateItem(self.getObjFromEntry(parentTWI.text(col.entry)), itemName)
-                    if obj:
-                        entry = obj.GetID()
-                        twItem.setText(col.entry, entry)
-                        self.entryToTwiMap[entry] = twItem
-                else:
-                    boo = False
-                    dirList = os.listdir(itemPath)
-                    for i in dirList:
-                        if re.match(".*\.syd$", i) or re.match(".*\.syd_example$", i):
-                            boo = True
-                    if boo :
-                        self.setIdCon(twItem, "SYRCaseFolder")
-                    else:
-                        if itemName == "MESH":
-                            self.setIdCon(twItem, "MESHFolder")
-                        elif itemName == "POST":
-                            self.setIdCon(twItem, "POSTFolder")
-                        else:
-                            self.setIdCon(twItem, "OtherFolder")   
-            if itemName in ("code_saturne", "neptune_cfd", "runcase"):
-                self.setIdCon(twItem, "CouplingLauncher")
-            elif itemName == "RESU_COUPLING":
-                self.setIdCon(twItem, "RESU_COUPLINGFolder")
-                                        
-        # --- parent is Syrthes Case
-        elif parentTWI.text(col.id) == str(dict_object["SYRCaseFolder"]):
-            if os.path.isdir(itemPath):
-                if itemName == "usr_examples":
-                    self.setIdCon(twItem, "SRCSYRFolder")
-            if itemName in ["Makefile","syrthes.py","user_cond.c"]:
-                self.setIdCon(twItem, "SyrthesFile")
-            if re.match(".*\.syd$", itemName) or re.match(".*\.syd_example$", itemName) :
-                self.setIdCon(twItem, "SyrthesSydFile")
-                
-        # --- parent is Syrthes user examples
-        elif parentTWI.text(col.id) == str(dict_object["SRCSYRFolder"]):
-            if re.match(".*\.c$", itemName):
-                self.setIdCon(twItem, "USRSRCSYRFile")
-
-        # --- parent is Case
-        elif parentTWI.text(col.id) == str(dict_object["Case"]):
-            if os.path.isdir(itemPath):
-                if itemName == "DATA":
-                    self.setIdCon(twItem, "DATAFolder")
-                elif itemName == "SRC":
-                    self.setIdCon(twItem, "SRCFolder")
-                elif itemName == "RESU":
-                    self.setIdCon(twItem, "RESUFolder")
-                else:
-                    self.setIdCon(twItem, "OtherFolder")
-
-        # --- parent is DATA folder
-        elif parentTWI.text(col.id) == str(dict_object["DATAFolder"]):
-            if os.path.isdir(itemPath):
-                if itemName == "REFERENCE":
-                    self.setIdCon(twItem, "REFERENCEDATAFolder")
-                if itemName == "DRAFT":
-                    self.setIdCon(twItem, "DRAFTFolder")
-            else:
-                if itemName[0:12] == "code_saturne" or itemName[0:10] == "neptune_cfd":
-                    # could use "DATALaunch" but prefer to hide this wrapper.
-                    self.setIdCon(twItem, "OtherFile")
-                elif itemName[0:10] == "run.cfg":
-                    self.setIdCon(twItem, "DATARunConf")
-                elif re.match("^dp_", itemName) or re.match("^meteo",itemName) or re.match("^cs_", itemName):
-                    self.setIdCon(twItem, "DATAFile")
-                elif re.match(".*\.py$", itemName):
-                    self.setIdCon(twItem, "DATAPyFile")
-                else:
-                    if os.path.isfile(itemPath):
-                        fd = os.open(itemPath , os.O_RDONLY)
-                        try:
-                            f = os.fdopen(fd)
-                            l1 = f.readline()
-                            if l1.startswith('''<?xml version="1.0" encoding="utf-8"?><Code_Saturne_GUI''') or l1.startswith('''<?xml version="1.0" encoding="utf-8"?><NEPTUNE_CFD_GUI'''):
-                                self.setIdCon(twItem, "DATAfileXML")
-                            elif l1.startswith('''<?xml version="1.0" encoding="utf-8"?>''') :
-                                l2 = f.readline()
-                                if l2.startswith('''<Code_Saturne_GUI''') or l2.startswith('''<NEPTUNE_CFD_GUI'''):
-                                    self.setIdCon(twItem, "DATAfileXML")
-                            else:
-                                    self.setIdCon(twItem, "DATAFile")
-                            f.close()
-                        except:
-                            pass
-
-        # --- parent is DRAFT folder
-        elif parentTWI.text(col.id) == str(dict_object["DRAFTFolder"]):
-            draftParentFolder = os.path.basename(parentTWI.parent().text(col.details.id))
-            if os.path.isfile(itemPath):
-                if draftParentFolder == "DATA":
-                    if re.match("^dp_", itemName) or re.match("^meteo",itemName) or re.match("^cs_", itemName):
-                        self.setIdCon(twItem, "DATADRAFTFile")
-                elif draftParentFolder == "SRC":
-                    if re.match(".*\.[fF]$", itemName) or \
-                        re.match(".*\.[fF]90$", itemName) or \
-                        re.match(".*\.for$", itemName) or \
-                        re.match(".*\.FOR$", itemName):
-                        self.setIdCon(twItem, "SRCDRAFTFile")
-                    elif re.match(".*\.c$", itemName):
-                        self.setIdCon(twItem, "SRCDRAFTFile")
-                    elif re.match(".*\.cxx$", itemName) or \
-                        re.match(".*\.cpp$", itemName):
-                        self.setIdCon(twItem, "SRCDRAFTFile")
-                    elif re.match(".*\.h$", itemName) or \
-                        re.match(".*\.hxx$", itemName) or \
-                        re.match(".*\.hpp$", itemName):
-                        self.setIdCon(twItem, "SRCDRAFTFile")
-            elif os.path.isdir(itemPath):
-                self.setIdCon(twItem, "OtherFolder")
-
-        # --- parent is REFERENCE folder into DATA folder
-        elif parentTWI.text(col.id) == str(dict_object["REFERENCEDATAFolder"]):
-            if os.path.isfile(itemPath):
-                if re.match("^dp_", itemName) or re.match("^meteo",itemName) or re.match("^cs_", itemName):
-                    self.setIdCon(twItem, "REFERENCEDATAFile")
-            elif os.path.isdir(itemPath):
-                self.setIdCon(twItem, "OtherFolder")
-
-        # --- parent is MESH folder
-        elif parentTWI.text(col.id) == str(dict_object["MESHFolder"]):
-            if os.path.isdir(itemPath):
-                # --- TODO: check!
-                if d_dirMesh != {}:
-                    for key in d_dirMesh:
-                        if itemPath in d_dirMesh[key]:
-                            for k,v in dict_object.items():
-                                if v == key:
-                                    self.setIdCon(twItem, k)
-                                    break
-            else:
-                if re.match(".*\.des$", itemName):
-                    self.setIdCon(twItem, "DESFile")
-                elif re.match(".*\.med$", itemName):
-                    self.setIdCon(twItem, "MEDFile")
-                elif re.match(".*\.dat$", itemName):
-                    self.setIdCon(twItem, "DATFile")
-                elif re.match(".*\.cgns$", itemName):
-                    self.setIdCon(twItem, "CGNSFile")
-                elif re.match(".*\.ccm$", itemName):
-                    self.setIdCon(twItem, "CcmFile")
-                elif re.match(".*\.case$", itemName):
-                    self.setIdCon(twItem, "CaseFile")
-                elif re.match(".*\.neu$", itemName):
-                    self.setIdCon(twItem, "NeuFile")
-                elif re.match(".*\.msh$", itemName):
-                    self.setIdCon(twItem, "MSHFile")
-                elif re.match(".*\.hex$", itemName):
-                    self.setIdCon(twItem, "HexFile")
-                elif re.match(".*\.unv$", itemName):
-                    self.setIdCon(twItem, "UnvFile")
-                elif re.match(".*\.syr$", itemName):
-                    self.setIdCon(twItem, "SYRMESHFile")
-                else:
-                    self.setIdCon(twItem, "MESHFile")
-
-        # --- parent is POST folder
-        elif parentTWI.text(col.id) == str(dict_object["POSTFolder"]):
-            if os.path.isdir(itemPath):
-                self.setIdCon(twItem, "OtherFolder")
-            else:
-                self.setIdCon(twItem, "POSTFile")
-
-        # --- parent is SRC folder
-        elif parentTWI.text(col.id) == str(dict_object["SRCFolder"]):
-            if os.path.isfile(itemPath):
-                if re.match(".*\.[fF]$", itemName) or re.match(".*\.[fF]90$", itemName) \
-                or re.match(".*\.for$", itemName) or re.match(".*\.FOR$", itemName):
-                    self.setIdCon(twItem, "SRCFile")
-                elif re.match(".*\.c$", itemName):
-                    self.setIdCon(twItem, "SRCFile")
-                elif re.match(".*\.cpp$", itemName) or re.match(".*\.cxx$", itemName):
-                    self.setIdCon(twItem, "SRCFile")
-                elif re.match(".*\.h$", itemName) or re.match(".*\.hpp$", itemName) or re.match(".*\.hxx$", itemName):
-                    self.setIdCon(twItem, "SRCFile")
-                elif re.match(".*\.log$", itemName):
-                    self.setIdCon(twItem, "LOGSRCFile")
-            elif os.path.isdir(itemPath):
-                if itemName == "REFERENCE" or itemName == "EXAMPLES" :
-                    self.setIdCon(twItem, "USERSFolder")
-                elif itemName == "DRAFT":
-                    self.setIdCon(twItem, "DRAFTFolder")
-                else:
-                    self.setIdCon(twItem, "OtherFolder")
-
-        # --- parent REFERENCE/base... folder
-        elif parentTWI.text(col.id) == str(dict_object["USERSFolder"]):
-            if os.path.isfile(itemPath):
-                if re.match(".*\.[fF]$", itemName) or re.match(".*\.[fF]90$", itemName) \
-                or re.match(".*\.for$", itemName) or re.match(".*\.FOR$", itemName):
-                    self.setIdCon(twItem, "USRSRCFile")
-                elif re.match(".*\.c$", itemName):
-                    self.setIdCon(twItem, "USRSRCFile")
-                elif re.match(".*\.cpp$", itemName) or re.match(".*\.cxx$", itemName):
-                    self.setIdCon(twItem, "USRSRCFile")
-                elif re.match(".*\.h$", itemName) or re.match(".*\.hpp$", itemName) or re.match(".*\.hxx$", itemName):
-                    self.setIdCon(twItem, "USRSRCFile")
-                elif re.match(".*\.log$", itemName):
-                    self.setIdCon(twItem, "LOGSRCFile")
-            elif os.path.isdir(itemPath):
-                if itemName in ("atmo", "base", "cplv", "cfbl", "cogz", \
-                            "ctwr", "elec", "fuel", "lagr", "pprt", "rayt"):
-                    self.setIdCon(twItem, "USERSFolder")
-                else:
-                    self.setIdCon(twItem, "OtherFolder")
-
-        # --- parent is RESU folder
-        elif parentTWI.text(col.id) == str(dict_object["RESUFolder"]):
-            if os.path.isdir(itemPath):
-                if "error" in os.listdir(itemPath):
-                    self.setIdCon(twItem, "RESUSubErrFolder")
-                else:
-                    self.setIdCon(twItem, "RESUSubFolder")
-
-        # --- parent is RESULT SRC folder
-        elif parentTWI.text(col.id) == str(dict_object["RESSRCFolder"]):
-            if os.path.isfile(itemPath):
-                if re.match(".*\.[fF]$", itemName) or re.match(".*\.[fF]90$", itemName) \
-                or re.match(".*\.for$", itemName) or re.match(".*\.FOR$", itemName):
-                    self.setIdCon(twItem, "RESSRCFile")
-                elif re.match(".*\.c$", itemName):
-                    self.setIdCon(twItem, "RESSRCFile")
-                elif re.match(".*\.cpp$", itemName) or re.match(".*\.cxx$", itemName):
-                    self.setIdCon(twItem, "RESSRCFile")
-                elif re.match(".*\.h$", itemName) or re.match(".*\.hpp$", itemName) or re.match(".*\.hxx$", itemName):
-                    self.setIdCon(twItem, "RESSRCFile")
-
-        # --- parent is RESULT sub folder
-        elif parentTWI.text(col.id) == str(dict_object["RESUSubFolder"]) or parentTWI.text(col.id) == str(dict_object["RESUSubErrFolder"]):
-            if os.path.isdir(itemPath):
-                if itemName == "src_neptune" or itemName == "src_saturne":
-                    self.setIdCon(twItem, "RESSRCFolder")
-                elif itemName == "monitoring":
-                    self.setIdCon(twItem, "HISTFolder")
-                elif itemName == "checkpoint":
-                    self.setIdCon(twItem, "SUITEFolder")
-                elif itemName == "mesh_input":
-                    self.setIdCon(twItem, "PRETFolder")
-                elif itemName == "partition_output":
-                    self.setIdCon(twItem, "PRETFolder")
-                elif itemName == "postprocessing":
-                    self.setIdCon(twItem, "POSTPROFolder")
-            else:
-                if re.match(".*\.dat$", itemName) or re.match(".*\.csv$", itemName):
-                    self.setIdCon(twItem, "HISTFile")
-                elif re.match(".*\.xml$", itemName):
-                    self.setIdCon(twItem, "RESXMLFile")
-                elif re.match(".*\.log$", itemName):
-                    self.setIdCon(twItem, "RESUFile")
-                elif re.match("listing$", itemName):
-                    self.setIdCon(twItem, "RESUFile")
-                elif re.match("error$", itemName):
-                    self.setIdCon(twItem, "RESUFile")
-                elif re.match(".*\.png$", itemName):
-                    self.setIdCon(twItem, "RESUPNGFile")
-
-        # --- parent is POSTPRO folder
-        elif parentTWI.text(col.id) == str(dict_object["POSTPROFolder"]):
-            if os.path.isfile(itemPath):
-                if re.match(".*\.med$", itemName):
-                    self.setIdCon(twItem, "RESMEDFile")
-                if re.match(".*\.case$", itemName):
-                    self.setIdCon(twItem, "RESENSIGHTFile")
-
-        # --- parent is HIST folder
-        elif parentTWI.text(col.id) == str(dict_object["HISTFolder"]):
-            if os.path.isfile(itemPath):
-                if re.match(".*\.dat$", itemName) or re.match(".*\.csv$", itemName):
-                    self.setIdCon(twItem, "HISTFile")
-
-        # --- parent is RESU_COUPLING folder
-        elif parentTWI.text(col.id) == str(dict_object["RESU_COUPLINGFolder"]):
-            if os.path.isdir(itemPath):
-                self.setIdCon(twItem, "RESU_COUPLINGSubFolder")
-
-        # --- parent is RESU_COUPLING sub folder
-        elif parentTWI.text(col.id) == str(dict_object["RESU_COUPLINGSubFolder"]):
-            if os.path.isdir(itemPath):
-                if os.path.isfile(os.path.join(itemPath,"syrthes")):
-                    self.setIdCon(twItem, "RESUSubFolderSYR")
-                else:
-                    # test if folder is a result cfd folder?
-                    self.setIdCon(twItem, "RESUSubFolder")
-
-        elif parentTWI.text(col.id) == str(dict_object["RESUSubFolderSYR"]):
-            if re.match(".*\.log$", itemName):
-                self.setIdCon(twItem, "RESUFile")
-            if re.match(".*\.dat$", itemName):
-                self.setIdCon(twItem, "RESUFile")
-            if re.match(".*\.rdt$", itemName):
-                self.setIdCon(twItem, "RESUFile")
-            if re.match(".*\.res$", itemName):
-                self.setIdCon(twItem, "RESUFile")
-            if re.match(".*\.syr$", itemName):
-                self.setIdCon(twItem, "RESUFile")
-            if re.match(".*\.data$", itemName):
-                self.setIdCon(twItem, "RESUFile")
-            if re.match(".*\.add$", itemName):
-                self.setIdCon(twItem, "RESUFile")
-            if re.match(".*\.c$", itemName):
-                self.setIdCon(twItem, "RESUFile")
-            elif re.match("listing$", itemName):
-                self.setIdCon(twItem, "RESUFile")
-
-        # --- MESH sub folder
-        if parentTWI.text(col.id) in d_dirMesh:
-            if os.path.isdir(itemPath):
-                if d_dirMesh != {}:
-                    for key in d_dirMesh:
-                        if itemPath in d_dirMesh[key]:
-                            for k,v in dict_object.items():
-                                if v == key:
-                                    self.setIdCon(twItem, k)
-                                    break
-            else:
-                if re.match(".*\.des$", itemName):
-                    self.setIdCon(twItem, "DESFile")
-                elif re.match(".*\.med$", itemName):
-                    self.setIdCon(twItem, "MEDFile")
-                elif re.match(".*\.dat$", itemName):
-                    self.setIdCon(twItem, "DATFile")
-                elif re.match(".*\.cgns$", itemName):
-                    self.setIdCon(twItem, "CGNSFile")
-                elif re.match(".*\.ccm$", itemName):
-                    self.setIdCon(twItem, "CcmFile")
-                elif re.match(".*\.case$", itemName):
-                    self.setIdCon(twItem, "CaseFile")
-                elif re.match(".*\.neu$", itemName):
-                    self.setIdCon(twItem, "NeuFile")
-                elif re.match(".*\.msh$", itemName):
-                    self.setIdCon(twItem, "MSHFile")
-                elif re.match(".*\.hex$", itemName):
-                    self.setIdCon(twItem, "HexFile")
-                elif re.match(".*\.unv$", itemName):
-                    self.setIdCon(twItem, "UnvFile")
-                elif re.match(".*\.syr$", itemName):
-                    self.setIdCon(twItem, "SYRMESHFile")
-                else:
-                    self.setIdCon(twItem, "MESHFile")
-
-
-        if twItem.text(col.id) == str(dict_object["OtherFile"]):
-            if re.match(".*\.[fF]$", itemName) or \
-            re.match(".*\.[fF]90$", itemName) or \
-            re.match(".*\.for$", itemName) or \
-            re.match(".*\.FOR$", itemName):
-                if self.detectUSERSitem(parentTWI):
-                    logging.debug("****************************** %s", itemPath)
-                    self.setIdCon(twItem, self.detectSRCitem(parentTWI))
-            elif re.match(".*\.c$", itemName):
-                if self.detectUSERSitem(parentTWI):
-                    logging.debug("****************************** %s", itemPath)
-                    self.setIdCon(twItem, self.detectSRCitem(parentTWI))
-            elif re.match(".*\.cpp$", itemName) or \
-                re.match(".*\.cxx$", itemName):
-                if self.detectUSERSitem(parentTWI):
-                    logging.debug("****************************** %s", itemPath)
-                    self.setIdCon(twItem, self.detectSRCitem(parentTWI))
-            elif re.match(".*\.h$", itemName) or \
-                re.match(".*\.hxx$", itemName) or \
-                re.match(".*\.hpp$", itemName):
-                if self.detectUSERSitem(parentTWI):
-                    logging.debug("****************************** %s", itemPath)
-                    self.setIdCon(twItem, self.detectSRCitem(parentTWI))
-
-        if twItem.text(col.id) == str(dict_object["OtherFile"]):
-            if os.path.isdir(itemPath):
-                self.setIdCon(twItem, "OtherFolder")
-                
-        parentTWI.addChild(twItem)
-        return twItem
-            
-    def rebuildTWRecursively(self, twItem):
-        """
-        Compare the children (if any) of the tree item with the content of the
-        corresponding folder on the disk.
-        Create the items corresponding to new files or directories on the disk,
-        remove the items corresponding to files or directories that are no more
-        on the disk.
-        """
-        # --- find the path corresponding to the current item. 
-        #     Do not consider items with no path (for instance, mesh groups).
-        
-        itemPath = twItem.text(col.details)
-        logging.debug("rebuildTWRecursively %s", itemPath)
-        if itemPath is None:
-            return
-        
-        # --- if the item path exists and is a directory, get the names of the files on disk in this directory
-        lst = []
-        if os.path.isdir(itemPath):
-            lst = os.listdir(itemPath)
-        lst.sort()
-        
-        # --- get the paths of children of the item
-        nbChildren = twItem.childCount()
-        childPaths = {}
-        for i in range(nbChildren):
-            itm = twItem.child(i)
-            pth = itm.text(col.details)
-            childPaths[pth] = itm
-        
-        # --- find the new paths on disk, create the corresponding tree items as new children of the current item
-        for aName in lst:
-            aPath = os.path.join(itemPath, aName)
-            if aPath not in childPaths:
-                nc = self.createTWItem(twItem, aName, aPath)
-        
-        # --- find the items corresponding to files or directories no longer present on the disk and are removed
-        #     only the items coresponding to a file or directory are taken into account,
-        #     (the items corresponding to mesh groups have no path, and are not removed)
-        for pth, itm in childPaths.items():
-            aName = os.path.basename(pth)
-            if aName not in lst:
-                itmPth = itm.text(col.details)
-                if itmPth:
-                    self.removeObjFromTwi(itm)
-                    twItem.removeChild(itm)
-        
-        # --- recursive call with the updated children of the item 
-        nbChildren = twItem.childCount()
-        for i in range(nbChildren):
-            itm = twItem.child(i)
-            self.rebuildTWRecursively(itm)
-        logging.debug("rebuildTWRecursively %s END", itemPath)
-
-    def detectUSERSitem(self, twItem):
-        """
-        Search if the branch containing twItem represents the USERS folder.
-        """
-        cur = twItem
-        while cur:
-            if cur.text(col.id) == str(dict_object["USERSFolder"]):
-                return True
-            elif cur.text(col.id) == str(dict_object["Study"]):
-                return False
-            cur = cur.parent()
-        logging.debug("************* outside Study ? *****************")
-        return False
-
-    def detectSRCitem(self, twItem):
-        """
-        Returns the type of the branch twItem which represents
-        the files in the SRC folder.
-        """
-        cur = twItem
-        while cur:
-            if cur.text(col.id) == str(dict_object["SRCFolder"]):
-                return "USRSRCFile"
-            cur = cur.parent()
-        logging.debug("************* outside Study ? *****************")
-        return "USRSRCFile"
-    
-    def findCaseItem(self, twItem):
-        cur = twItem
-        while cur:
-            if cur.text(col.id) == str(dict_object["Case"]):
-                return cur
-            cur = cur.parent()
-        logging.debug("************* outside Case ? *****************")
-        return cur
-    
-    def findStudyItem(self, twItem):
-        cur = twItem
-        while cur:
-            if cur.text(col.id) == str(dict_object["Study"]):
-                return cur
-            cur = cur.parent()
-        logging.debug("************* outside Study ? *****************")
-        return cur
-
-    def getTwiChildWithName(self, parentTwi, name):
-        nbChildren = parentTwi.childCount()
-        for i in range(nbChildren) :
-            child = parentTwi.child(i)
-            if child.text(col.name) == name:
-                return child
-        return None
     
 #-------------------------------------------------------------------------------
 # ObjectTR is a convenient object for traduction purpose
@@ -1027,123 +413,914 @@ def _findOrCreateComponent():
         # except:
         #     pass
     return father
- 
-def _SetCaseLocation(theCasePath):
-    logging.debug("_SetCaseLocation %s", theCasePath)
-    study         = _getStudy()
-    builder       = study.NewBuilder()
-    father        = _findOrCreateComponent()
-    theStudyPath  = os.path.dirname(theCasePath)
-    aCaseName      = os.path.basename(theCasePath)
-    studyObject   = FindStudyByPath(theStudyPath)
-    if studyObject == None:
-        if CFDSTUDYGUI_Commons.isaCFDStudy(theStudyPath):
-            studyObject  = builder.NewObject(father)
-            attr = builder.FindOrCreateAttribute(studyObject, "AttributeLocalID")
-            attr.SetValue(dict_object["Study"])
-            attr = builder.FindOrCreateAttribute(studyObject, "AttributePixMap")
-            attr.SetPixMap(str(ObjectTR.tr("CFDSTUDY_STUDY_OBJ_ICON")))
-            attr = builder.FindOrCreateAttribute(studyObject, "AttributeName")
-            attr.SetValue(os.path.basename(theStudyPath))
-            attr = builder.FindOrCreateAttribute(studyObject, "AttributeComment")
-            attr.SetValue(os.path.dirname(theStudyPath))
-    _CreateItem(studyObject,aCaseName)
-    caseObject = getSObject(studyObject,aCaseName)
-    twiStudy = getCFDTW().findOrCreateStudyTWI(studyObject, theStudyPath)
-    #getCFDTW().entryToTwiMap[studyObject.GetID()] = twiStudy
-    twiCase = getCFDTW().findOrCreateCaseTWI(caseObject, twiStudy, theCasePath)
-    #getCFDTW().entryToTwiMap[caseObject.GetID()] = twiCase
-    getCFDTW().rebuildTWRecursively(twiCase)
-    if getSObject(studyObject,"MESH") == None:
-        _CreateItem(studyObject,"MESH")
-        meshObject = getSObject(studyObject,"MESH")
-        if meshObject != None:
-            meshPath = os.path.join(theStudyPath, "MESH")
-            twiMesh = getCFDTW().findOrCreateMeshTWI(meshObject, twiStudy, meshPath)
-            #getCFDTW().entryToTwiMap[meshObject.GetID()] = twiMesh
-            getCFDTW().rebuildTWRecursively(twiMesh)
- 
 
-def _SetStudyLocation(theStudyPath, theCaseNames,theCreateOpt,
-                      theCopyOpt, theNameRef = "", theSyrthesOpt =False, theSyrthesCase = "",theNprocs=""):
-    """
-    Constructs the tree representation of a CFD study (with the
-    associated cases) for the Object Browser. All branch of the tree is
-    an C{SObject} object.
+def getCFDTW():
+    global _CFDTreeWidget
+    if _CFDTreeWidget is None:
+        _CFDTreeWidget = CFDTreeWidget()
+    return _CFDTreeWidget
 
-    @type theStudyPath: C{String}
-    @param theStudyPath: unix path of the CFD study.
-    @type theCaseNames: C{String}
-    @param theCaseNames: unix pathes of the new CFD cases to be build.
-    """
-    logging.debug("_SetStudyLocation %s %s", theStudyPath, theCaseNames)
+def getQIcon(category):
+    id = dict_object[category]
+    iconPath = os.path.join(os.getenv("SATURNE8_ROOT_DIR"), 
+                            "share/salome/resources/saturne8", 
+                            ObjectTR.tr(icon_collection[id]))
+    logging.debug("icon: %s %s", category, iconPath)
+    return QIcon(iconPath)
 
-    iok = True
-    if theCopyOpt:
-        if not os.path.exists(theNameRef):
-            raise ValueError("reference case is not a repository")
-    if os.path.exists(theStudyPath) :
+def getTWIid(category):
+    return dict_object[category]
 
-        if theCreateOpt:
-            mess = cfdstudyMess.trMessage(ObjectTR.tr("STUDY_DIRECTORY_ALREADY_EXISTS"),[""])
-            cfdstudyMess.criticalMessage(mess)
-            return False
-    if theCreateOpt or (not theCreateOpt and theCaseNames!=""):
-        iok = _CallCreateScript(theStudyPath, theCreateOpt, theCaseNames,
-                                theCopyOpt, theNameRef, theSyrthesOpt, theSyrthesCase)
-
-    study   = _getStudy()
-    builder = study.NewBuilder()
-    father  = _findOrCreateComponent()
-    studyObject = FindStudyByPath(theStudyPath)
-    twiStudy = None
-    if studyObject == None:
-        # --- obtain name and dir for new study
-        lst = os.path.split(theStudyPath)
-        aStudyDir = lst[0]
-        aStudyName = lst[1]
-        if aStudyName == "":
-            raise ValueError("Empty Study Name!")
-        if aStudyDir == "":
-            raise ValueError("Empty Study Directory!")
-
-        studyObject  = builder.NewObject(father)
-        attr = builder.FindOrCreateAttribute(studyObject, "AttributeLocalID")
-        if CFDSTUDYGUI_Commons.isaSaturneSyrthesCouplingStudy(theStudyPath):
-            attr.SetValue(dict_object["CouplingStudy"])
-        elif CFDSTUDYGUI_Commons.isaCFDStudy(theStudyPath):
-            attr.SetValue(dict_object["Study"])
-        else:
-            return False
-        attr = builder.FindOrCreateAttribute(studyObject, "AttributePixMap")
-        attr.SetPixMap(str(ObjectTR.tr("CFDSTUDY_STUDY_OBJ_ICON")))
-        attr = builder.FindOrCreateAttribute(studyObject, "AttributeName")
-        attr.SetValue(aStudyName)
-        attr = builder.FindOrCreateAttribute(studyObject, "AttributeComment")
-        attr.SetValue(aStudyDir)
-        twiStudy = getCFDTW().findOrCreateStudyTWI(studyObject, theStudyPath)
-        getCFDTW().entryToTwiMap[studyObject.GetID()] = twiStudy
-    else:
-        twiStudy = getCFDTW().entryToTwiMap[studyObject.GetID()]
+class CFDTreeWidget():
     
-    if iok and theCaseNames:
-        _CreateItem(studyObject,theCaseNames)
-        caseObject = getSObject(studyObject,theCaseNames)
-        twiStudy = getCFDTW().findOrCreateStudyTWI(studyObject, theStudyPath)
-        theCasePath = os.path.join(theStudyPath, theCaseNames)
-        twiCase = getCFDTW().findOrCreateCaseTWI(caseObject, twiStudy, theCasePath)
-        getCFDTW().rebuildTWRecursively(twiCase)
+    def __init__(self):
+        from .clientgui import getClientGui
+        from .CLSMainWindow import getSalomePyQt
+        self.getClientGui = getClientGui
+        self.moduleFolder = self.getClientGui().getCLSMainWindow().getSaturneFolder()
+        self.moduleFolder.setIcon(col.name, getQIcon("CFDSTUDY"))
+        self.pathToTwi = {}
+        self.entryToTwi = {}
+        self.entryToSO = {}
         
-    if iok:
-        UpdateSubTree(twiStudy)
+    def getObjFromTwi(self, twItem):
+        for entry in self.entryToTwi:
+            if self.entryToTwi[entry] == twItem:
+                if twItem in self.entryToSO:
+                    return self.entryToSO[twItem]
+        return None
+    
+    def getTwiFromEntry(self, entry):
+        if entry in self.entryToTwi:
+            return self.entryToTwi[entry]
+        else:
+            return None
         
-        # TODO handle number of procs required in a consistant manner for coupled cases
-        # Better handled using models/BatchRunningModel
-        # if "run.cfg" in os.listdir(theStudyPath) and theCreateOpt:
-        #     if theNprocs != "":
-        #         pass
+    def getObjFromEntry(self, entry):
+        study = _getStudy()
+        obj = study.FindObjectID(entry)
+        return obj
+    
+    def removeObjFromTwi(self, baseTwi):
+        """
+        remove Salome Study object (CFD study, case, mesh folder)
+        to be done before removeTwiWithChildren
+        """
+        baseEntry = baseTwi.text(col.entry)
+        entriesToRemove = []
+        if baseEntry:
+            baseObj = self.getObjFromEntry(baseEntry)
+            if baseObj:
+                # "recursive" clean of entryToTwi and entryToSO before recursive remove of obj
+                basePath = baseTwi.text(col.details)
+                for entry in self.entryToSO:
+                    twi = self.getTwiFromEntry(entry)
+                    path = twi.text(col.details)
+                    if basePath in path:
+                        entriesToRemove.append(entry)
+                                      
+                study   = _getStudy()
+                builder = study.NewBuilder()
+                builder.RemoveObjectWithChildren(baseObj)
+                
+            for entry in entriesToRemove:
+                self.entryToTwi.pop(entry)
+                self.entryToSO.pop(entry)
+            
+    def removeTwiWithChildren(self, twItem):
+        """
+        recursive remove of Tree Widget Items
+        to be done after removeObjFromTwi
+        """
+        basePath = twItem.text(col.details)
+        logging.debug("removeTwiWithChildren %s", basePath)
+        pathsToRemove = []
+        for path in self.pathToTwi:
+            # all the path to remove begin with basePath
+            if basePath in path:
+                pathsToRemove.append(path)
+        for path in pathsToRemove:
+            self.pathToTwi.pop(path)        
+        parentTwi = twItem.parent()
+        parentTwi.removeChild(twItem)
 
-    return iok
+    def setIdAndIcon(self, twItem, category):
+        """
+        Fill the tree widget column id with the widget category
+        (see dict_widget) and set the appropriate icon
+    """
+        twItem.setIcon(col.name, getQIcon(category))
+        twItem.setText(col.id, str(getTWIid(category)))
+
+    def getSaturne8Studies(self):
+        '''
+        Return the list of CFD Studies cases:
+        Salome Study entries that are direct children of the module.
+        '''
+        # === Only with light Study objects (texts) ===
+        logging.debug("get Module children in Salome Study (CFD Studies)")
+        children = self.getSalomePyQt().getChildren()
+        for child in children:
+            logging.debug("child: %s", child)
+        logging.debug("done")
+        return children
+        
+    def findCFDStudyInSalomeStudy(self, text):
+        logging.debug("findfindCFDStudyInSalomeStudyInStudy %s", text)
+        studyObjs = self.getSaturne8Studies()
+        for entry in studyObjs:
+            if entry not in self.entryToSO:
+                logging.critical(
+                    "inconsistency: entry in SALOME study, under the Saturne8 module, not known")
+                return ""
+            studyObj = self.entryToSO[entry]
+            studyPath = studyObj.getText()
+            logging.debug("entry: %s case: %s", entry, studyPath)
+            if text == studyPath:
+                return entry
+        return ""
+    
+    def findSOinSalomeStudy(self, thePath, parentSO):
+        logging.debug("findSOinSalomeStudy")
+        childrenSO = ScanChildrenObj(parentSO,  ".*")
+        for childSO in childrenSO:
+            #twItem = self.getTwiFromEntry(childSO.GetID())
+            #path = twItem.text(col.details)
+            if childSO.getPath() == thePath:
+                return childSO
+        return None
+                
+
+    def getObject(self, entry):
+        '''
+        Return SATURNE8_DataObject by its entry.
+        '''
+        logging.debug("getObject")
+        obj = None
+        if entry in self.entryToSO:
+            obj = self.entryToSO[entry]
+        return obj
+
+    def findOrCreateStudySO(self, thePath):
+        '''
+        Find or create Salome Study Object for CFD study
+        '''
+        logging.debug("findOrCreateStudySO %s", thePath)
+        entry = self.findCFDStudyInSalomeStudy(thePath)
+        if not entry:
+            logging.debug("create Salome study object for %s", thePath)
+            obj = SATURNE8_DataObject(thePath)
+            entry = obj.getEntry()
+            self.entryToSO[entry] = obj
+        return obj
+    
+    def findOrCreateChildSO(self, name, parentSO):
+        """
+        Find or create Salome Study Object as a child of an SO 
+        """
+        logging.debug("findOrCreateChildSO: %s parentSO: %s", name, parentSO.GetName())
+        childrenSO = ScanChildrenObj(parentSO,  ".*")
+        for childSO in childrenSO:
+            if childSO.GetName() == name:
+                return childSO
+        # not found, create
+        thePath = os.path.join(parentSO.getPath(), name)
+        logging.debug("create Salome study object for %s", thePath)
+        obj = SATURNE8_DataObject(thePath)
+        entry = obj.getEntry()
+        self.entryToSO[entry] = obj
+        return obj
+        
+
+    def removeObject(self, entry):
+        ''' 
+        Remove object by its entry
+        '''
+        logging.debug("removeObject %s", entry)
+        if entry in self.entryToSO:
+            self.getSalomePyQt().removeObject(entry)
+            self.entryToSO.pop(entry)
+
+    def saveFile(self, filename):
+        """
+        Write one line per Saturne8 case, with the full case path
+        """
+        logging.debug("saveFile %s", filename)
+        with open(filename, mode='w', encoding='utf-8') as f:
+            caseEntries = self.getSaturne8Studies()
+            for entry in caseEntries:
+                logging.debug("entry: %s", entry)
+                caseObj = self.entryToSO[entry]
+                casePath = caseObj.getText()
+                logging.debug("casePath %s", casePath)
+                f.write(casePath + "\n")
+
+    def findCurrentStudyItem(self):
+        cur = self.getClientGui().getCLSMainWindow().getCurrentSelectedItem()
+        while cur:
+            if cur.text(col.id) == str(dict_object["Study"]):
+                return cur
+            cur = cur.parent()
+        logging.debug("************* outside Study ? *****************")
+        return None    
+    
+    def findOrCreateStudyTWI(self, studyObject, studyPath):
+        logging.debug("findOrCreateStudyTWI %s", studyPath)
+        twiRoot = self.moduleFolder
+        studyName = os.path.basename(studyPath) # = studyObject.GetName()
+        # --- check if study is already in tree
+        twiStudy = self.getTwiChildWithName(twiRoot, studyName)
+        if twiStudy:
+            return twiStudy
+        # --- create  
+        twiStudy = QTreeWidgetItem()
+        twiStudy.setText(col.name, studyName)
+        twiStudy.setText(col.details, studyPath)
+        entry = studyObject.GetID()
+        twiStudy.setText(col.entry, entry)
+        self.setIdAndIcon(twiStudy, "Study")
+        twiRoot.addChild(twiStudy)
+        self.entryToTwi[entry] = twiStudy
+        self.pathToTwi[studyPath] = twiStudy
+        self.getClientGui().getCLSMainWindow().initialSelection(twiStudy)
+        return twiStudy
+
+    def findOrCreateCaseTWI(self, caseObject, twiStudy, casePath):
+        logging.debug("findOrCreateCaseTWI %s", casePath)
+        caseName = os.path.basename(casePath)
+        # --- check if case is already in tree
+        twiCase = self.getTwiChildWithName(twiStudy, caseName)
+        if twiCase:
+            return twiCase
+        # --- create  
+        twiCase = QTreeWidgetItem()
+        twiCase.setText(col.name, caseName)
+        twiCase.setText(col.details, casePath)
+        entry = caseObject.GetID()
+        twiCase.setText(col.entry, entry)
+        self.setIdAndIcon(twiCase, "Case")
+        twiStudy.addChild(twiCase)
+        self.entryToTwi[entry] = twiCase
+        self.pathToTwi[casePath] = twiCase
+        return twiCase
+
+    def findOrCreateMeshTWI(self, meshObject, twiStudy, meshPath):
+        logging.debug("findOrCreateMeshTWI %s", meshPath)
+        meshName = os.path.basename(meshPath)
+        # --- check if Mesh is already in tree
+        twiMesh = self.getTwiChildWithName(twiStudy, meshName)
+        if twiMesh:
+            return twiMesh
+        # --- create  
+        twiMesh = QTreeWidgetItem()
+        twiMesh.setText(col.name, meshObject.GetName())
+        twiMesh.setText(col.details, meshPath)
+        entry = meshObject.GetID()
+        twiMesh.setText(col.entry, entry)
+        self.setIdAndIcon(twiMesh, "MESHFolder")
+        twiStudy.addChild(twiMesh)
+        self.entryToTwi[entry] = twiMesh
+        self.pathToTwi[meshPath] = twiMesh
+        return twiMesh
+
+    def createTWItem(self, parentTWI, itemName, itemPath):
+        logging.debug("createTWItem %s %s %s", itemPath, itemName, parentTWI.text(col.name))
+        
+        # TODO: first, find or create SALOME study objects for "Study", "case" and "MESH"
+        
+        twItem = QTreeWidgetItem()
+        twItem.setText(col.name, itemName)
+        twItem.setText(col.details, itemPath)
+        self.pathToTwi[itemPath] = twItem
+        
+        # --- parent is study
+        if parentTWI == self.findCurrentStudyItem():
+            if os.path.isdir(itemPath):
+                if CFDSTUDYGUI_Commons.isaCFDCase(itemPath):
+                    self.setIdAndIcon(twItem, "Case")
+                    obj = _CreateItem(self.getObjFromEntry(parentTWI.text(col.entry)), itemName)
+                    if obj:
+                        entry = obj.GetID()
+                        twItem.setText(col.entry, entry)
+                        self.entryToTwi[entry] = twItem
+                else:
+                    boo = False
+                    dirList = os.listdir(itemPath)
+                    for i in dirList:
+                        if re.match(".*\.syd$", i) or re.match(".*\.syd_example$", i):
+                            boo = True
+                    if boo :
+                        self.setIdAndIcon(twItem, "SYRCaseFolder")
+                    else:
+                        if itemName == "MESH":
+                            self.setIdAndIcon(twItem, "MESHFolder")
+                        elif itemName == "POST":
+                            self.setIdAndIcon(twItem, "POSTFolder")
+                        else:
+                            self.setIdAndIcon(twItem, "OtherFolder")   
+            if itemName in ("code_saturne", "neptune_cfd", "runcase"):
+                self.setIdAndIcon(twItem, "CouplingLauncher")
+            elif itemName == "RESU_COUPLING":
+                self.setIdAndIcon(twItem, "RESU_COUPLINGFolder")
+                                        
+        # --- parent is Syrthes Case
+        elif parentTWI.text(col.id) == str(dict_object["SYRCaseFolder"]):
+            if os.path.isdir(itemPath):
+                if itemName == "usr_examples":
+                    self.setIdAndIcon(twItem, "SRCSYRFolder")
+            if itemName in ["Makefile","syrthes.py","user_cond.c"]:
+                self.setIdAndIcon(twItem, "SyrthesFile")
+            if re.match(".*\.syd$", itemName) or re.match(".*\.syd_example$", itemName) :
+                self.setIdAndIcon(twItem, "SyrthesSydFile")
+                
+        # --- parent is Syrthes user examples
+        elif parentTWI.text(col.id) == str(dict_object["SRCSYRFolder"]):
+            if re.match(".*\.c$", itemName):
+                self.setIdAndIcon(twItem, "USRSRCSYRFile")
+
+        # --- parent is Case
+        elif parentTWI.text(col.id) == str(dict_object["Case"]):
+            if os.path.isdir(itemPath):
+                if itemName == "DATA":
+                    self.setIdAndIcon(twItem, "DATAFolder")
+                elif itemName == "SRC":
+                    self.setIdAndIcon(twItem, "SRCFolder")
+                elif itemName == "RESU":
+                    self.setIdAndIcon(twItem, "RESUFolder")
+                else:
+                    self.setIdAndIcon(twItem, "OtherFolder")
+
+        # --- parent is DATA folder
+        elif parentTWI.text(col.id) == str(dict_object["DATAFolder"]):
+            if os.path.isdir(itemPath):
+                if itemName == "REFERENCE":
+                    self.setIdAndIcon(twItem, "REFERENCEDATAFolder")
+                if itemName == "DRAFT":
+                    self.setIdAndIcon(twItem, "DRAFTFolder")
+            else:
+                if itemName[0:12] == "code_saturne" or itemName[0:10] == "neptune_cfd":
+                    # could use "DATALaunch" but prefer to hide this wrapper.
+                    self.setIdAndIcon(twItem, "OtherFile")
+                elif itemName[0:10] == "run.cfg":
+                    self.setIdAndIcon(twItem, "DATARunConf")
+                elif re.match("^dp_", itemName) or re.match("^meteo",itemName) or re.match("^cs_", itemName):
+                    self.setIdAndIcon(twItem, "DATAFile")
+                elif re.match(".*\.py$", itemName):
+                    self.setIdAndIcon(twItem, "DATAPyFile")
+                else:
+                    if os.path.isfile(itemPath):
+                        fd = os.open(itemPath , os.O_RDONLY)
+                        try:
+                            f = os.fdopen(fd)
+                            l1 = f.readline()
+                            if l1.startswith('''<?xml version="1.0" encoding="utf-8"?><Code_Saturne_GUI''') or l1.startswith('''<?xml version="1.0" encoding="utf-8"?><NEPTUNE_CFD_GUI'''):
+                                self.setIdAndIcon(twItem, "DATAfileXML")
+                            elif l1.startswith('''<?xml version="1.0" encoding="utf-8"?>''') :
+                                l2 = f.readline()
+                                if l2.startswith('''<Code_Saturne_GUI''') or l2.startswith('''<NEPTUNE_CFD_GUI'''):
+                                    self.setIdAndIcon(twItem, "DATAfileXML")
+                            else:
+                                    self.setIdAndIcon(twItem, "DATAFile")
+                            f.close()
+                        except:
+                            pass
+
+        # --- parent is DRAFT folder
+        elif parentTWI.text(col.id) == str(dict_object["DRAFTFolder"]):
+            draftParentFolder = os.path.basename(parentTWI.parent().text(col.details.id))
+            if os.path.isfile(itemPath):
+                if draftParentFolder == "DATA":
+                    if re.match("^dp_", itemName) or re.match("^meteo",itemName) or re.match("^cs_", itemName):
+                        self.setIdAndIcon(twItem, "DATADRAFTFile")
+                elif draftParentFolder == "SRC":
+                    if re.match(".*\.[fF]$", itemName) or \
+                        re.match(".*\.[fF]90$", itemName) or \
+                        re.match(".*\.for$", itemName) or \
+                        re.match(".*\.FOR$", itemName):
+                        self.setIdAndIcon(twItem, "SRCDRAFTFile")
+                    elif re.match(".*\.c$", itemName):
+                        self.setIdAndIcon(twItem, "SRCDRAFTFile")
+                    elif re.match(".*\.cxx$", itemName) or \
+                        re.match(".*\.cpp$", itemName):
+                        self.setIdAndIcon(twItem, "SRCDRAFTFile")
+                    elif re.match(".*\.h$", itemName) or \
+                        re.match(".*\.hxx$", itemName) or \
+                        re.match(".*\.hpp$", itemName):
+                        self.setIdAndIcon(twItem, "SRCDRAFTFile")
+            elif os.path.isdir(itemPath):
+                self.setIdAndIcon(twItem, "OtherFolder")
+
+        # --- parent is REFERENCE folder into DATA folder
+        elif parentTWI.text(col.id) == str(dict_object["REFERENCEDATAFolder"]):
+            if os.path.isfile(itemPath):
+                if re.match("^dp_", itemName) or re.match("^meteo",itemName) or re.match("^cs_", itemName):
+                    self.setIdAndIcon(twItem, "REFERENCEDATAFile")
+            elif os.path.isdir(itemPath):
+                self.setIdAndIcon(twItem, "OtherFolder")
+
+        # --- parent is MESH folder
+        elif parentTWI.text(col.id) == str(dict_object["MESHFolder"]):
+            if os.path.isdir(itemPath):
+                # --- TODO: check!
+                if d_dirMesh != {}:
+                    for key in d_dirMesh:
+                        if itemPath in d_dirMesh[key]:
+                            for k,v in dict_object.items():
+                                if v == key:
+                                    self.setIdAndIcon(twItem, k)
+                                    break
+            else:
+                if re.match(".*\.des$", itemName):
+                    self.setIdAndIcon(twItem, "DESFile")
+                elif re.match(".*\.med$", itemName):
+                    self.setIdAndIcon(twItem, "MEDFile")
+                elif re.match(".*\.dat$", itemName):
+                    self.setIdAndIcon(twItem, "DATFile")
+                elif re.match(".*\.cgns$", itemName):
+                    self.setIdAndIcon(twItem, "CGNSFile")
+                elif re.match(".*\.ccm$", itemName):
+                    self.setIdAndIcon(twItem, "CcmFile")
+                elif re.match(".*\.case$", itemName):
+                    self.setIdAndIcon(twItem, "CaseFile")
+                elif re.match(".*\.neu$", itemName):
+                    self.setIdAndIcon(twItem, "NeuFile")
+                elif re.match(".*\.msh$", itemName):
+                    self.setIdAndIcon(twItem, "MSHFile")
+                elif re.match(".*\.hex$", itemName):
+                    self.setIdAndIcon(twItem, "HexFile")
+                elif re.match(".*\.unv$", itemName):
+                    self.setIdAndIcon(twItem, "UnvFile")
+                elif re.match(".*\.syr$", itemName):
+                    self.setIdAndIcon(twItem, "SYRMESHFile")
+                else:
+                    self.setIdAndIcon(twItem, "MESHFile")
+
+        # --- parent is POST folder
+        elif parentTWI.text(col.id) == str(dict_object["POSTFolder"]):
+            if os.path.isdir(itemPath):
+                self.setIdAndIcon(twItem, "OtherFolder")
+            else:
+                self.setIdAndIcon(twItem, "POSTFile")
+
+        # --- parent is SRC folder
+        elif parentTWI.text(col.id) == str(dict_object["SRCFolder"]):
+            if os.path.isfile(itemPath):
+                if re.match(".*\.[fF]$", itemName) or re.match(".*\.[fF]90$", itemName) \
+                or re.match(".*\.for$", itemName) or re.match(".*\.FOR$", itemName):
+                    self.setIdAndIcon(twItem, "SRCFile")
+                elif re.match(".*\.c$", itemName):
+                    self.setIdAndIcon(twItem, "SRCFile")
+                elif re.match(".*\.cpp$", itemName) or re.match(".*\.cxx$", itemName):
+                    self.setIdAndIcon(twItem, "SRCFile")
+                elif re.match(".*\.h$", itemName) or re.match(".*\.hpp$", itemName) or re.match(".*\.hxx$", itemName):
+                    self.setIdAndIcon(twItem, "SRCFile")
+                elif re.match(".*\.log$", itemName):
+                    self.setIdAndIcon(twItem, "LOGSRCFile")
+            elif os.path.isdir(itemPath):
+                if itemName == "REFERENCE" or itemName == "EXAMPLES" :
+                    self.setIdAndIcon(twItem, "USERSFolder")
+                elif itemName == "DRAFT":
+                    self.setIdAndIcon(twItem, "DRAFTFolder")
+                else:
+                    self.setIdAndIcon(twItem, "OtherFolder")
+
+        # --- parent REFERENCE/base... folder
+        elif parentTWI.text(col.id) == str(dict_object["USERSFolder"]):
+            if os.path.isfile(itemPath):
+                if re.match(".*\.[fF]$", itemName) or re.match(".*\.[fF]90$", itemName) \
+                or re.match(".*\.for$", itemName) or re.match(".*\.FOR$", itemName):
+                    self.setIdAndIcon(twItem, "USRSRCFile")
+                elif re.match(".*\.c$", itemName):
+                    self.setIdAndIcon(twItem, "USRSRCFile")
+                elif re.match(".*\.cpp$", itemName) or re.match(".*\.cxx$", itemName):
+                    self.setIdAndIcon(twItem, "USRSRCFile")
+                elif re.match(".*\.h$", itemName) or re.match(".*\.hpp$", itemName) or re.match(".*\.hxx$", itemName):
+                    self.setIdAndIcon(twItem, "USRSRCFile")
+                elif re.match(".*\.log$", itemName):
+                    self.setIdAndIcon(twItem, "LOGSRCFile")
+            elif os.path.isdir(itemPath):
+                if itemName in ("atmo", "base", "cplv", "cfbl", "cogz", \
+                            "ctwr", "elec", "fuel", "lagr", "pprt", "rayt"):
+                    self.setIdAndIcon(twItem, "USERSFolder")
+                else:
+                    self.setIdAndIcon(twItem, "OtherFolder")
+
+        # --- parent is RESU folder
+        elif parentTWI.text(col.id) == str(dict_object["RESUFolder"]):
+            if os.path.isdir(itemPath):
+                if "error" in os.listdir(itemPath):
+                    self.setIdAndIcon(twItem, "RESUSubErrFolder")
+                else:
+                    self.setIdAndIcon(twItem, "RESUSubFolder")
+
+        # --- parent is RESULT SRC folder
+        elif parentTWI.text(col.id) == str(dict_object["RESSRCFolder"]):
+            if os.path.isfile(itemPath):
+                if re.match(".*\.[fF]$", itemName) or re.match(".*\.[fF]90$", itemName) \
+                or re.match(".*\.for$", itemName) or re.match(".*\.FOR$", itemName):
+                    self.setIdAndIcon(twItem, "RESSRCFile")
+                elif re.match(".*\.c$", itemName):
+                    self.setIdAndIcon(twItem, "RESSRCFile")
+                elif re.match(".*\.cpp$", itemName) or re.match(".*\.cxx$", itemName):
+                    self.setIdAndIcon(twItem, "RESSRCFile")
+                elif re.match(".*\.h$", itemName) or re.match(".*\.hpp$", itemName) or re.match(".*\.hxx$", itemName):
+                    self.setIdAndIcon(twItem, "RESSRCFile")
+
+        # --- parent is RESULT sub folder
+        elif parentTWI.text(col.id) == str(dict_object["RESUSubFolder"]) or parentTWI.text(col.id) == str(dict_object["RESUSubErrFolder"]):
+            if os.path.isdir(itemPath):
+                if itemName == "src_neptune" or itemName == "src_saturne":
+                    self.setIdAndIcon(twItem, "RESSRCFolder")
+                elif itemName == "monitoring":
+                    self.setIdAndIcon(twItem, "HISTFolder")
+                elif itemName == "checkpoint":
+                    self.setIdAndIcon(twItem, "SUITEFolder")
+                elif itemName == "mesh_input":
+                    self.setIdAndIcon(twItem, "PRETFolder")
+                elif itemName == "partition_output":
+                    self.setIdAndIcon(twItem, "PRETFolder")
+                elif itemName == "postprocessing":
+                    self.setIdAndIcon(twItem, "POSTPROFolder")
+            else:
+                if re.match(".*\.dat$", itemName) or re.match(".*\.csv$", itemName):
+                    self.setIdAndIcon(twItem, "HISTFile")
+                elif re.match(".*\.xml$", itemName):
+                    self.setIdAndIcon(twItem, "RESXMLFile")
+                elif re.match(".*\.log$", itemName):
+                    self.setIdAndIcon(twItem, "RESUFile")
+                elif re.match("listing$", itemName):
+                    self.setIdAndIcon(twItem, "RESUFile")
+                elif re.match("error$", itemName):
+                    self.setIdAndIcon(twItem, "RESUFile")
+                elif re.match(".*\.png$", itemName):
+                    self.setIdAndIcon(twItem, "RESUPNGFile")
+
+        # --- parent is POSTPRO folder
+        elif parentTWI.text(col.id) == str(dict_object["POSTPROFolder"]):
+            if os.path.isfile(itemPath):
+                if re.match(".*\.med$", itemName):
+                    self.setIdAndIcon(twItem, "RESMEDFile")
+                if re.match(".*\.case$", itemName):
+                    self.setIdAndIcon(twItem, "RESENSIGHTFile")
+
+        # --- parent is HIST folder
+        elif parentTWI.text(col.id) == str(dict_object["HISTFolder"]):
+            if os.path.isfile(itemPath):
+                if re.match(".*\.dat$", itemName) or re.match(".*\.csv$", itemName):
+                    self.setIdAndIcon(twItem, "HISTFile")
+
+        # --- parent is RESU_COUPLING folder
+        elif parentTWI.text(col.id) == str(dict_object["RESU_COUPLINGFolder"]):
+            if os.path.isdir(itemPath):
+                self.setIdAndIcon(twItem, "RESU_COUPLINGSubFolder")
+
+        # --- parent is RESU_COUPLING sub folder
+        elif parentTWI.text(col.id) == str(dict_object["RESU_COUPLINGSubFolder"]):
+            if os.path.isdir(itemPath):
+                if os.path.isfile(os.path.join(itemPath,"syrthes")):
+                    self.setIdAndIcon(twItem, "RESUSubFolderSYR")
+                else:
+                    # test if folder is a result cfd folder?
+                    self.setIdAndIcon(twItem, "RESUSubFolder")
+
+        elif parentTWI.text(col.id) == str(dict_object["RESUSubFolderSYR"]):
+            if re.match(".*\.log$", itemName):
+                self.setIdAndIcon(twItem, "RESUFile")
+            if re.match(".*\.dat$", itemName):
+                self.setIdAndIcon(twItem, "RESUFile")
+            if re.match(".*\.rdt$", itemName):
+                self.setIdAndIcon(twItem, "RESUFile")
+            if re.match(".*\.res$", itemName):
+                self.setIdAndIcon(twItem, "RESUFile")
+            if re.match(".*\.syr$", itemName):
+                self.setIdAndIcon(twItem, "RESUFile")
+            if re.match(".*\.data$", itemName):
+                self.setIdAndIcon(twItem, "RESUFile")
+            if re.match(".*\.add$", itemName):
+                self.setIdAndIcon(twItem, "RESUFile")
+            if re.match(".*\.c$", itemName):
+                self.setIdAndIcon(twItem, "RESUFile")
+            elif re.match("listing$", itemName):
+                self.setIdAndIcon(twItem, "RESUFile")
+
+        # --- MESH sub folder
+        if parentTWI.text(col.id) in d_dirMesh:
+            if os.path.isdir(itemPath):
+                if d_dirMesh != {}:
+                    for key in d_dirMesh:
+                        if itemPath in d_dirMesh[key]:
+                            for k,v in dict_object.items():
+                                if v == key:
+                                    self.setIdAndIcon(twItem, k)
+                                    break
+            else:
+                if re.match(".*\.des$", itemName):
+                    self.setIdAndIcon(twItem, "DESFile")
+                elif re.match(".*\.med$", itemName):
+                    self.setIdAndIcon(twItem, "MEDFile")
+                elif re.match(".*\.dat$", itemName):
+                    self.setIdAndIcon(twItem, "DATFile")
+                elif re.match(".*\.cgns$", itemName):
+                    self.setIdAndIcon(twItem, "CGNSFile")
+                elif re.match(".*\.ccm$", itemName):
+                    self.setIdAndIcon(twItem, "CcmFile")
+                elif re.match(".*\.case$", itemName):
+                    self.setIdAndIcon(twItem, "CaseFile")
+                elif re.match(".*\.neu$", itemName):
+                    self.setIdAndIcon(twItem, "NeuFile")
+                elif re.match(".*\.msh$", itemName):
+                    self.setIdAndIcon(twItem, "MSHFile")
+                elif re.match(".*\.hex$", itemName):
+                    self.setIdAndIcon(twItem, "HexFile")
+                elif re.match(".*\.unv$", itemName):
+                    self.setIdAndIcon(twItem, "UnvFile")
+                elif re.match(".*\.syr$", itemName):
+                    self.setIdAndIcon(twItem, "SYRMESHFile")
+                else:
+                    self.setIdAndIcon(twItem, "MESHFile")
+
+
+        if twItem.text(col.id) == str(dict_object["OtherFile"]):
+            if re.match(".*\.[fF]$", itemName) or \
+            re.match(".*\.[fF]90$", itemName) or \
+            re.match(".*\.for$", itemName) or \
+            re.match(".*\.FOR$", itemName):
+                if self.detectUSERSitem(parentTWI):
+                    logging.debug("****************************** %s", itemPath)
+                    self.setIdAndIcon(twItem, self.detectSRCitem(parentTWI))
+            elif re.match(".*\.c$", itemName):
+                if self.detectUSERSitem(parentTWI):
+                    logging.debug("****************************** %s", itemPath)
+                    self.setIdAndIcon(twItem, self.detectSRCitem(parentTWI))
+            elif re.match(".*\.cpp$", itemName) or \
+                re.match(".*\.cxx$", itemName):
+                if self.detectUSERSitem(parentTWI):
+                    logging.debug("****************************** %s", itemPath)
+                    self.setIdAndIcon(twItem, self.detectSRCitem(parentTWI))
+            elif re.match(".*\.h$", itemName) or \
+                re.match(".*\.hxx$", itemName) or \
+                re.match(".*\.hpp$", itemName):
+                if self.detectUSERSitem(parentTWI):
+                    logging.debug("****************************** %s", itemPath)
+                    self.setIdAndIcon(twItem, self.detectSRCitem(parentTWI))
+
+        if twItem.text(col.id) == str(dict_object["OtherFile"]):
+            if os.path.isdir(itemPath):
+                self.setIdAndIcon(twItem, "OtherFolder")
+                
+        parentTWI.addChild(twItem)
+        return twItem
+            
+    def rebuildTWRecursively(self, twItem):
+        """
+        Compare the children (if any) of the tree item with the content of the
+        corresponding folder on the disk.
+        Create the items corresponding to new files or directories on the disk,
+        remove the items corresponding to files or directories that are no more
+        on the disk.
+        """
+        # --- find the path corresponding to the current item. 
+        #     Do not consider items with no path (for instance, mesh groups).
+        
+        itemPath = twItem.text(col.details)
+        logging.debug("rebuildTWRecursively %s", itemPath)
+        if itemPath is None:
+            return
+        
+        # --- if the item path exists and is a directory, get the names of the files on disk in this directory
+        lst = []
+        if os.path.isdir(itemPath):
+            lst = os.listdir(itemPath)
+        lst.sort()
+        
+        # --- get the paths of children of the item
+        nbChildren = twItem.childCount()
+        childPaths = {}
+        for i in range(nbChildren):
+            itm = twItem.child(i)
+            pth = itm.text(col.details)
+            childPaths[pth] = itm
+        
+        # --- find the new paths on disk, create the corresponding tree items as new children of the current item
+        for aName in lst:
+            aPath = os.path.join(itemPath, aName)
+            if aPath not in childPaths:
+                nc = self.createTWItem(twItem, aName, aPath)
+        
+        # --- find the items corresponding to files or directories no longer present on the disk and are removed
+        #     only the items coresponding to a file or directory are taken into account,
+        #     (the items corresponding to mesh groups have no path, and are not removed)
+        for pth, itm in childPaths.items():
+            aName = os.path.basename(pth)
+            if aName not in lst:
+                itmPth = itm.text(col.details)
+                if itmPth:
+                    self.removeObjFromTwi(itm)       # remove SALOME Objects first (recursive)
+                    self.removeTwiWithChildren(itm)  # then remove tree widget items (recursive)
+
+        # --- recursive call with the updated children of the item 
+        nbChildren = twItem.childCount()
+        for i in range(nbChildren):
+            itm = twItem.child(i)
+            self.rebuildTWRecursively(itm)
+        logging.debug("rebuildTWRecursively %s END", itemPath)
+
+    def detectUSERSitem(self, twItem):
+        """
+        Search if the branch containing twItem represents the USERS folder.
+        """
+        cur = twItem
+        while cur:
+            if cur.text(col.id) == str(dict_object["USERSFolder"]):
+                return True
+            elif cur.text(col.id) == str(dict_object["Study"]):
+                return False
+            cur = cur.parent()
+        logging.debug("************* outside Study ? *****************")
+        return False
+
+    def detectSRCitem(self, twItem):
+        """
+        Returns the type of the branch twItem which represents
+        the files in the SRC folder.
+        """
+        cur = twItem
+        while cur:
+            if cur.text(col.id) == str(dict_object["SRCFolder"]):
+                return "USRSRCFile"
+            cur = cur.parent()
+        logging.debug("************* outside Study ? *****************")
+        return "USRSRCFile"
+    
+    def findCaseItem(self, twItem):
+        cur = twItem
+        while cur:
+            if cur.text(col.id) == str(dict_object["Case"]):
+                return cur
+            cur = cur.parent()
+        logging.debug("************* outside Case ? *****************")
+        return cur
+    
+    def findStudyItem(self, twItem):
+        cur = twItem
+        while cur:
+            if cur.text(col.id) == str(dict_object["Study"]):
+                return cur
+            cur = cur.parent()
+        logging.debug("************* outside Study ? *****************")
+        return cur
+
+    def getTwiChildWithName(self, parentTwi, name):
+        """
+        explore the children of a parent TreeWidget Item
+        to find one with the given name
+        """
+        nbChildren = parentTwi.childCount()
+        for i in range(nbChildren) :
+            child = parentTwi.child(i)
+            if child.text(col.name) == name:
+                return child
+        return None
+
+    def _SetStudyLocation(self, theStudyPath, theCaseName,theCreateOpt,
+                        theCopyOpt, theNameRef = "", theSyrthesOpt =False, theSyrthesCase = "",theNprocs=""):
+        """
+        Constructs the tree representation of a CFD study (with the
+        associated cases) for the Object Browser. Only the CFD Studies and cases are 
+        stored in SALOME study, with their path
+        """
+        logging.debug("_SetStudyLocation %s %s", theStudyPath, theCaseName)
+
+        iok = True
+        if theCopyOpt:
+            if not os.path.exists(theNameRef):
+                raise ValueError("reference case is not a repository")
+        if os.path.exists(theStudyPath) :
+
+            if theCreateOpt:
+                mess = cfdstudyMess.trMessage(ObjectTR.tr("STUDY_DIRECTORY_ALREADY_EXISTS"),[""])
+                cfdstudyMess.criticalMessage(mess)
+                return False
+        if theCreateOpt or (not theCreateOpt and theCaseName!=""):
+            iok = _CallCreateScript(theStudyPath, theCreateOpt, theCaseName,
+                                    theCopyOpt, theNameRef, theSyrthesOpt, theSyrthesCase)
+
+        studyObject = self.FindStudyObjectByPath(theStudyPath)
+        twiStudy = None
+        if studyObject is None:
+            studyObject = self.findOrCreateStudySO(theStudyPath)
+            twiStudy = self.findOrCreateStudyTWI(studyObject, theStudyPath)
+        else:
+            twiStudy = self.entryToTwi[studyObject.GetID()]
+        
+        if theCaseName:
+            # --- find or create case SO 
+            theCasePath = os.path.join(theStudyPath, theCaseName)
+            caseObject = self.FindCaseByPath(theCasePath)
+            if caseObject is None:
+                caseObject = self.findOrCreateChildSO(theCaseName, studyObject)
+            twiCase = self.findOrCreateCaseTWI(caseObject, twiStudy, theCasePath)
+            self.rebuildTWRecursively(twiCase)
+            
+            UpdateSubTree(twiStudy)
+            
+            # TODO handle number of procs required in a consistant manner for coupled cases
+            # Better handled using models/BatchRunningModel
+            # if "run.cfg" in os.listdir(theStudyPath) and theCreateOpt:
+            #     if theNprocs != "":
+            #         pass
+
+        return iok
+
+    def _SetCaseLocation(self, theCasePath):
+        logging.debug("_SetCaseLocation %s", theCasePath)
+        # study         = _getStudy()
+        # builder       = study.NewBuilder()
+        # father        = _findOrCreateComponent()
+        
+        theStudyPath  = os.path.dirname(theCasePath)
+        theCaseName   = os.path.basename(theCasePath)
+        studyObject   = self.FindStudyObjectByPath(theStudyPath)
+        if studyObject is None:
+            if CFDSTUDYGUI_Commons.isaCFDStudy(theStudyPath):
+                studyObject = self.findOrCreateStudySO(theStudyPath)
+                twiStudy = self.findOrCreateStudyTWI(studyObject, theStudyPath)
+            else:
+                logging.critical("the study path %s does not correspond to a CFD study...")
+                return
+        else:
+            twiStudy = self.entryToTwi[studyObject.GetID()]                
+        if theCaseName:
+            # find or create case SO 
+            theCasePath = os.path.join(theStudyPath, theCaseName)
+            caseObject = self.FindCaseByPath(theCasePath)
+            if caseObject is None:
+                caseObject = self.findOrCreateChildSO(theCaseName, studyObject)
+            twiCase = self.findOrCreateCaseTWI(caseObject, twiStudy, theCasePath)
+            self.rebuildTWRecursively(twiCase)
+
+        if getSObject(studyObject,"MESH") == None:
+            meshPath = os.path.join(theStudyPath, "MESH")
+            meshObject = self.findOrCreateChildSO("MESH", studyObject)
+            meshObject = getSObject(studyObject,"MESH")
+            twiMesh = self.findOrCreateMeshTWI(meshObject, twiStudy, meshPath)
+            self.rebuildTWRecursively(twiMesh)
+    
+    def FindStudyObjectByPath(self, theStudyPath):
+        """
+        Return the SALOME Study object (SO) representing 
+        the CFD study described by its path on disk
+        """
+        logging.debug("FindStudyByPath %s", theStudyPath)
+        studySO = None
+        if theStudyPath in self.pathToTwi:
+            twItem = self.pathToTwi[theStudyPath]
+            if twItem.text(col.id) == str(dict_object["Study"]):
+                studySO = self.getObjFromTwi(twItem)
+        return studySO
+
+    def FindCaseByPath(self, theCasePath):
+        """
+        Return the SALOME Study object (SO) representing 
+        the CFD case described by its path on disk
+        """
+        logging.debug("FindCaseByPath %s", theCasePath)
+        caseSO = None
+        if theCasePath in self.pathToTwi:
+            twItem = self.pathToTwi[theCasePath]
+            if twItem.text(col.id) == str(dict_object["Case"]):
+                caseSO = self.getObjFromTwi(twItem)
+        return caseSO
+
+
+def FindCaseByPath(theCasePath):
+    """
+    Returns a CFD study described by the unix path I{theCasePath}.
+
+    @type theCasePath: C{String}
+    @param theCasePath: unix path of the CFD study.
+    @return: the CFD study.
+    @rtype: C{SObject} or C{None}
+    """
+    logging.debug("FindCaseByPath")
+    component = _getComponent()
+    if component == None:
+        return None
+
+    study = _getStudy()
+    builder = study.NewBuilder()
+    studyCfdObject = FindStudyByPath(os.path.dirname(theCasePath))
+    iter  = study.NewChildIterator(studyCfdObject)
+    while iter.More():
+        attr = builder.FindOrCreateAttribute(iter.Value(), "AttributeLocalID")
+        if attr.Value() == dict_object["Case"]:
+            #compare case path
+            aCurCasePath = _GetPath(iter.Value())
+            if aCurCasePath == theCasePath:
+                return iter.Value()
+        iter.Next()
+
+    return None
 
 
 def _CallCreateScript(theStudyPath, isCreateStudy, theCaseNames,
@@ -1259,18 +1436,18 @@ def _CreateObject(theFather, theBuilder, theName):
     return newChild
 
 
-def _CreateItem(theFather,theNewName) :
-    """
-    Creates a child with name theNewName under theFather root into Object Browser
-    @type theFather: C{SObject}
-    @type theNewName : C{String}
-    """
-    logging.debug("_CreateItem: NewItem = %s with Parent = %s" % (theNewName,theFather.GetName()))
-    if theNewName not in ScanChildNames(theFather,  ".*") :
-        theBuilder = _getNewBuilder()
-        newChild = _CreateObject(theFather, theBuilder, theNewName)
-        return newChild
-    return None
+# def _CreateItem(theFather,theNewName) :
+#     """
+#     Creates a child with name theNewName under theFather root into Object Browser
+#     @type theFather: C{SObject}
+#     @type theNewName : C{String}
+#     """
+#     logging.debug("_CreateItem: NewItem = %s with Parent = %s" % (theNewName,theFather.GetName()))
+#     if theNewName not in ScanChildNames(theFather,  ".*") :
+#         theBuilder = _getNewBuilder()
+#         newChild = _CreateObject(theFather, theBuilder, theNewName)
+#         return newChild
+#     return None
 
 
 def getNameCodeFromXmlCasePath(XMLCasePath) :
@@ -1949,63 +2126,6 @@ def GetStudyByObj(theObject):
 
     return None
 
-def FindStudyByPath(theStudyPath):
-    """
-    Returns a CFD study described by the unix path I{theStudyPath}.
-
-    @type theStudyPath: C{String}
-    @param theStudyPath: unix path of the CFD study.
-    @return: the CFD study.
-    @rtype: C{SObject} or C{None}
-    """
-    logging.debug("FindStudyByPath %s", theStudyPath)
-    component = _getComponent()
-    if component == None:
-        return None
-
-    study = _getStudy()
-    builder = study.NewBuilder()
-
-    iter  = study.NewChildIterator(component)
-    while iter.More():
-        attr = builder.FindOrCreateAttribute(iter.Value(), "AttributeLocalID")
-        if attr.Value() == dict_object["Study"] or attr.Value() == dict_object["CouplingStudy"] :
-            #compare study path
-            aCurStudyPath = _GetPath(iter.Value())
-            if aCurStudyPath == theStudyPath:
-                return iter.Value()
-        iter.Next()
-
-    return None
-
-def FindCaseByPath(theCasePath):
-    """
-    Returns a CFD study described by the unix path I{theCasePath}.
-
-    @type theCasePath: C{String}
-    @param theCasePath: unix path of the CFD study.
-    @return: the CFD study.
-    @rtype: C{SObject} or C{None}
-    """
-    logging.debug("FindCaseByPath")
-    component = _getComponent()
-    if component == None:
-        return None
-
-    study = _getStudy()
-    builder = study.NewBuilder()
-    studyCfdObject = FindStudyByPath(os.path.dirname(theCasePath))
-    iter  = study.NewChildIterator(studyCfdObject)
-    while iter.More():
-        attr = builder.FindOrCreateAttribute(iter.Value(), "AttributeLocalID")
-        if attr.Value() == dict_object["Case"]:
-            #compare case path
-            aCurCasePath = _GetPath(iter.Value())
-            if aCurCasePath == theCasePath:
-                return iter.Value()
-        iter.Next()
-
-    return None
 
 def GetCaseNameList(theStudy):
     """
@@ -2471,3 +2591,39 @@ def getMeshFromGroup(meshGroupItem):
             meshObj = group.GetMesh()
             meshItem = salome.ObjectToSObject(meshObj)
     return meshItem, group
+
+
+
+class SATURNE8_DataObject:
+    '''
+    Data Object of SATURNE8 module
+    '''
+
+    def __init__(self, path):
+        '''
+        Constructor of SATURNE8_DataObject class
+        '''
+        logging.debug("SATURNE8_DataObject.__init__")
+        name = os.path.basename(path)
+        from .CLSMainWindow import getSalomePyQt
+        entry = getSalomePyQt().createObject(name,
+                                             "SATURNE8_CASE_ICON",
+                                             path)
+        logging.debug("name: %s path: %s entry: %s",name, path, entry)
+        getSalomePyQt().setIcon(entry, "SATURNE8_CASE_ICON")
+        self.entry = entry
+        self.path = path
+
+    def getEntry(self):
+        '''
+        Return entry of object
+        '''
+        logging.debug("getEntry %s", self.entry)
+        return self.entry
+
+    def getPath(self):
+        '''
+        Return text string
+        '''
+        logging.debug("getPath %s", self.path)
+        return self.path
