@@ -437,6 +437,7 @@ class CFDTreeWidget():
         from .clientgui import getClientGui
         from .CLSMainWindow import getSalomePyQt
         self.getClientGui = getClientGui
+        self.getSalomePyQt = getSalomePyQt
         self.moduleFolder = self.getClientGui().getCLSMainWindow().getSaturneFolder()
         self.moduleFolder.setIcon(col.name, getQIcon("CFDSTUDY"))
         self.pathToTwi = {}
@@ -444,10 +445,9 @@ class CFDTreeWidget():
         self.entryToSO = {}
         
     def getObjFromTwi(self, twItem):
-        for entry in self.entryToTwi:
-            if self.entryToTwi[entry] == twItem:
-                if twItem in self.entryToSO:
-                    return self.entryToSO[twItem]
+        entry = twItem.text(col.entry)
+        if entry in self.entryToSO:
+            return self.entryToSO[entry]
         return None
     
     def getTwiFromEntry(self, entry):
@@ -457,9 +457,13 @@ class CFDTreeWidget():
             return None
         
     def getObjFromEntry(self, entry):
-        study = _getStudy()
-        obj = study.FindObjectID(entry)
-        return obj
+        if entry in self.entryToSO:
+            return self.entryToSO[entry]
+        else:
+            return None
+        # study = _getStudy()
+        # obj = study.FindObjectID(entry)
+        # return obj
     
     def removeObjFromTwi(self, baseTwi):
         """
@@ -526,9 +530,9 @@ class CFDTreeWidget():
         return children
         
     def findCFDStudyInSalomeStudy(self, text):
-        logging.debug("findfindCFDStudyInSalomeStudyInStudy %s", text)
-        studyObjs = self.getSaturne8Studies()
-        for entry in studyObjs:
+        logging.debug("findCFDStudyInSalomeStudy %s", text)
+        studyEntries = self.getSaturne8Studies()
+        for entry in studyEntries:
             if entry not in self.entryToSO:
                 logging.critical(
                     "inconsistency: entry in SALOME study, under the Saturne8 module, not known")
@@ -539,10 +543,35 @@ class CFDTreeWidget():
             if text == studyPath:
                 return entry
         return ""
+
+    def ScanChildrenObj(self, theObject, theRegExp):
+        """
+        Returns a list of children data from a parent branch data.
+        The list of the children is filtered whith a regular expression.
+        """
+        logging.debug("ScanChildrenObj %s %s", theObject.GetName(), theObject.getEntry())
+        ChildList = []
+        childrenEntries = self.getSalomePyQt().getChildren(theObject.getEntry())
+        for ch in childrenEntries:
+            logging.debug("child entry: %s", ch)
+            child = self.getObjFromEntry(ch)
+            aName = child.GetName()
+            if not aName == "" and re.match(theRegExp, aName):
+                ChildList.append(child)
+        return ChildList
     
+    def getSObject(self, theParent,Name) :
+        logging.debug("getSObject %s %s", theParent.GetName(), Name)
+        Sobjlist = self.ScanChildrenObj(theParent,  ".*")
+        SObj = None
+        for i in Sobjlist :
+            if i.GetName() == Name :
+                SObj = i
+        return SObj
+   
     def findSOinSalomeStudy(self, thePath, parentSO):
         logging.debug("findSOinSalomeStudy")
-        childrenSO = ScanChildrenObj(parentSO,  ".*")
+        childrenSO = self.ScanChildrenObj(parentSO,  ".*")
         for childSO in childrenSO:
             #twItem = self.getTwiFromEntry(childSO.GetID())
             #path = twItem.text(col.details)
@@ -569,7 +598,7 @@ class CFDTreeWidget():
         entry = self.findCFDStudyInSalomeStudy(thePath)
         if not entry:
             logging.debug("create Salome study object for %s", thePath)
-            obj = SATURNE8_DataObject(thePath)
+            obj = SATURNE8_DataObject(thePath, None)
             entry = obj.getEntry()
             self.entryToSO[entry] = obj
         return obj
@@ -579,14 +608,14 @@ class CFDTreeWidget():
         Find or create Salome Study Object as a child of an SO 
         """
         logging.debug("findOrCreateChildSO: %s parentSO: %s", name, parentSO.GetName())
-        childrenSO = ScanChildrenObj(parentSO,  ".*")
+        childrenSO = self.ScanChildrenObj(parentSO,  ".*")
         for childSO in childrenSO:
             if childSO.GetName() == name:
                 return childSO
         # not found, create
         thePath = os.path.join(parentSO.getPath(), name)
         logging.debug("create Salome study object for %s", thePath)
-        obj = SATURNE8_DataObject(thePath)
+        obj = SATURNE8_DataObject(thePath, parentSO)
         entry = obj.getEntry()
         self.entryToSO[entry] = obj
         return obj
@@ -615,7 +644,12 @@ class CFDTreeWidget():
                 logging.debug("casePath %s", casePath)
                 f.write(casePath + "\n")
 
-    def findCurrentStudyItem(self):
+    def findAncestorStudyItemFromSelected(self):
+        """
+        get the parent of the current selected tree widget item recursively
+        until the corresponding CFD study item is found. 
+        If a CFD study item is selected, it is returned.
+        """
         cur = self.getClientGui().getCLSMainWindow().getCurrentSelectedItem()
         while cur:
             if cur.text(col.id) == str(dict_object["Study"]):
@@ -694,11 +728,12 @@ class CFDTreeWidget():
         self.pathToTwi[itemPath] = twItem
         
         # --- parent is study
-        if parentTWI == self.findCurrentStudyItem():
+        if parentTWI == self.findAncestorStudyItemFromSelected():
+            studyObj = self.findOrCreateStudySO(parentTWI.text(col.details))
             if os.path.isdir(itemPath):
                 if CFDSTUDYGUI_Commons.isaCFDCase(itemPath):
                     self.setIdAndIcon(twItem, "Case")
-                    obj = _CreateItem(self.getObjFromEntry(parentTWI.text(col.entry)), itemName)
+                    obj =self.findOrCreateChildSO(itemName,studyObj)
                     if obj:
                         entry = obj.GetID()
                         twItem.setText(col.entry, entry)
@@ -713,6 +748,7 @@ class CFDTreeWidget():
                         self.setIdAndIcon(twItem, "SYRCaseFolder")
                     else:
                         if itemName == "MESH":
+                            obj = self.findOrCreateChildSO("MESH",studyObj)
                             self.setIdAndIcon(twItem, "MESHFolder")
                         elif itemName == "POST":
                             self.setIdAndIcon(twItem, "POSTFolder")
@@ -1136,7 +1172,7 @@ class CFDTreeWidget():
             elif cur.text(col.id) == str(dict_object["Study"]):
                 return False
             cur = cur.parent()
-        logging.debug("************* outside Study ? *****************")
+        logging.debug("outside Study ? ")
         return False
 
     def detectSRCitem(self, twItem):
@@ -1149,7 +1185,7 @@ class CFDTreeWidget():
             if cur.text(col.id) == str(dict_object["SRCFolder"]):
                 return "USRSRCFile"
             cur = cur.parent()
-        logging.debug("************* outside Study ? *****************")
+        logging.debug("outside Study ?")
         return "USRSRCFile"
     
     def findCaseItem(self, twItem):
@@ -1167,7 +1203,7 @@ class CFDTreeWidget():
             if cur.text(col.id) == str(dict_object["Study"]):
                 return cur
             cur = cur.parent()
-        logging.debug("************* outside Study ? *****************")
+        logging.debug("*** outside Study  ? ***")
         return cur
 
     def getTwiChildWithName(self, parentTwi, name):
@@ -1259,10 +1295,10 @@ class CFDTreeWidget():
             twiCase = self.findOrCreateCaseTWI(caseObject, twiStudy, theCasePath)
             self.rebuildTWRecursively(twiCase)
 
-        if getSObject(studyObject,"MESH") == None:
+        if self.getSObject(studyObject,"MESH") == None:
             meshPath = os.path.join(theStudyPath, "MESH")
             meshObject = self.findOrCreateChildSO("MESH", studyObject)
-            meshObject = getSObject(studyObject,"MESH")
+            #meshObject = self.getSObject(studyObject,"MESH")
             twiMesh = self.findOrCreateMeshTWI(meshObject, twiStudy, meshPath)
             self.rebuildTWRecursively(twiMesh)
     
@@ -2223,30 +2259,6 @@ def ScanChildren(twItem, theRegExp):
             children.append(child)
     return children
 
-def ScanChildrenObj(theObject, theRegExp):
-    """
-    Returns a list of children data from a parent branch data.
-    The list of the children is filtered whith a regular expression.
-
-    @type theObject: C{SObject}
-    @param theObject: parent data.
-    @type theRegExp: C{String}
-    @param theRegExp: regular expression to filter children data.
-    @return: list of branch of children data.
-    @rtype: C{list} of C{SObject}
-    """
-    ChildList = []
-    study   = _getStudy()
-    builder = study.NewBuilder()
-    iter  = study.NewChildIterator(theObject)
-
-    while iter.More():
-        aName = iter.Value().GetName()
-        if not aName == "" and re.match(theRegExp, aName):
-            ChildList.append(iter.Value())
-        iter.Next()
-
-    return ChildList
 
 def ScanChildNames(theObject, theRegExp):
     """
@@ -2504,14 +2516,6 @@ def setCaseInProcess(theCasePath, isInProcess):
         attr.SetPixMap(str(ObjectTR.tr(icon_collection[dict_object["Case"]])))
 
 
-def getSObject(theParent,Name) :
-    Sobjlist = ScanChildrenObj(theParent,  ".*")
-    SObj = None
-    for i in Sobjlist :
-        if i.GetName() == Name :
-            SObj = i
-    return SObj
-
 #def getTwi(parentTwi, name):
     
 
@@ -2599,20 +2603,31 @@ class SATURNE8_DataObject:
     Data Object of SATURNE8 module
     '''
 
-    def __init__(self, path):
+    def __init__(self, path, parent):
         '''
         Constructor of SATURNE8_DataObject class
         '''
         logging.debug("SATURNE8_DataObject.__init__")
-        name = os.path.basename(path)
         from .CLSMainWindow import getSalomePyQt
-        entry = getSalomePyQt().createObject(name,
-                                             "SATURNE8_CASE_ICON",
-                                             path)
-        logging.debug("name: %s path: %s entry: %s",name, path, entry)
+        self.getSalomePyQt = getSalomePyQt
+        name = os.path.basename(path)
+        parentName = None
+        if parent:
+            parentName = parent.GetName()
+            entry = getSalomePyQt().createObject(name,
+                                                "SATURNE8_CASE_ICON",
+                                                path,
+                                                parent.getEntry())
+            logging.debug("name: %s path: %s entry: %s parent %s",name, path, entry, parentName)
+        else:
+            entry = getSalomePyQt().createObject(name,
+                                                "SATURNE8_CASE_ICON",
+                                                path)
+            logging.debug("name: %s path: %s entry: %s",name, path, entry)
         getSalomePyQt().setIcon(entry, "SATURNE8_CASE_ICON")
         self.entry = entry
         self.path = path
+        self.name = name
 
     def getEntry(self):
         '''
@@ -2621,9 +2636,24 @@ class SATURNE8_DataObject:
         logging.debug("getEntry %s", self.entry)
         return self.entry
 
+    def GetID(self):
+        """
+        for compatibility avec standard Salome Study Objects
+        """
+        logging.debug("GetID %s", self.entry)
+        return self.entry
+                      
     def getPath(self):
         '''
         Return text string
         '''
         logging.debug("getPath %s", self.path)
         return self.path
+
+    def GetName(self):
+        """
+        for compatibility avec standard Salome Study Objects
+        """
+        logging.debug("GetName %s", self.name)
+        return self.name        
+        
