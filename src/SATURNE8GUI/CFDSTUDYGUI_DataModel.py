@@ -538,7 +538,7 @@ class CFDTreeWidget():
                     "inconsistency: entry in SALOME study, under the Saturne8 module, not known")
                 return ""
             studyObj = self.entryToSO[entry]
-            studyPath = studyObj.getText()
+            studyPath = studyObj.getPath()
             logging.debug("entry: %s case: %s", entry, studyPath)
             if text == studyPath:
                 return entry
@@ -596,11 +596,14 @@ class CFDTreeWidget():
         '''
         logging.debug("findOrCreateStudySO %s", thePath)
         entry = self.findCFDStudyInSalomeStudy(thePath)
+        obj = None
         if not entry:
             logging.debug("create Salome study object for %s", thePath)
             obj = SATURNE8_DataObject(thePath, None)
             entry = obj.getEntry()
             self.entryToSO[entry] = obj
+        else:
+            obj = self.getObjFromEntry(entry)
         return obj
     
     def findOrCreateChildSO(self, name, parentSO):
@@ -640,7 +643,7 @@ class CFDTreeWidget():
             for entry in caseEntries:
                 logging.debug("entry: %s", entry)
                 caseObj = self.entryToSO[entry]
-                casePath = caseObj.getText()
+                casePath = caseObj.getPath()
                 logging.debug("casePath %s", casePath)
                 f.write(casePath + "\n")
 
@@ -1249,6 +1252,7 @@ class CFDTreeWidget():
         else:
             twiStudy = self.entryToTwi[studyObject.GetID()]
         
+        self.getClientGui().getCLSMainWindow().initialSelection(twiStudy)
         if theCaseName:
             # --- find or create case SO 
             theCasePath = os.path.join(theStudyPath, theCaseName)
@@ -1258,13 +1262,14 @@ class CFDTreeWidget():
             twiCase = self.findOrCreateCaseTWI(caseObject, twiStudy, theCasePath)
             self.rebuildTWRecursively(twiCase)
             
-            UpdateSubTree(twiStudy)
+        UpdateSubTree(twiStudy)
             
-            # TODO handle number of procs required in a consistant manner for coupled cases
-            # Better handled using models/BatchRunningModel
-            # if "run.cfg" in os.listdir(theStudyPath) and theCreateOpt:
-            #     if theNprocs != "":
-            #         pass
+        # TODO handle number of procs required in a consistant manner for coupled cases
+        # Better handled using models/BatchRunningModel
+        # if "run.cfg" in os.listdir(theStudyPath) and theCreateOpt:
+        #     if theNprocs != "":
+        #         pass
+
 
         return iok
 

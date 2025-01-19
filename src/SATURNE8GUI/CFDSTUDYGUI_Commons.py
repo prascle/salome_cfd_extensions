@@ -234,11 +234,12 @@ def isaCFDCase(theCasePath):
     return False
 
 def isaCFDStudy(theStudyPath):
-    logging.debug("isaCFDStudy")
+    logging.debug("isaCFDStudy %s", theStudyPath)
     dirList = []
     if os.path.isdir(theStudyPath):
         dirList = os.walk(theStudyPath).__next__()[1]
         for i in dirList:
+            logging.debug(" --- %s",i)
             if i not in ["MESH"] :
                 if isaCFDCase(os.path.join(theStudyPath,i)) :
                     return True

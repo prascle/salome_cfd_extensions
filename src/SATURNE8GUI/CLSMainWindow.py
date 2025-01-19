@@ -71,10 +71,12 @@ class CLSMainWindow(QMainWindow):
         Useful when tree widget is first filled with a study and nothing was selected,
         to detect the current study from menu/toolbar
         """
-        if not self.ui.tw_gauche.selectedItems():
-            logging.debug("set an initial selection on tree widget")
-            self.ui.tw_gauche.setCurrentItem(item)
-            self.treeSelectionChanged()
+        twiSelected = self.ui.tw_gauche.selectedItems()
+        if self.ui.tw_gauche.selectedItems():
+            logging.debug("initialSelection %s", twiSelected[0].text(col.details))
+        logging.debug("set an initial selection on tree widget")
+        self.ui.tw_gauche.setCurrentItem(item)
+        self.treeSelectionChanged()
     
     def initContextMenus(self, treeItemMenuMgr):
         """
