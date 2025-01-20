@@ -1498,18 +1498,15 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
             mess = cfdstudyMess.trMessage(self.tr("CLOSE_ACTION_CONFIRM_MESS"),[theStudypath])
             if cfdstudyMess.warningMessage(mess) == QMessageBox.No:
                 return
-            #TODO: rewrite (remove studyTwi from tree)
             theStudy = getCFDTW().getObjFromTwi(studyTwi)
-            caseList = CFDSTUDYGUI_DataModel.GetCaseList(theStudy)
+            caseList = getCFDTW().GetCaseList(studyTwi)
             if caseList != []:
                 for aCase in caseList:
-                    self._SolverGUI.removeDockWindowfromStudyAndCaseNames(theStudy.GetName(), aCase.GetName())
-            CFDSTUDYGUI_DataModel.closeCFDStudyTree(theStudy)
-            
+                    # TODO: remove CFD dialog instances
+                    # self._SolverGUI.removeDockWindowfromStudyAndCaseNames(theStudy.GetName(), aCase.GetName())
+                    pass
             self.getClientGui().getCLSMainWindow().removeItem(studyTwi)
             
-
-
     def slotRemoveAction(self):
         logging.debug("slotRemoveAction")
         if self.selectedItem is not None:

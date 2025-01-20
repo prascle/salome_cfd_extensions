@@ -471,25 +471,22 @@ class CFDTreeWidget():
         to be done before removeTwiWithChildren
         """
         baseEntry = baseTwi.text(col.entry)
+        basePath = baseTwi.text(col.details)
+        logging.debug("baseEntry %s %s", baseEntry, basePath)
         entriesToRemove = []
         if baseEntry:
             baseObj = self.getObjFromEntry(baseEntry)
             if baseObj:
                 # "recursive" clean of entryToTwi and entryToSO before recursive remove of obj
-                basePath = baseTwi.text(col.details)
                 for entry in self.entryToSO:
+                    logging.debug("entry %s", entry)
                     twi = self.getTwiFromEntry(entry)
                     path = twi.text(col.details)
                     if basePath in path:
                         entriesToRemove.append(entry)
                                       
-                study   = _getStudy()
-                builder = study.NewBuilder()
-                builder.RemoveObjectWithChildren(baseObj)
-                
             for entry in entriesToRemove:
-                self.entryToTwi.pop(entry)
-                self.entryToSO.pop(entry)
+                self.removeObject(entry)
             
     def removeTwiWithChildren(self, twItem):
         """
@@ -630,6 +627,7 @@ class CFDTreeWidget():
         if entry in self.entryToSO:
             self.getSalomePyQt().removeObject(entry)
             self.entryToSO.pop(entry)
+            self.entryToTwi.pop(entry)
 
     def saveFile(self, filename):
         """
@@ -1136,7 +1134,8 @@ class CFDTreeWidget():
         for i in range(nbChildren):
             itm = twItem.child(i)
             pth = itm.text(col.details)
-            childPaths[pth] = itm
+            if pth:
+                childPaths[pth] = itm
         
         # --- find the new paths on disk, create the corresponding tree items as new children of the current item
         for aName in lst:
@@ -1345,8 +1344,21 @@ class CFDTreeWidget():
         for i in range(nbChildren):
             child = studyItem.child(i)
             if child.text(col.id) == str(dict_object["Case"]):
+                CaseList.append(child.text(col.name))
+        return CaseList
+
+    def GetCaseList(self, studyItem):
+        """
+        Returns the list of the existing cases (tree widget items) from a CFD study in the Object Browser.
+        """
+        CaseList = []
+        nbChildren = studyItem.childCount()
+        for i in range(nbChildren):
+            child = studyItem.child(i)
+            if child.text(col.id) == str(dict_object["Case"]):
                 CaseList.append(child)
         return CaseList
+
 
 def FindCaseByPath(theCasePath):
     """
@@ -1448,18 +1460,18 @@ def updateCasePath(theCasePath):
 
             
 
-def closeCFDStudyTree(theObject):
-    """
-    Close a CFD Study from the Object browser
-    """
-    logging.debug("closeCFDStudyTree")
-    # TODO : check usage
-    # if theObject == None:
-    #     return
-    # study   = _getStudy()
-    # builder = study.NewBuilder()
-    # builder.RemoveObjectWithChildren(theObject)
-    return
+# def closeCFDStudyTree(theObject):
+#     """
+#     Close a CFD Study from the Object browser
+#     """
+#     logging.debug("closeCFDStudyTree")
+#     # TODO : check usage
+#     # if theObject == None:
+#     #     return
+#     # study   = _getStudy()
+#     # builder = study.NewBuilder()
+#     # builder.RemoveObjectWithChildren(theObject)
+#     return
 
 
 def _CreateObject(theFather, theBuilder, theName):
@@ -2180,35 +2192,6 @@ def GetStudyByObj(theObject):
     return None
 
 
-def GetCaseList(theStudy):
-    """
-    Returns a list of data which are cases folder in the Object Browser.
-
-    @type theStudy: C{SObject}
-    @param theStudy: CFD study data in the Object Browser.
-    @return: list of branch which are CFD cases.
-    @rtype: C{list} of C{SObject}
-    """
-    CaseList = []
-
-    study   = _getStudy()
-    builder = study.NewBuilder()
-
-    attr = builder.FindOrCreateAttribute(theStudy, "AttributeLocalID")
-    if attr.Value() != dict_object["Study"] :
-        if attr.Value() != dict_object["CouplingStudy"]:
-            return CaseList
-
-    iter  = study.NewChildIterator(theStudy)
-
-    while iter.More():
-        anObject = iter.Value()
-        attr = builder.FindOrCreateAttribute(anObject, "AttributeLocalID")
-        if attr.Value() == dict_object["Case"]:
-            CaseList.append(anObject)
-        iter.Next()
-
-    return CaseList
 
 def getXmlCaseNameList(caseItem):
     """
