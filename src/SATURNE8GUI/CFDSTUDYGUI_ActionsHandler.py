@@ -1319,15 +1319,12 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         dialog.__init__()
         dialog.setCaseMode()
 
-        # studyObj = self._singleSelectedObject() changer ça !
-        # if studyObj == None:
-        #     return
-        # TODO: simplify, remove use of SALOME studyObj
         studyTwi = getCFDTW().entryToTwi[entry]
         studyObj = getCFDTW().getObjFromEntry(entry)
-        dialog.StudyPath = CFDSTUDYGUI_DataModel._GetPath(studyObj)
-        dialog.StudyDirName.setText(os.path.dirname(CFDSTUDYGUI_DataModel._GetPath(studyObj)))
-        dialog.StudyLineEdit.setText(studyObj.GetName())
+        studyPath = studyTwi.text(col.details)
+        dialog.StudyPath = studyPath
+        dialog.StudyDirName.setText(os.path.dirname(studyPath))
+        dialog.StudyLineEdit.setText(os.path.basename(studyPath))
         if not os.path.exists(dialog.StudyPath):
             mess = cfdstudyMess.trMessage(self.tr("ENV_DLG_INVALID_DIRECTORY"),[dialog.StudyPath])+self.tr("STMSG_UPDATE_STUDY_INCOMING")
             cfdstudyMess.aboutMessage(mess)
@@ -1340,14 +1337,14 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
             return
         _SetCFDCode(dialog.code)
         # --- Get existing case name list of a CFD study
-        ExistingCaseNameList = CFDSTUDYGUI_DataModel.GetCaseNameList(studyObj)
+        ExistingCaseNameList = getCFDTW().GetCaseNameList(studyTwi)
         logging.debug("ExistingCaseNameList %s", ExistingCaseNameList)
         if dialog.CaseNames != "" :
             newCaseList = str(dialog.CaseNames).strip().split()
             logging.debug("newCaseList %s", newCaseList)
             for i in newCaseList:
                 if i in ExistingCaseNameList:
-                    mess = cfdstudyMess.trMessage(self.tr("CASE_ALREADY_EXISTS"),[i,CFDSTUDYGUI_DataModel._GetPath(studyObj)])
+                    mess = cfdstudyMess.trMessage(self.tr("CASE_ALREADY_EXISTS"),[i,studyPath])
                     cfdstudyMess.aboutMessage(mess)
                 else :
                     iok = getCFDTW()._SetStudyLocation(theStudyPath   = dialog.StudyPath,

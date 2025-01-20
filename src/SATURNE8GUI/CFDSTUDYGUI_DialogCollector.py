@@ -42,6 +42,9 @@ import os, re, shutil, logging
 from code_saturne.gui.base.QtCore    import *
 from code_saturne.gui.base.QtGui     import *
 from code_saturne.gui.base.QtWidgets import *
+
+from .CFDSTUDYGUI_DataModel import getCFDTW
+
 # ObjectTR is a convenient object for traduction purpose
 
 ObjectTR = QObject()
@@ -498,7 +501,7 @@ class ECSConversionDialogHandler(ECSConversionDialog):
 
         self.CaseCB.clear()
 
-        aCaseList = CFDSTUDYGUI_DataModel.GetCaseNameList(aStudy)
+        aCaseList = getCFDTW().GetCaseNameList(aStudy)
         if len(aCaseList) == 0:
             self.CaseCB.setEnabled(False)
             self.ConvertBtn.setEnabled(False)
@@ -580,7 +583,7 @@ class GUIActivationDialogHandler(GUIActivationDialog):
         self.CaseCB.clear()
         self.xmlfile = xmlFileName
 
-        for i in CFDSTUDYGUI_DataModel.GetCaseNameList(self.CurrentStudy):
+        for i in getCFDTW().GetCaseNameList(self.CurrentStudy):
             if self.CurrentCase and self.CurrentCase.GetName() == i:
                 self.CaseCB.addItem(i)
 

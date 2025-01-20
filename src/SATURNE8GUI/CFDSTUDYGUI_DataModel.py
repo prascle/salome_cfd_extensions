@@ -579,7 +579,6 @@ class CFDTreeWidget():
                 return childSO
         return None
                 
-
     def getObject(self, entry):
         '''
         Return SATURNE8_DataObject by its entry.
@@ -623,7 +622,6 @@ class CFDTreeWidget():
         self.entryToSO[entry] = obj
         return obj
         
-
     def removeObject(self, entry):
         ''' 
         Remove object by its entry
@@ -1337,6 +1335,18 @@ class CFDTreeWidget():
             getCFDTW().rebuildTWRecursively(twItem)
             self.getClientGui().getCLSMainWindow().expandTree()
 
+    def GetCaseNameList(self,studyItem):
+        """
+        Returns the list of the existing cases names from a CFD study in the Object Browser.
+        Used into slotAddCase to verify the existing cases
+        """
+        CaseList = []
+        nbChildren = studyItem.childCount()
+        for i in range(nbChildren):
+            child = studyItem.child(i)
+            if child.text(col.id) == str(dict_object["Case"]):
+                CaseList.append(child)
+        return CaseList
 
 def FindCaseByPath(theCasePath):
     """
@@ -2168,36 +2178,6 @@ def GetStudyByObj(theObject):
         cur = cur.GetFather()
 
     return None
-
-
-def GetCaseNameList(theStudy):
-    """
-    Returns the list of the existing cases from a CFD study in the Object Browser.
-    Used into slotAddCase to verify the existing cases
-    @type theStudy: C{SObject}
-    @param theStudy: CFD study data in the Object Browser.
-    @return: list of names of the loaded CFD studies.
-    @rtype: C{List} or C{String}
-    """
-    CaseList = []
-
-    study   = _getStudy()
-    builder = study.NewBuilder()
-
-    attr = builder.FindOrCreateAttribute(theStudy, "AttributeLocalID")
-    if attr.Value() != dict_object["Study"] :
-        if attr.Value() != dict_object["CouplingStudy"]:
-            return CaseList
-
-    iter  = study.NewChildIterator(theStudy)
-    while iter.More():
-        anObject = iter.Value()
-        attr = builder.FindOrCreateAttribute(anObject, "AttributeLocalID")
-        if attr.Value() == dict_object["Case"]:
-            CaseList.append(anObject.GetName())
-        iter.Next()
-
-    return CaseList
 
 
 def GetCaseList(theStudy):
