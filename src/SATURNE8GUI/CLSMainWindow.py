@@ -60,6 +60,10 @@ class CLSMainWindow(QMainWindow):
     def getCurrentSelectedItem(self):
         return self.selectedItem
     
+    def expandTree(self):
+        self.ui.tw_gauche.expandToDepth(3)
+        self.ui.tw_gauche.resizeColumnToContents(0)
+    
     def removeItem(self, item):
         logging.debug("removeItem %s",item.text(col.name))
         parent = item.parent()

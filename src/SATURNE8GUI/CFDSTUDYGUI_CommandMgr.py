@@ -54,6 +54,7 @@ from .CFDSTUDYGUI_Commons import sgPyQt, LoggingMgr
 from .CFDSTUDYGUI_QProcessDialog_ui import Ui_CFDSTUDYGUI_QProcessDialog
 from . import CFDSTUDYGUI_DataModel
 
+
 #-------------------------------------------------------------------------------
 # Classes definitions
 #-------------------------------------------------------------------------------
@@ -135,9 +136,10 @@ class CFDSTUDYGUI_QProcessDialog(QDialog, Ui_CFDSTUDYGUI_QProcessDialog):
 
 
     def __finished(self):
+        from .CFDSTUDYGUI_DataModel import getCFDTW
         if self.objBr:
             twi = CFDSTUDYGUI_DataModel.getCFDTW().entryToTwi[self.objBr.GetID()]
-            CFDSTUDYGUI_DataModel.UpdateSubTree(twi)
+            getCFDTW().UpdateSubTree(twi)
         QApplication.restoreOverrideCursor()
         self.pushButton.setEnabled(True)
 

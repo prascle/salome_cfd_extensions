@@ -1331,7 +1331,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         if not os.path.exists(dialog.StudyPath):
             mess = cfdstudyMess.trMessage(self.tr("ENV_DLG_INVALID_DIRECTORY"),[dialog.StudyPath])+self.tr("STMSG_UPDATE_STUDY_INCOMING")
             cfdstudyMess.aboutMessage(mess)
-            CFDSTUDYGUI_DataModel.UpdateSubTree(studyTwi)
+            getCFDTW().UpdateSubTree(studyTwi)
             return
         dialog.exec_()
         if self.DialogCollector.SetTreeLocationDialog.result() != QDialog.Accepted:
@@ -1372,7 +1372,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
                                                               theSyrthesCase = "",
                                                               theNprocs      = "")
         getCFDTW().rebuildTWRecursively(studyTwi)
-        CFDSTUDYGUI_DataModel.UpdateSubTree(studyTwi)
+        getCFDTW().UpdateSubTree(studyTwi)
 
 
     def slotInfo(self):
@@ -1395,9 +1395,9 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         logging.debug("slotUpdateObjectBrowser")
         twi = self.selectedItem
         if twi:
-            CFDSTUDYGUI_DataModel.UpdateSubTree(twi)
+            getCFDTW().UpdateSubTree(twi)
         else:
-            CFDSTUDYGUI_DataModel.UpdateSubTree()
+            getCFDTW().UpdateSubTree()
 
 
     def updateObjBrowser(self, Object=None):
@@ -1413,7 +1413,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         
         if Object:
             twi = getCFDTW().entryToTwi[Object.GetID()]
-            CFDSTUDYGUI_DataModel.UpdateSubTree(twi)
+            getCFDTW().UpdateSubTree(twi)
 
         QApplication.restoreOverrideCursor()
 
@@ -1975,7 +1975,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
             if not os.path.exists(CFDSTUDYGUI_DataModel._GetPath(sobj)):
                 mess = cfdstudyMess.trMessage(self.tr("ENV_DLG_INVALID_FILE"),[CFD_Code(),CFDSTUDYGUI_DataModel._GetPath(sobj)])+self.tr("STMSG_UPDATE_STUDY_INCOMING")
                 cfdstudyMess.aboutMessage(mess)
-                CFDSTUDYGUI_DataModel.UpdateSubTree(item)
+                getCFDTW().UpdateSubTree(item)
                 return
             self.OpenCFD_GUI(sobj)
 

@@ -1262,7 +1262,7 @@ class CFDTreeWidget():
             twiCase = self.findOrCreateCaseTWI(caseObject, twiStudy, theCasePath)
             self.rebuildTWRecursively(twiCase)
             
-        UpdateSubTree(twiStudy)
+        self.UpdateSubTree(twiStudy)
             
         # TODO handle number of procs required in a consistant manner for coupled cases
         # Better handled using models/BatchRunningModel
@@ -1274,11 +1274,7 @@ class CFDTreeWidget():
         return iok
 
     def _SetCaseLocation(self, theCasePath):
-        logging.debug("_SetCaseLocation %s", theCasePath)
-        # study         = _getStudy()
-        # builder       = study.NewBuilder()
-        # father        = _findOrCreateComponent()
-        
+        logging.debug("_SetCaseLocation %s", theCasePath)        
         theStudyPath  = os.path.dirname(theCasePath)
         theCaseName   = os.path.basename(theCasePath)
         studyObject   = self.FindStudyObjectByPath(theStudyPath)
@@ -1292,20 +1288,19 @@ class CFDTreeWidget():
         else:
             twiStudy = self.entryToTwi[studyObject.GetID()]                
         if theCaseName:
-            # find or create case SO 
+            # --- find or create case SO 
             theCasePath = os.path.join(theStudyPath, theCaseName)
             caseObject = self.FindCaseByPath(theCasePath)
             if caseObject is None:
                 caseObject = self.findOrCreateChildSO(theCaseName, studyObject)
             twiCase = self.findOrCreateCaseTWI(caseObject, twiStudy, theCasePath)
             self.rebuildTWRecursively(twiCase)
-
         if self.getSObject(studyObject,"MESH") == None:
             meshPath = os.path.join(theStudyPath, "MESH")
             meshObject = self.findOrCreateChildSO("MESH", studyObject)
-            #meshObject = self.getSObject(studyObject,"MESH")
             twiMesh = self.findOrCreateMeshTWI(meshObject, twiStudy, meshPath)
             self.rebuildTWRecursively(twiMesh)
+        self.getClientGui().getCLSMainWindow().expandTree()        
     
     def FindStudyObjectByPath(self, theStudyPath):
         """
@@ -1332,6 +1327,15 @@ class CFDTreeWidget():
             if twItem.text(col.id) == str(dict_object["Case"]):
                 caseSO = self.getObjFromTwi(twItem)
         return caseSO
+
+    def UpdateSubTree(self, twItem):
+        """
+        Update recursively Tree Widget from the given item
+        """
+        logging.debug("UpdateSubTree")
+        if twItem:
+            getCFDTW().rebuildTWRecursively(twItem)
+            self.getClientGui().getCLSMainWindow().expandTree()
 
 
 def FindCaseByPath(theCasePath):
@@ -1432,12 +1436,6 @@ def updateCasePath(theCasePath):
     return mess == ""
 
 
-def UpdateSubTree(twItem):
-    """
-    Update recursively Tree Widget from the given item
-    """
-    if twItem:
-        getCFDTW().rebuildTWRecursively(twItem)
             
 
 def closeCFDStudyTree(theObject):
