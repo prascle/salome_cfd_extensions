@@ -1155,10 +1155,10 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
             popup.addAction(self.commonAction(OpenGUIAction))
             popup.addAction(self.solverAction(SolverCloseAction))
             popup.addAction(self.commonAction(InfoCFDSTUDYAction))
-        elif id == CFDSTUDYGUI_DataModel.dict_object["SRCFolder"]:
-            popup.addAction(self.commonAction(CheckCompilationAction))
+        # elif id == CFDSTUDYGUI_DataModel.dict_object["SRCFolder"]:
+        #     popup.addAction(self.commonAction(CheckCompilationAction))
         elif id == CFDSTUDYGUI_DataModel.dict_object["SRCFile"]:
-            popup.addAction(self.commonAction(CheckCompilationAction))
+            # popup.addAction(self.commonAction(CheckCompilationAction))
             popup.addAction(self.commonAction(EditAction))
             popup.addAction(self.commonAction(MoveToDRAFTAction))
         elif id == CFDSTUDYGUI_DataModel.dict_object["SRCDRAFTFile"]:
@@ -1637,18 +1637,17 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
                                       os.path.join(parentPath,newName))
                         self.updateObjBrowser(parent)
 
-    # TODO verif utilisation, reecrire avec twi
     def slotMoveToDRAFT(self):
         """
         """
         logging.debug("slotMoveToDRAFT")
-        sobj = self._singleSelectedObject()
-        if not sobj == None:
-            path = CFDSTUDYGUI_DataModel._GetPath(sobj)
-            parent = sobj.GetFather()
-            if not parent == None:
-                parentPath = os.path.join(CFDSTUDYGUI_DataModel._GetPath(parent), 'DRAFT')
-                destPath = os.path.join(parentPath, sobj.GetName())
+        if self.selectedItem:
+            twItem = self.selectedItem
+            path = twItem.text(col.details)
+            parent = twItem.parent()
+            if parent:
+                parentPath = os.path.join(parent.text(col.details), 'DRAFT')
+                destPath = os.path.join(parentPath, twItem.text(col.name))
                 if os.path.exists(destPath):
                     mess = cfdstudyMess.trMessage(self.tr("OVERWRITE_CONFIRM_MESS"),[])
                     if cfdstudyMess.warningMessage(mess) == QMessageBox.No:
@@ -1658,14 +1657,14 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
 
                 if os.path.exists(parentPath) == False:
                     os.mkdir(parentPath)
-                if CFDSTUDYGUI_DataModel.isLinkPathObject(sobj) != None:
-                    #symbolic link file
+                if CFDSTUDYGUI_DataModel.isLinkPathItem(twItem):
+                    # --- symbolic link file
                     shutil.copy(path, parentPath)
                     import subprocess
                     ret = subprocess.call(['rm','-f',path])
                 else:
                     shutil.move(path, parentPath)
-                self.updateObjBrowser(parent)
+                getCFDTW().UpdateSubTree(parent)
 
 
     def _singleSelectedObject(self):

@@ -2469,22 +2469,13 @@ def checkCaseLaunchGUI(theCase):
 #     return CFD_Saturne
 
 
-def isLinkPathObject(theObject):
+def isLinkPathItem(twItem):
     """
-    Checks if I{theObject} represents a unix symbolic link.
-
-    @type theObject: C{SObject}
-    @param theObject: object from the Object Browser.
-    @rtype: C{True} or C{False}
-    @return: C{True} if C{SObject} represents a unix symbolic link.
+    Checks if the tree item represents a unix symbolic link.
     """
-    if theObject == None:
-        return False
-
-    study   = _getStudy()
-    builder = study.NewBuilder()
-    attr = builder.FindOrCreateAttribute(theObject, "AttributeComment")
-    return re.match("^->", attr.Value())
+    if twItem:
+        path = twItem.text(col.details)
+        return os.path.islink(path)
 
 
 def setCaseInProcess(theCasePath, isInProcess):
