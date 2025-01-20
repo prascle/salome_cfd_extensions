@@ -239,13 +239,19 @@ class SetTreeLocationDialogHandler(SetTreeLocationDialog):
 
     def slotCreateStudy(self):
         self.findChild(QCheckBox,"checkBoxCreate").setChecked(True)
-        new_path = QFileDialog.getExistingDirectory(None, self.tr("Select a directory location to create a new CFD Study"))
+        new_path = QFileDialog.getExistingDirectory(None, self.tr("Select an empty directory to become a new CFD Study"))
+        logging.debug("new_path: %s", new_path)
         if str(new_path) == "" :
             self.findChild(QCheckBox,"checkBoxCreate").setChecked(False)
             self.reinit()
             return
-        self.findChild(QLineEdit,"StudyDirName").setText(str(new_path))
-
+        basePath = os.path.dirname(new_path)
+        studyName = os.path.basename(new_path)
+        isEmptyDir = os.path.isdir(new_path) and len(os.listdir(new_path)) == 0
+        if isEmptyDir:
+            os.rmdir(new_path)
+        self.findChild(QLineEdit,"StudyDirName").setText(str(basePath))
+        self.findChild(QLineEdit,"StudyLineEdit").setText(str(studyName))
         if self.findChild(QLineEdit,"StudyDirName").text() == "" :
             self.findChild(QCheckBox,"checkBoxCreate").setChecked(False)
             self.findChild(QLineEdit, "StudyLineEdit").setEnabled(False)
