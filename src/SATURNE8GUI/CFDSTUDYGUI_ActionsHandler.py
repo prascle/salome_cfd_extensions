@@ -1426,9 +1426,6 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         logging.debug("slotViewAction")
         viewerName = str( sgPyQt.stringSetting( "CFDSTUDY", "ExternalReader", str(self.tr("CFDSTUDY_PREF_READER")) )).strip()
         if viewerName != "":
-            # sobj = self._singleSelectedObject()
-            # if sobj is not None:
-            #     path = CFDSTUDYGUI_DataModel._GetPath(sobj)
             if self.selectedItem is not None:
                 path = self.selectedItem.text(col.details)
                 try:
@@ -1454,9 +1451,8 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         logging.debug("slotEditAction")
         viewerName = str( sgPyQt.stringSetting( "CFDSTUDY", "ExternalEditor", str(self.tr("CFDSTUDY_PREF_EDITOR") ) )).strip()
         if str(viewerName) != "":
-            sobj = self._singleSelectedObject()
-            if not sobj == None:
-                path = CFDSTUDYGUI_DataModel._GetPath(sobj)
+            if self.selectedItem is not None:
+                path = self.selectedItem.text(col.details)
                 try:
                     subprocess.Popen([viewerName, path])
                 except:
@@ -1702,22 +1698,22 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         Not used now, but will be used when PARAVIS API will run correctly
         """
         logging.debug("slotExportInParavis")
-
-        sobj = self._singleSelectedObject()
-        if not sobj == None:
+        if self.selectedItem is not None:
             import pvsimple
             import salome
+            path = self.selectedItem.text(col.details)
+            name = self.selectedItem.text(col.name)
+
             pvsimple.ShowParaviewView()
-            path = CFDSTUDYGUI_DataModel._GetPath(sobj)
-            if re.match(".*\.med$", sobj.GetName()) or re.match(".*\.case$", sobj.GetName()):
-                #export Med file from CFDSTUDY into PARAVIS
+            if re.match(".*\.med$", name) or re.match(".*\.case$", name):
+                #export result file from CFDSTUDY into PARAVIS
                 engine = salome.lcc.FindOrLoadComponent("FactoryServer", "PARAVIS")
                 renderView1 = pvsimple.GetActiveViewOrCreate('RenderView')
                 pvsimple.OpenDataFile(path)
                 DataRepresentation = pvsimple.Show()
                 renderView1.ResetCamera()
 
-            if re.match(".*\.csv$", sobj.GetName()) :
+            if re.match(".*\.csv$", name) :
                 #export csv file from CFDSTUDY into PARAVIS
                 engine = salome.lcc.FindOrLoadComponent("FactoryServer", "PARAVIS")
                 coord_path = pvsimple.CSVReader(FileName=[path])
@@ -2126,14 +2122,10 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
 
     def slotUpdateCasePath(self):
         logging.debug("slotUpdateCasePath")
-        sobj = self._singleSelectedObject()
-        if sobj == None:
+        caseItem = self.selectedItem
+        if not caseItem:
             return
-
-        casePath = CFDSTUDYGUI_DataModel._GetPath(sobj)
-
-        aCase = CFDSTUDYGUI_DataModel.GetCase(sobj)
-        import os
+        casePath = caseItem.text(col.details)
         if not os.path.exists(casePath):
             mess = cfdstudyMess.trMessage(self.tr("ENV_DLG_INVALID_DIRECTORY"),[casePath])+ self.tr("STMSG_UPDATE_STUDY_INCOMING")
             cfdstudyMess.aboutMessage(mess)
@@ -2512,6 +2504,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         """
         Returns action by id from common action map of module
         """
+        #logging.debug("commonAction id %s", theId)
         if not theId in self._CommonActionIdMap:
             raise ActionError("Invalid action id")
 
@@ -2526,7 +2519,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         """
         Returns action by id from solver action maps of module
         """
-        logging.debug("solverAction")
+        #logging.debug("solverAction id %s", theId)
         action_id = None
 
         if theId in self._SolverActionIdMap:
@@ -2543,22 +2536,22 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         return self._ActionMap[action_id]
 
 
-    def actionId(self, theId):
-        """
-        """
-        action_id = None
+    # def actionId(self, theId):
+    #     """
+    #     """
+    #     action_id = None
 
-        if theId in self._CommonActionIdMap:
-            action_id =  self._CommonActionIdMap[theId]
-        elif theId in self._SolverActionIdMap:
-            action_id =  self._SolverActionIdMap[theId]
-        elif theId in self._HelpActionIdMap:
-            action_id = self._HelpActionIdMap[theId]
+    #     if theId in self._CommonActionIdMap:
+    #         action_id =  self._CommonActionIdMap[theId]
+    #     elif theId in self._SolverActionIdMap:
+    #         action_id =  self._SolverActionIdMap[theId]
+    #     elif theId in self._HelpActionIdMap:
+    #         action_id = self._HelpActionIdMap[theId]
 
-        if action_id == None:
-            raise ActionError("Invalid action id")
+    #     if action_id == None:
+    #         raise ActionError("Invalid action id")
 
-        return action_id
+    #     return action_id
 
 
     # def dskAgent(self):

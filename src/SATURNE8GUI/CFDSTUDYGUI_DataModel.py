@@ -1981,37 +1981,41 @@ def _SetIcon(theObject, theBuilder):
 def _GetPath(theObject):
     """
     Returns the unix path of the branch I{theObject}.
-
-    @type theObject: C{SObject}
-    @param theObject: branch of the tree to add an icon.
-    @return: unix path of the branch I{theObject}
-    @rtype: C{String}
     """
-    # check for null object
-    # check object from others component
-    # check if CFDSTUDY component object
+    name = None
+    if theObject:
+        name = theObject.getName()
+        logging.debug("_GetPath %s", name)
+        return theObject.getPath()
+    else:
+        logging.debug("_GetPath None")
+        return
+    
+    # # check for null object
+    # # check object from others component
+    # # check if CFDSTUDY component object
 
-    if _getComponent() == None:
-        return ""
+    # if _getComponent() == None:
+    #     return ""
 
-    if not theObject or \
-           theObject.GetFatherComponent().GetID() != _getComponent().GetID() or \
-           theObject.GetID() == _getComponent().GetID():
-        return ""
+    # if not theObject or \
+    #        theObject.GetFatherComponent().GetID() != _getComponent().GetID() or \
+    #        theObject.GetID() == _getComponent().GetID():
+    #     return ""
 
-    study   = _getStudy()
-    builder = study.NewBuilder()
-    path = str(theObject.GetName())
-    attr = builder.FindOrCreateAttribute(theObject, "AttributeLocalID")
-    if attr.Value() == dict_object["Study"] or attr.Value() == dict_object["CouplingStudy"]:
-        dir = builder.FindOrCreateAttribute(theObject, "AttributeComment")
-        return os.path.join(dir.Value(), path)
+    # study   = _getStudy()
+    # builder = study.NewBuilder()
+    # path = str(theObject.GetName())
+    # attr = builder.FindOrCreateAttribute(theObject, "AttributeLocalID")
+    # if attr.Value() == dict_object["Study"] or attr.Value() == dict_object["CouplingStudy"]:
+    #     dir = builder.FindOrCreateAttribute(theObject, "AttributeComment")
+    #     return os.path.join(dir.Value(), path)
 
-    father = theObject.GetFather()
-    attr = builder.FindOrCreateAttribute(father, "AttributeLocalID")
-    path = os.path.join(_GetPath(father), path)
+    # father = theObject.GetFather()
+    # attr = builder.FindOrCreateAttribute(father, "AttributeLocalID")
+    # path = os.path.join(_GetPath(father), path)
 
-    return path
+    # return path
 
 
 def _GetDirList(theObject):
@@ -2088,38 +2092,38 @@ def _DetectSRCObject(theObject):
     return dict_object["USRSRCFile"]
 
 
-def GetCase(theObject):
-    """
-    Returns the case to which belongs the I{theObject}.
+# def GetCase(theObject):
+#     """
+#     Returns the case to which belongs the I{theObject}.
 
-    @type theObject: C{SObject}
-    @param theObject: file or folder we want to know the case.
-    @return: case to which belongs the I{theObject}.
-    @rtype: C{SObject}
-    """
-    if theObject == None:
-        return None
+#     @type theObject: C{SObject}
+#     @param theObject: file or folder we want to know the case.
+#     @return: case to which belongs the I{theObject}.
+#     @rtype: C{SObject}
+#     """
+#     if theObject == None:
+#         return None
 
-    study   = _getStudy()
-    builder = study.NewBuilder()
-    cur = theObject
+#     study   = _getStudy()
+#     builder = study.NewBuilder()
+#     cur = theObject
 
-    while cur:
-        attr = builder.FindOrCreateAttribute(cur, "AttributeLocalID")
-        if Trace():
-            print("attr:",attr)
-            print("Value for Case", attr.Value())
-        value = attr.Value()
-        if value == dict_object["Case"]:
-            return cur
-        elif value == dict_object["Study"] or value == dict_object["CouplingStudy"] \
-             or value == __MODULE_ID__ \
-             or value == 0:
-            return None
+#     while cur:
+#         attr = builder.FindOrCreateAttribute(cur, "AttributeLocalID")
+#         if Trace():
+#             print("attr:",attr)
+#             print("Value for Case", attr.Value())
+#         value = attr.Value()
+#         if value == dict_object["Case"]:
+#             return cur
+#         elif value == dict_object["Study"] or value == dict_object["CouplingStudy"] \
+#              or value == __MODULE_ID__ \
+#              or value == 0:
+#             return None
 
-        cur = cur.GetFather()
+#         cur = cur.GetFather()
 
-    return None
+#     return None
 
 
 def GetFirstStudy():
