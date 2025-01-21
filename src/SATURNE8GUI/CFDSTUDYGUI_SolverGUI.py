@@ -422,39 +422,15 @@ class CFDSTUDYGUI_SolverGUI(QObject):
         self.mainWin.setCentralWidget(mw.centralwidget)
         self.mainWin.addDockWidget(Qt.LeftDockWidgetArea,mw.dockWidgetBrowser)
         
-        # --- the Workspace is a QGridLayout with a label in (0, 0) and a vertical spacer
-        #     the solver mainWindow is added below the label
-        li = self.Workspace.itemAtPosition(0, 0)
-        lbl = li.widget()
-        lbl.setText(aTitle)
-        self.Workspace.addWidget(self.mainWin, 1, 0, -1, -1)
+        case_name = caseTwi.parent().text(col.name) +'.' + caseTwi.text(col.name)
+        tw_case = QWidget()
+        gl_case = QGridLayout(tw_case)
+        self.mainWin.setParent(tw_case)
+        gl_case.addWidget(self.mainWin, 0, 0 ,1, 1)
+        WorkSpace.addTab(tw_case, case_name)
         getClientGui().getCLSMainWindow().setHSplitterSizes(300, 600, 750)
-
-        # self.dockMainWin = QDockWidget(aTitle)
-        # self.dockMainWin.setWidget(self.mainWin)
-
-        # dsk.addDockWidget(Qt.LeftDockWidgetArea,self.dockMainWin)
-        # self.dockMainWin.setVisible(True)
-        # self.dockMainWin.show()
-        # self.dockMainWin.raise_()
-
-        # objectBrowserDockWindow.visibilityChanged["bool"].connect(self.resizeObjectBrowserDock)
-
-        #Add Dock windows are managed by CFDGUI_Management class
-        # aStudyCFD = aCase.GetFather()
-        # aCaseCFD  = aCase
-        # xmlFileName = str(Title)
-        # _c_CFDGUI.set_d_CfdCases(self.dockMainWin, mw, aStudyCFD, aCaseCFD, xmlFileName)
-        # dockMain = _c_CFDGUI.getDockWithCFDNames(aStudyCFD.GetName(),
-        #                                          aCaseCFD.GetName(),
-        #                                          xmlFileName)
-        # if dockMain != None:
-        #     dockMain.visibilityChanged["bool"].connect(self.resizeMainWindowDock)
-        #self.mainWin.adjustSize()
-        #self.mainWin.resize(900, 900)
         updateObjectBrowser()
         return mw
-
 
     def resizeObjBrowserDock(self):
         """

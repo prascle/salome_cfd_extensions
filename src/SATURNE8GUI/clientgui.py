@@ -216,7 +216,7 @@ class ClientGui():
             return False
         else:
             self.ah.DialogCollector.InfoDialog.setCode(env_saturne)
-        self.ah.setSolverParentWidget(self.clsmainw.ui.gl_fr_droite)
+        self.ah.setSolverParentWidget(self.clsmainw.ui.tw_case)
         self.ah._SalomeSelection.currentSelectionChanged.connect(self.ah.updateActions)
         self.ah.connectSolverGUI()
                    
