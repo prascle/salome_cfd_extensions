@@ -54,22 +54,22 @@ class CLSMainWindow(QMainWindow):
         self.selectedParent = None
         from .clientgui import getClientGui
         self.getClientGui = getClientGui
-    
+
     def setHSplitterSizes(self, l1, l2, l3):
-        self.ui.splitter.setSizes([l1,l2,l3])
-        
+        self.ui.splitter.setSizes([l1, l2, l3])
+
     def getSaturneFolder(self):
         return self.saturneFolder
-    
+
     def getCurrentSelectedItem(self):
         return self.selectedItem
-    
+
     def expandTree(self):
         self.ui.tw_gauche.expandToDepth(3)
         self.ui.tw_gauche.resizeColumnToContents(0)
-    
+
     def removeItem(self, item):
-        logging.debug("removeItem %s",item.text(col.name))
+        logging.debug("removeItem %s", item.text(col.name))
         parent = item.parent()
         self.selectedParent = parent
         parent.removeChild(item)
@@ -81,11 +81,12 @@ class CLSMainWindow(QMainWindow):
         """
         twiSelected = self.ui.tw_gauche.selectedItems()
         if self.ui.tw_gauche.selectedItems():
-            logging.debug("initialSelection %s", twiSelected[0].text(col.details))
+            logging.debug("initialSelection %s",
+                          twiSelected[0].text(col.details))
         logging.debug("set an initial selection on tree widget")
         self.ui.tw_gauche.setCurrentItem(item)
         self.treeSelectionChanged()
-    
+
     def initContextMenus(self, treeItemMenuMgr):
         """
         The specific actions menus for each tree item are defined in clientgui.treeItemMenuMgr
@@ -96,25 +97,25 @@ class CLSMainWindow(QMainWindow):
         self.ui.tw_gauche.setContextMenuPolicy(Qt.CustomContextMenu)
         self.ui.tw_gauche.customContextMenuRequested.connect(
             self.treeItemMenuMgr)
-        
+
     def slotSelectTabCase(self):
         indexTab = self.ui.tw_case.currentIndex()
         logging.debug("slotSelectTabCase %s", indexTab)
         currentWd = self.ui.tw_case.currentWidget()
         mw_case = None
         for c in currentWd.children():
-            logging.debug("child %s",c.__class__)
+            logging.debug("child %s", c.__class__)
             if "QMainWindow" in str(c.__class__):
                 mw_case = c
                 break
         ah = self.getClientGui().getActionsHandler()
         ah.getSolverGUI().setCurrentWindow(mw_case)
-        #logging.debug("index: %s", self.ui.tw_case.indexOf(currentWd))
-        
+        # logging.debug("index: %s", self.ui.tw_case.indexOf(currentWd))
+
     def detailsMeshGroups(self, medFile, meshItem, liste):
         """
         Generate tree items for each group in a mesh
-        
+
         :param string medFile: path of the med file.
         :param QTreeWidgetItem meshItem: QTreeWidgetItem associated to the meshFile
         :param list liste: a list of (parent, entry, name, offset) for each child
@@ -182,7 +183,7 @@ class CLSMainWindow(QMainWindow):
             if entry in self.entryItems.keys():
                 item = self.entryItems[entry]
                 self.ui.tw_gauche.setCurrentItem(item)
-                
+
     def caseSelectionChanged(self, twi):
         logging.debug("caseSelectionChanged %s", twi)
         if twi:

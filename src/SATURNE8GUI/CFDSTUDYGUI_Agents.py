@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 
 # This file is part of Code_Saturne, a general-purpose CFD tool.
 #
@@ -20,7 +20,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51 Franklin
 # Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 
 """
 Desktop Agent
@@ -32,17 +32,18 @@ is the main window's central widget.
 
 import logging
 
+
 class Desktop_Agent:
     """
     Container for the SALOME workspace.
     """
+
     def __init__(self):
         """
         Constructor.
         """
         logging.debug("CFDSTUDYGUI_Agents.Desktop_Agent.__init__: ")
         self._WORKSPACE = None
-
 
     def setWorkspace(self, ws):
         """
@@ -54,7 +55,6 @@ class Desktop_Agent:
         logging.debug("CFDSTUDYGUI_Agents.Desktop_Agent.setWorkspace: ")
         self._WORKSPACE = ws
 
-
     def workspace(self):
         """
         Returns the SALOME Workspace I{ws} into the Desktop Manager.
@@ -65,4 +65,4 @@ class Desktop_Agent:
         logging.debug("CFDSTUDYGUI_Agents.Desktop_Agent.workspace: ")
         return self._WORKSPACE
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------

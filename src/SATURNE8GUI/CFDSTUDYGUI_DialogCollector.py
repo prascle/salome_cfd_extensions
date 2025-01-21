@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 
 # This file is part of Code_Saturne, a general-purpose CFD tool.
 #
@@ -20,7 +20,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51 Franklin
 # Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 
 """
 Dialog Collector
@@ -29,18 +29,30 @@ Dialog Collector
 This file gathers the C{QDialog} definitions of the CFD_STUDY module.
 """
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 # Standard modules
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 
-import os, re, shutil, logging
+from .CFDSTUDYGUI_Message import cfdstudyMess
+from .CFDSTUDYGUI_Commons import CFD_Saturne, CFD_Neptune, CheckCFD_CodeEnv
+from .CFDSTUDYGUI_Commons import CFD_Code, getCFDSolverName, sgPyQt
+from . import CFDSTUDYGUI_Commons
+from . import CFDSTUDYGUI_DataModel
+from .GUIActivationDialog_ui import Ui_GUIActivationDialog
+from .ECSConversionDialog_ui import Ui_ECSConversionDialog
+from .SetTreeLocationDialog_ui import Ui_SetTreeLocationDialog
+from .InfoDialog_ui import Ui_InfoDialog
+import os
+import re
+import shutil
+import logging
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 # Third-party modules
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 
-from code_saturne.gui.base.QtCore    import *
-from code_saturne.gui.base.QtGui     import *
+from code_saturne.gui.base.QtCore import *
+from code_saturne.gui.base.QtGui import *
 from code_saturne.gui.base.QtWidgets import *
 
 from .CFDSTUDYGUI_DataModel import getCFDTW
@@ -48,33 +60,26 @@ from .CFDSTUDYGUI_DataModel import getCFDTW
 # ObjectTR is a convenient object for traduction purpose
 
 ObjectTR = QObject()
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 # Salome modules
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 # Application modules
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 
-from .InfoDialog_ui            import Ui_InfoDialog
-from .SetTreeLocationDialog_ui import Ui_SetTreeLocationDialog
-from .ECSConversionDialog_ui   import Ui_ECSConversionDialog
-from .GUIActivationDialog_ui   import Ui_GUIActivationDialog
-from . import CFDSTUDYGUI_DataModel
-from . import CFDSTUDYGUI_Commons
-from .CFDSTUDYGUI_Commons import CFD_Code, getCFDSolverName, sgPyQt
-from .CFDSTUDYGUI_Commons import CFD_Saturne, CFD_Neptune, CheckCFD_CodeEnv
-from .CFDSTUDYGUI_Message import cfdstudyMess
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 # Dialog definitions
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
+
 
 class InfoDialog(QDialog, Ui_InfoDialog):
     """
     Dialog informations about solver installation.
     """
-    def __init__(self, parent = None):
+
+    def __init__(self, parent=None):
         """
         """
         QDialog.__init__(self, parent)
@@ -86,31 +91,32 @@ class InfoDialog(QDialog, Ui_InfoDialog):
 class InfoDialogHandler(InfoDialog):
     """
     """
-    def __init__(self, parent = None):
-        """
-        """
-        InfoDialog.__init__(self,parent)
 
-        self.status = 1 #initial access status
+    def __init__(self, parent=None):
+        """
+        """
+        InfoDialog.__init__(self, parent)
+
+        self.status = 1  # initial access status
 
         aBtn = self.findChild(QPushButton, "OKButton")
         aBtn.setText(self.tr("DLG_OK_BUTTON_TEXT"))
 
         self.setWindowTitle(self.tr("INFO_DLG_CAPTION"))
 
-
     def accept(self):
         iok, mess = CheckCFD_CodeEnv(CFD_Code())
         if iok:
-            if mess != "" :
-                mess = cfdstudyMess.trMessage(self.tr("CFDSTUDY_INVALID_ENV"),[]) + mess
+            if mess != "":
+                mess = cfdstudyMess.trMessage(
+                    self.tr("CFDSTUDY_INVALID_ENV"), []) + mess
                 cfdstudyMess.criticalMessage(mess)
-            else :
+            else:
                 InfoDialog.accept(self)
         else:
-            mess = cfdstudyMess.trMessage(self.tr("INFO_DLG_INVALID_ENV"),[]) + mess
+            mess = cfdstudyMess.trMessage(
+                self.tr("INFO_DLG_INVALID_ENV"), []) + mess
             cfdstudyMess.criticalMessage(mess)
-
 
     def setCode(self, env_saturne):
 
@@ -122,24 +128,25 @@ class InfoDialogHandler(InfoDialog):
         self.labelPrefixValue.setText(pkg.get_dir('prefix'))
         self.labelCodeValue.setText(pkg.name)
 
-
     def update(self, code):
         from code_saturne.base.cs_package import package
 
         _solver_name = getCFDSolverName(code)
-        pkg = package(name = _solver_name)
+        pkg = package(name=_solver_name)
 
         self.labelVersionValue.setText(pkg.version)
         self.labelPrefixValue.setText(pkg.get_dir('prefix'))
         self.labelCodeValue.setText(pkg.name)
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
+
 
 class SetTreeLocationDialog(QDialog, Ui_SetTreeLocationDialog):
     """
     Tree Location Dialog informations about environment variables
     """
-    def __init__(self, parent = None):
+
+    def __init__(self, parent=None):
         """
         """
         QDialog.__init__(self, parent)
@@ -147,14 +154,16 @@ class SetTreeLocationDialog(QDialog, Ui_SetTreeLocationDialog):
 
         self.setupUi(self)
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
+
 
 class SetTreeLocationDialogHandler(SetTreeLocationDialog):
     """
     Load the CFD study location. If the name of the CFD study
     does not exists, the corresponding folder is created.
     """
-    def __init__(self, parent = None):
+
+    def __init__(self, parent=None):
         """
         Constructor. Initialize text and label of the QDialog.
         """
@@ -168,78 +177,85 @@ class SetTreeLocationDialogHandler(SetTreeLocationDialog):
             if "neptune_cfd" in os.listdir(os.path.join(cs_root_dir, "bin")):
                 neptune_status = True
         if not neptune_status:
-            self.findChild(QRadioButton,"radioButtonNeptune").setEnabled(False)
+            self.findChild(
+                QRadioButton, "radioButtonNeptune").setEnabled(False)
 
-        self.findChild(QCheckBox,"checkBoxCreate").clicked.connect(self.slotCreateStudy)
-        self.findChild(QCheckBox,"checkBoxLoad").clicked.connect(self.slotLoadStudy)
-        self.findChild(QCheckBox,"checkBoxCopyFrom").clicked.connect(self.slotCopyFrom)
-        self.findChild(QWidget,"copyFromCase_widget").hide()
+        self.findChild(QCheckBox, "checkBoxCreate").clicked.connect(
+            self.slotCreateStudy)
+        self.findChild(QCheckBox, "checkBoxLoad").clicked.connect(
+            self.slotLoadStudy)
+        self.findChild(QCheckBox, "checkBoxCopyFrom").clicked.connect(
+            self.slotCopyFrom)
+        self.findChild(QWidget, "copyFromCase_widget").hide()
         # Define option when openning
-        self.findChild(QCheckBox,"checkBoxCreate").setChecked(False)
-        self.findChild(QRadioButton,"radioButtonSaturne").setChecked(True)
-        self.findChild(QRadioButton,"radioButtonNeptune").setChecked(False)
-        self.findChild(QCheckBox,"checkBoxCopyFrom").setChecked(False)
-        self.findChild(QCheckBox,"checkBoxCouplingSaturneSyrthes").setChecked(False)
-        self.findChild(QWidget,"SyrthesGroupBox").setVisible(False)
+        self.findChild(QCheckBox, "checkBoxCreate").setChecked(False)
+        self.findChild(QRadioButton, "radioButtonSaturne").setChecked(True)
+        self.findChild(QRadioButton, "radioButtonNeptune").setChecked(False)
+        self.findChild(QCheckBox, "checkBoxCopyFrom").setChecked(False)
+        self.findChild(
+            QCheckBox, "checkBoxCouplingSaturneSyrthes").setChecked(False)
+        self.findChild(QWidget, "SyrthesGroupBox").setVisible(False)
         self.findChild(QLineEdit, "NprocsLineEdit").setText("1")
-        self.findChild(QCheckBox,"checkBoxLoad").setChecked(False)
-        self.findChild(QDialogButtonBox,"buttonBox").button(QDialogButtonBox.Ok).setEnabled(False)
+        self.findChild(QCheckBox, "checkBoxLoad").setChecked(False)
+        self.findChild(QDialogButtonBox, "buttonBox").button(
+            QDialogButtonBox.Ok).setEnabled(False)
         self.findChild(QLineEdit, "CaseLineEdit").setEnabled(False)
-        self.CaseNames              = ""
-        self.CreateOption           = False
-        self.code                   = None
-        self.CopyFromOption         = False
+        self.CaseNames = ""
+        self.CreateOption = False
+        self.code = None
+        self.CopyFromOption = False
         self.CouplingSaturneSyrthes = False
-        self.SyrthesCase            = ""
+        self.SyrthesCase = ""
         self.adjustSize()
 
-    def reinit(self) :
-        self.findChild(QCheckBox,"checkBoxLoad").setChecked(False)
-        self.findChild(QCheckBox,"checkBoxCreate").setChecked(False)
-        self.findChild(QRadioButton,"radioButtonSaturne").setChecked(True)
-        self.findChild(QRadioButton,"radioButtonNeptune").setChecked(False)
-        self.findChild(QWidget,"CaseWidget").setEnabled(False)
-        self.findChild(QWidget,"CaseWidget").setVisible(True)
-        self.findChild(QLineEdit,"StudyDirName").setText("")
+    def reinit(self):
+        self.findChild(QCheckBox, "checkBoxLoad").setChecked(False)
+        self.findChild(QCheckBox, "checkBoxCreate").setChecked(False)
+        self.findChild(QRadioButton, "radioButtonSaturne").setChecked(True)
+        self.findChild(QRadioButton, "radioButtonNeptune").setChecked(False)
+        self.findChild(QWidget, "CaseWidget").setEnabled(False)
+        self.findChild(QWidget, "CaseWidget").setVisible(True)
+        self.findChild(QLineEdit, "StudyDirName").setText("")
         self.findChild(QLineEdit, "StudyLineEdit").setEnabled(False)
         self.findChild(QLineEdit, "StudyLineEdit").setText("")
         self.findChild(QLineEdit, "CaseLineEdit").setText("")
         self.findChild(QLineEdit, "CaseLineEdit").setEnabled(False)
-        self.findChild(QCheckBox,"checkBoxCopyFrom").setChecked(False)
-        self.findChild(QCheckBox,"checkBoxCouplingSaturneSyrthes").setChecked(False)
+        self.findChild(QCheckBox, "checkBoxCopyFrom").setChecked(False)
+        self.findChild(
+            QCheckBox, "checkBoxCouplingSaturneSyrthes").setChecked(False)
         self.findChild(QLineEdit, "NprocsLineEdit").setText("1")
-        self.findChild(QDialogButtonBox,"buttonBox").button(QDialogButtonBox.Ok).setEnabled(False)
-        self.findChild(QWidget,"SyrthesGroupBox").setVisible(False)
-        self.findChild(QWidget,"copyFromCase_widget").setEnabled(False)
-        self.CaseNames              = ""
-        self.CreateOption           = False
-        self.code                   = None
-        self.CopyFromOption         = False
+        self.findChild(QDialogButtonBox, "buttonBox").button(
+            QDialogButtonBox.Ok).setEnabled(False)
+        self.findChild(QWidget, "SyrthesGroupBox").setVisible(False)
+        self.findChild(QWidget, "copyFromCase_widget").setEnabled(False)
+        self.CaseNames = ""
+        self.CreateOption = False
+        self.code = None
+        self.CopyFromOption = False
         self.CouplingSaturneSyrthes = False
         self.StudyPath = ''
         self.StudyName = ''
         self.CaseRefName = ''
         self.adjustSize()
 
-
-    def on_checkBoxCreate_pressed(self) :
+    def on_checkBoxCreate_pressed(self):
         self.reinit()
-        self.findChild(QCheckBox,"checkBoxLoad").setChecked(False)
-        self.findChild(QLineEdit,"StudyDirName").setText("")
+        self.findChild(QCheckBox, "checkBoxLoad").setChecked(False)
+        self.findChild(QLineEdit, "StudyDirName").setText("")
         self.findChild(QLineEdit, "StudyLineEdit").setEnabled(True)
         self.findChild(QLineEdit, "StudyLineEdit").setText("")
         self.findChild(QLineEdit, "CaseLineEdit").setText("")
         self.findChild(QLineEdit, "copyFromCase").setText("")
-        self.findChild(QWidget,"StudyGB").setEnabled(True)
-        self.findChild(QCheckBox,"checkBoxCopyFrom").setChecked(False)
-
+        self.findChild(QWidget, "StudyGB").setEnabled(True)
+        self.findChild(QCheckBox, "checkBoxCopyFrom").setChecked(False)
 
     def slotCreateStudy(self):
-        self.findChild(QCheckBox,"checkBoxCreate").setChecked(True)
-        new_path = QFileDialog.getExistingDirectory(None, self.tr("Select an empty directory to become a new CFD Study"))
+        self.findChild(QCheckBox, "checkBoxCreate").setChecked(True)
+        new_path = QFileDialog.getExistingDirectory(None, self.tr(
+            "Select an empty directory to become a new CFD Study"))
         logging.debug("new_path: %s", new_path)
-        if str(new_path) == "" :
-            self.findChild(QCheckBox,"checkBoxCreate").setChecked(False)
+        if str(new_path) == "":
+            self.findChild(QCheckBox, "checkBoxCreate").setChecked(False)
             self.reinit()
             return
         basePath = os.path.dirname(new_path)
@@ -247,49 +263,52 @@ class SetTreeLocationDialogHandler(SetTreeLocationDialog):
         isEmptyDir = os.path.isdir(new_path) and len(os.listdir(new_path)) == 0
         if isEmptyDir:
             os.rmdir(new_path)
-        self.findChild(QLineEdit,"StudyDirName").setText(str(basePath))
-        self.findChild(QLineEdit,"StudyLineEdit").setText(str(studyName))
-        if self.findChild(QLineEdit,"StudyDirName").text() == "" :
-            self.findChild(QCheckBox,"checkBoxCreate").setChecked(False)
+        self.findChild(QLineEdit, "StudyDirName").setText(str(basePath))
+        self.findChild(QLineEdit, "StudyLineEdit").setText(str(studyName))
+        if self.findChild(QLineEdit, "StudyDirName").text() == "":
+            self.findChild(QCheckBox, "checkBoxCreate").setChecked(False)
             self.findChild(QLineEdit, "StudyLineEdit").setEnabled(False)
 
-    def on_checkBoxLoad_pressed(self) :
-        self.findChild(QCheckBox,"checkBoxCreate").setChecked(False)
-        self.findChild(QWidget,"StudyGB").setEnabled(False)
-        self.findChild(QLineEdit,"StudyDirName").setText("")
+    def on_checkBoxLoad_pressed(self):
+        self.findChild(QCheckBox, "checkBoxCreate").setChecked(False)
+        self.findChild(QWidget, "StudyGB").setEnabled(False)
+        self.findChild(QLineEdit, "StudyDirName").setText("")
         self.findChild(QLineEdit, "StudyLineEdit").setText("")
-        self.findChild(QCheckBox,"checkBoxCopyFrom").setChecked(False)
-        self.findChild(QCheckBox,"checkBoxCouplingSaturneSyrthes").setChecked(False)
+        self.findChild(QCheckBox, "checkBoxCopyFrom").setChecked(False)
+        self.findChild(
+            QCheckBox, "checkBoxCouplingSaturneSyrthes").setChecked(False)
         self.findChild(QLineEdit, "copyFromCase").setText("")
 
     def slotLoadStudy(self):
-        self.findChild(QCheckBox,"checkBoxLoad").setChecked(True)
+        self.findChild(QCheckBox, "checkBoxLoad").setChecked(True)
         self.adjustSize()
-        new_path = QFileDialog.getExistingDirectory(None, self.tr("Select an existing CFD Study"))
-        if str(new_path) == "" :
+        new_path = QFileDialog.getExistingDirectory(
+            None, self.tr("Select an existing CFD Study"))
+        if str(new_path) == "":
             self.reinit()
             return
         new_path, self.StudyName = os.path.split(str(new_path))
-        self.findChild(QLineEdit,"StudyDirName").setText(new_path)
+        self.findChild(QLineEdit, "StudyDirName").setText(new_path)
         self.findChild(QLineEdit, "StudyLineEdit").setText(self.StudyName)
-        self.findChild(QDialogButtonBox,"buttonBox").button(QDialogButtonBox.Ok).setEnabled(True)
+        self.findChild(QDialogButtonBox, "buttonBox").button(
+            QDialogButtonBox.Ok).setEnabled(True)
 
-
-    def on_StudyLineEdit_textChanged(self,stringValue):
-        if str(stringValue) != "" :
+    def on_StudyLineEdit_textChanged(self, stringValue):
+        if str(stringValue) != "":
             self.findChild(QLineEdit, "CaseLineEdit").setEnabled(True)
-            self.findChild(QWidget,"CaseWidget").setEnabled(True)
-            self.findChild(QCheckBox,"checkBoxCopyFrom").setEnabled(True)
-            self.findChild(QDialogButtonBox,"buttonBox").button(QDialogButtonBox.Ok).setEnabled(True)
+            self.findChild(QWidget, "CaseWidget").setEnabled(True)
+            self.findChild(QCheckBox, "checkBoxCopyFrom").setEnabled(True)
+            self.findChild(QDialogButtonBox, "buttonBox").button(
+                QDialogButtonBox.Ok).setEnabled(True)
         else:
             self.findChild(QLineEdit, "CaseLineEdit").setEnabled(False)
-            self.findChild(QWidget,"CaseWidget").setEnabled(False)
-            self.findChild(QDialogButtonBox,"buttonBox").button(QDialogButtonBox.Ok).setEnabled(False)
-
+            self.findChild(QWidget, "CaseWidget").setEnabled(False)
+            self.findChild(QDialogButtonBox, "buttonBox").button(
+                QDialogButtonBox.Ok).setEnabled(False)
 
     def on_checkBoxCopyFrom_pressed(self):
-        if self.findChild(QCheckBox,"checkBoxCopyFrom").isChecked() and self.findChild(QLineEdit, "copyFromCase").text() != "":
-            self.findChild(QLineEdit,"copyFromCase").setText("")
+        if self.findChild(QCheckBox, "checkBoxCopyFrom").isChecked() and self.findChild(QLineEdit, "copyFromCase").text() != "":
+            self.findChild(QLineEdit, "copyFromCase").setText("")
             return
 
 #####################################################################################
@@ -299,55 +318,58 @@ class SetTreeLocationDialogHandler(SetTreeLocationDialog):
         for option --copy-from
         """
 
-        if not self.findChild(QCheckBox,"checkBoxCopyFrom").isChecked() :
-            self.findChild(QWidget,"copyFromCase_widget").hide()
+        if not self.findChild(QCheckBox, "checkBoxCopyFrom").isChecked():
+            self.findChild(QWidget, "copyFromCase_widget").hide()
             return
 
         CopyFromCasePath = ""
-        if self.findChild(QLineEdit,"StudyDirName").text() != "":
-            CopyFromCasePath = QFileDialog.getExistingDirectory(None, ObjectTR.tr("SET_CASE_LOCATION_BROWSE_CAPTION"))
+        if self.findChild(QLineEdit, "StudyDirName").text() != "":
+            CopyFromCasePath = QFileDialog.getExistingDirectory(
+                None, ObjectTR.tr("SET_CASE_LOCATION_BROWSE_CAPTION"))
 
             if CopyFromCasePath == None or str(CopyFromCasePath) == "":
-                self.findChild(QCheckBox,"checkBoxCopyFrom").setChecked(False)
+                self.findChild(QCheckBox, "checkBoxCopyFrom").setChecked(False)
                 return
 
         self.CaseRefName = os.path.abspath(str(CopyFromCasePath))
         # check if it is a case directory
         if not self.isCfdCaseDir(self.CaseRefName):
-            mess = cfdstudyMess.trMessage(self.tr("CASE_DLG_ERROR_MESS"),[self.CaseRefName])
+            mess = cfdstudyMess.trMessage(
+                self.tr("CASE_DLG_ERROR_MESS"), [self.CaseRefName])
             cfdstudyMess.aboutMessage(mess)
-            self.findChild(QWidget,"copyFromCase_widget").hide()
-            self.findChild(QCheckBox,"checkBoxCopyFrom").setChecked(False)
+            self.findChild(QWidget, "copyFromCase_widget").hide()
+            self.findChild(QCheckBox, "checkBoxCopyFrom").setChecked(False)
             return
-        CaseRefDATAPath = os.path.join(self.CaseRefName,"DATA")
-        if "NeptuneGUI" in os.listdir(CaseRefDATAPath) and self.findChild(QRadioButton,"radioButtonSaturne").isChecked():
-            mess = cfdstudyMess.trMessage(self.tr("CASE_COPYFROM_NEPTUNE_DLG_ERROR_MESS"),[])
+        CaseRefDATAPath = os.path.join(self.CaseRefName, "DATA")
+        if "NeptuneGUI" in os.listdir(CaseRefDATAPath) and self.findChild(QRadioButton, "radioButtonSaturne").isChecked():
+            mess = cfdstudyMess.trMessage(
+                self.tr("CASE_COPYFROM_NEPTUNE_DLG_ERROR_MESS"), [])
             cfdstudyMess.aboutMessage(mess)
-            self.findChild(QWidget,"copyFromCase_widget").hide()
-            self.findChild(QCheckBox,"checkBoxCopyFrom").setChecked(False)
+            self.findChild(QWidget, "copyFromCase_widget").hide()
+            self.findChild(QCheckBox, "checkBoxCopyFrom").setChecked(False)
             return
-        if "SaturneGUI" in os.listdir(CaseRefDATAPath) and self.findChild(QRadioButton,"radioButtonNeptune").isChecked():
-            mess = cfdstudyMess.trMessage(self.tr("CASE_COPYFROM_SATURNE_DLG_ERROR_MESS"),[])
+        if "SaturneGUI" in os.listdir(CaseRefDATAPath) and self.findChild(QRadioButton, "radioButtonNeptune").isChecked():
+            mess = cfdstudyMess.trMessage(
+                self.tr("CASE_COPYFROM_SATURNE_DLG_ERROR_MESS"), [])
             cfdstudyMess.aboutMessage(mess)
-            self.findChild(QWidget,"copyFromCase_widget").hide()
-            self.findChild(QCheckBox,"checkBoxCopyFrom").setChecked(False)
+            self.findChild(QWidget, "copyFromCase_widget").hide()
+            self.findChild(QCheckBox, "checkBoxCopyFrom").setChecked(False)
             return
 
-        self.findChild(QWidget,"copyFromCase_widget").show()
-        self.findChild(QLineEdit,"copyFromCase").setText(self.CaseRefName)
-        self.findChild(QDialogButtonBox,"buttonBox").button(QDialogButtonBox.Ok).setEnabled(True)
-
+        self.findChild(QWidget, "copyFromCase_widget").show()
+        self.findChild(QLineEdit, "copyFromCase").setText(self.CaseRefName)
+        self.findChild(QDialogButtonBox, "buttonBox").button(
+            QDialogButtonBox.Ok).setEnabled(True)
 
     def on_checkBoxCouplingSaturneSyrthes_clicked(self):
-        if self.findChild(QCheckBox,"checkBoxCouplingSaturneSyrthes").isChecked() and self.findChild(QLineEdit, "syrthesCase").text() != "":
-            self.findChild(QLineEdit,"syrthesCase").setText("")
+        if self.findChild(QCheckBox, "checkBoxCouplingSaturneSyrthes").isChecked() and self.findChild(QLineEdit, "syrthesCase").text() != "":
+            self.findChild(QLineEdit, "syrthesCase").setText("")
 
-
-    def isCfdCaseDir(self,CfdCaseRefDir) :
-        listDir_required = ["DATA","SRC"]
+    def isCfdCaseDir(self, CfdCaseRefDir):
+        listDir_required = ["DATA", "SRC"]
         boolDir = True
-        for i in listDir_required :
-            if i not in os.listdir(CfdCaseRefDir) :
+        for i in listDir_required:
+            if i not in os.listdir(CfdCaseRefDir):
                 boolDir = False
                 return boolDir
         return boolDir
@@ -358,37 +380,38 @@ class SetTreeLocationDialogHandler(SetTreeLocationDialog):
         Called for adding cases
         """
         self.setWindowTitle(self.tr("Add new case to study"))
-        self.findChild(QCheckBox,"checkBoxLoad").hide()
-        self.findChild(QCheckBox,"checkBoxCreate").hide()
-        self.findChild(QWidget,"CaseWidget").setEnabled(True)
-        self.findChild(QCheckBox,"checkBoxCopyFrom").setEnabled(False)
-        self.findChild(QCheckBox,"checkBoxCopyFrom").setChecked(False)
-        self.findChild(QGroupBox,"groupBox").show()
-        self.findChild(QGroupBox,"groupBox").setEnabled(True)
-        self.findChild(QWidget,"StudyGB").setEnabled(False)
-        self.findChild(QLineEdit,"CaseLineEdit").setEnabled(True)
-        self.findChild(QRadioButton,"radioButtonSaturne").setEnabled(True)
-        self.findChild(QRadioButton,"radioButtonNeptune").setEnabled(True)
-        self.findChild(QCheckBox,"checkBoxCouplingSaturneSyrthes").hide()
-        self.findChild(QLineEdit,"StudyDirName").show()
-        self.findChild(QLabel,"StudyDirLabel").show()
+        self.findChild(QCheckBox, "checkBoxLoad").hide()
+        self.findChild(QCheckBox, "checkBoxCreate").hide()
+        self.findChild(QWidget, "CaseWidget").setEnabled(True)
+        self.findChild(QCheckBox, "checkBoxCopyFrom").setEnabled(False)
+        self.findChild(QCheckBox, "checkBoxCopyFrom").setChecked(False)
+        self.findChild(QGroupBox, "groupBox").show()
+        self.findChild(QGroupBox, "groupBox").setEnabled(True)
+        self.findChild(QWidget, "StudyGB").setEnabled(False)
+        self.findChild(QLineEdit, "CaseLineEdit").setEnabled(True)
+        self.findChild(QRadioButton, "radioButtonSaturne").setEnabled(True)
+        self.findChild(QRadioButton, "radioButtonNeptune").setEnabled(True)
+        self.findChild(QCheckBox, "checkBoxCouplingSaturneSyrthes").hide()
+        self.findChild(QLineEdit, "StudyDirName").show()
+        self.findChild(QLabel, "StudyDirLabel").show()
         self.adjustSize()
 
-
-
     def accept(self):
-        aDirLE                      = self.findChild(QLineEdit,"StudyDirName")
-        aNameLE                     = self.findChild(QLineEdit,"StudyLineEdit")
-        aCaseLE                     = self.findChild(QLineEdit,"CaseLineEdit")
-        CreateOption                = self.findChild(QCheckBox,"checkBoxCreate")
-        Neptune                     = self.findChild(QRadioButton,"radioButtonNeptune")
-        Saturne                     = self.findChild(QRadioButton,"radioButtonSaturne")
-        self.CaseNames              = str(self.findChild(QLineEdit,"CaseLineEdit").text())
-        self.CopyFromOption         = self.findChild(QCheckBox, "checkBoxCopyFrom").isChecked()
-        self.CouplingSaturneSyrthes = self.findChild(QCheckBox, "checkBoxCouplingSaturneSyrthes").isChecked()
-        self.Nprocs                 = str(self.findChild(QLineEdit,"NprocsLineEdit").text())
-        if  aNameLE.text() == "" :
-            mess = cfdstudyMess.trMessage(self.tr("LOCATION_DLG_ERROR_MESS"),[])
+        aDirLE = self.findChild(QLineEdit, "StudyDirName")
+        aNameLE = self.findChild(QLineEdit, "StudyLineEdit")
+        aCaseLE = self.findChild(QLineEdit, "CaseLineEdit")
+        CreateOption = self.findChild(QCheckBox, "checkBoxCreate")
+        Neptune = self.findChild(QRadioButton, "radioButtonNeptune")
+        Saturne = self.findChild(QRadioButton, "radioButtonSaturne")
+        self.CaseNames = str(self.findChild(QLineEdit, "CaseLineEdit").text())
+        self.CopyFromOption = self.findChild(
+            QCheckBox, "checkBoxCopyFrom").isChecked()
+        self.CouplingSaturneSyrthes = self.findChild(
+            QCheckBox, "checkBoxCouplingSaturneSyrthes").isChecked()
+        self.Nprocs = str(self.findChild(QLineEdit, "NprocsLineEdit").text())
+        if aNameLE.text() == "":
+            mess = cfdstudyMess.trMessage(
+                self.tr("LOCATION_DLG_ERROR_MESS"), [])
             cfdstudyMess.criticalMessage(mess)
             return False
 
@@ -409,30 +432,35 @@ class SetTreeLocationDialogHandler(SetTreeLocationDialog):
 
         if self.checkBoxLoad.isChecked():
             if self.StudyName == '':
-                mess = cfdstudyMess.trMessage(self.tr("LOCATION_DLG_ERROR_MESS"),[])
+                mess = cfdstudyMess.trMessage(
+                    self.tr("LOCATION_DLG_ERROR_MESS"), [])
                 cfdstudyMess.criticalMessage(mess)
                 self.reinit()
                 return False
             if not CFDSTUDYGUI_Commons.isaSaturneSyrthesCouplingStudy(self.StudyPath):
                 if not CFDSTUDYGUI_Commons.isaCFDStudy(self.StudyPath):
-#                   search if the cfd study directory self.StudyPath is in fact a cfd case directory: by calling  method isaCFDCase
+                    # search if the cfd study directory self.StudyPath is in fact a cfd case directory: by calling  method isaCFDCase
                     if not CFDSTUDYGUI_Commons.isaCFDCase(self.StudyPath):
-                        mess = cfdstudyMess.trMessage(self.tr("NOT_A_STUDY_OR_CASE_DIRECTORY"),[self.StudyPath,"CFD","SYRTHES"])
+                        mess = cfdstudyMess.trMessage(self.tr("NOT_A_STUDY_OR_CASE_DIRECTORY"), [
+                                                      self.StudyPath, "CFD", "SYRTHES"])
                         cfdstudyMess.criticalMessage(mess)
                         self.reinit()
                         return False
         # ckeck case name
-        if self.checkBoxCreate.isChecked() :
+        if self.checkBoxCreate.isChecked():
             if self.StudyName == '':
-                mess = cfdstudyMess.trMessage(self.tr("LOCATION_DLG_ERROR_MESS"),[aStudyDir])
+                mess = cfdstudyMess.trMessage(
+                    self.tr("LOCATION_DLG_ERROR_MESS"), [aStudyDir])
                 cfdstudyMess.criticalMessage(mess)
                 return False
             self.CaseNames = str(aCaseLE.text())
             self.CreateOption = True
-            if self.CouplingSaturneSyrthes :
-                self.SyrthesCase = str(self.findChild(QLineEdit,"syrthesCase").text())
+            if self.CouplingSaturneSyrthes:
+                self.SyrthesCase = str(self.findChild(
+                    QLineEdit, "syrthesCase").text())
                 if self.SyrthesCase == "":
-                    mess = cfdstudyMess.trMessage(self.tr("EMPTY_SYRTHES_CASENAME_MESS"),[])
+                    mess = cfdstudyMess.trMessage(
+                        self.tr("EMPTY_SYRTHES_CASENAME_MESS"), [])
                     cfdstudyMess.criticalMessage(mess)
                     return False
         SetTreeLocationDialog.accept(self)
@@ -441,13 +469,15 @@ class SetTreeLocationDialogHandler(SetTreeLocationDialog):
         self.reinit()
         SetTreeLocationDialog.reject(self)
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 
-class ECSConversionDialog(QDialog,Ui_ECSConversionDialog):
+
+class ECSConversionDialog(QDialog, Ui_ECSConversionDialog):
     """
     Tree Location Dialog informations about environment variables
     """
-    def __init__(self, parent = None):
+
+    def __init__(self, parent=None):
         """
         """
         QDialog.__init__(self, parent)
@@ -455,40 +485,40 @@ class ECSConversionDialog(QDialog,Ui_ECSConversionDialog):
 
         self.setupUi(self)
 
+
 class ECSConversionDialogHandler(ECSConversionDialog):
     """
     """
-    def __init__(self, parent = None):
+
+    def __init__(self, parent=None):
         """
         Constructor. Initialize text and label of the QDialog.
         """
         ECSConversionDialog.__init__(self, parent)
 
-        self.ConvertBtn = self.findChild(QPushButton,"ConvertBtn")
+        self.ConvertBtn = self.findChild(QPushButton, "ConvertBtn")
         self.ConvertBtn.setText(self.tr("ECSCONVERT_DLG_CONVERT_BUTTON"))
 
-        aBtn = self.findChild(QPushButton,"CancelBtn")
+        aBtn = self.findChild(QPushButton, "CancelBtn")
         aBtn.setText(self.tr("DLG_CANCEL_BUTTON_TEXT"))
 
-        aLabel = self.findChild(QLabel,"CaseLabel")
+        aLabel = self.findChild(QLabel, "CaseLabel")
         aLabel.hide()
 
-        self.CaseCB = self.findChild(QComboBox,"CaseCB")
+        self.CaseCB = self.findChild(QComboBox, "CaseCB")
         self.CaseCB.hide()
 
-        self.ResultLabel = self.findChild(QLabel,"ResultLabel")
+        self.ResultLabel = self.findChild(QLabel, "ResultLabel")
         self.ResultLabel.setText(self.tr("ECSCONVERT_DLG_RESULT_LABEL_TEXT"))
 
-        self.ResultName = self.findChild(QLineEdit,"ResultNameLE")
+        self.ResultName = self.findChild(QLineEdit, "ResultNameLE")
         self.ResultName.textChanged.connect(self.slotResNameChanged)
         self.setWindowTitle(self.tr("ECSCONVERT_DLG_CAPTION"))
 
         self.adjustSize()
 
-
     def GetCaseName(self):
         return self.CaseCB.currentText()
-
 
     def show(self):
         aStudy = CFDSTUDYGUI_DataModel.GetFirstStudy()
@@ -507,14 +537,12 @@ class ECSConversionDialogHandler(ECSConversionDialog):
 
         ECSConversionDialog.show(self)
 
-
     def resultFileName(self):
         aResName = str(self.ResultName.text())
         if re.match(".*\.med$", aResName) and len(aResName) > 4:
             aResName = aResName[0:len(aResName)-4]
 
         return aResName
-
 
     def setResultFileName(self, NewName):
         if NewName == None:
@@ -524,17 +552,18 @@ class ECSConversionDialogHandler(ECSConversionDialog):
 
         self.slotResNameChanged()
 
-
     def slotResNameChanged(self):
-        self.ConvertBtn.setEnabled(str(self.ResultName.text())!= '')
+        self.ConvertBtn.setEnabled(str(self.ResultName.text()) != '')
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 
-class GUIActivationDialog(QDialog,Ui_GUIActivationDialog):
+
+class GUIActivationDialog(QDialog, Ui_GUIActivationDialog):
     """
     Set environment variables Dialog informations
     """
-    def __init__(self, parent = None):
+
+    def __init__(self, parent=None):
         """
         """
         QDialog.__init__(self)
@@ -545,30 +574,30 @@ class GUIActivationDialog(QDialog,Ui_GUIActivationDialog):
 class GUIActivationDialogHandler(GUIActivationDialog):
     """
     """
-    def __init__(self, parent = None):
+
+    def __init__(self, parent=None):
         logging.debug("__init__")
         self.xmlfile = ""
         GUIActivationDialog.__init__(self, parent)
 
-        self.ActivateBtn = self.findChild(QPushButton,"ActivateBtn")
+        self.ActivateBtn = self.findChild(QPushButton, "ActivateBtn")
         self.ActivateBtn.setText(self.tr("GUIACTIVATE_DLG_ACTIVATE_BTN"))
 
-        aBtn = self.findChild(QPushButton,"CancelBtn")
+        aBtn = self.findChild(QPushButton, "CancelBtn")
         aBtn.setText(self.tr("DLG_CANCEL_BUTTON_TEXT"))
 
-        self.CaseCB = self.findChild(QComboBox,"CaseCB")
+        self.CaseCB = self.findChild(QComboBox, "CaseCB")
 
-        aGB = self.findChild(QGroupBox,"OptionsGB")
+        aGB = self.findChild(QGroupBox, "OptionsGB")
         aGB.setTitle(self.tr("GUIACTIVATE_DLG_OPTIONS_TITLE"))
 
-        self.FileCheckBox = self.findChild(QCheckBox,"FileCheckBox")
-        self.FileCB = self.findChild(QComboBox,"FileCB")
+        self.FileCheckBox = self.findChild(QCheckBox, "FileCheckBox")
+        self.FileCB = self.findChild(QComboBox, "FileCB")
 
         self.FileCheckBox.clicked.connect(self.slotUseXMLfileChange)
         self.CaseCB.activated["int"].connect(self.slotUpdateData)
 
         self.adjustSize()
-
 
     def fillData(self, xmlFileName):
         """
@@ -581,18 +610,17 @@ class GUIActivationDialogHandler(GUIActivationDialog):
             if self.CurrentCase and self.CurrentCase.GetName() == i:
                 self.CaseCB.addItem(i)
 
-        if self.xmlfile == "" :
+        if self.xmlfile == "":
             self.slotUpdateData()
         else:
             self.slotUpdateData()
         if CFD_Code() == CFD_Saturne:
             self.setWindowTitle(self.tr("ICSACTIVATE_DLG_CAPTION"))
             self.CaseLabel.setTitle(self.tr("ICSACTIVATE_DLG_CASE_LABEL"))
-            #self.FileCheckBox.setChecked(False)
+            # self.FileCheckBox.setChecked(False)
         elif CFD_Code() == CFD_Neptune:
             self.setWindowTitle(self.tr("IPBACTIVATE_DLG_CAPTION"))
             self.CaseLabel.setTitle(self.tr("IPBACTIVATE_DLG_CASE_LABEL"))
-
 
     def slotUpdateData(self):
         logging.debug("slotUpdateData")
@@ -613,7 +641,7 @@ class GUIActivationDialogHandler(GUIActivationDialog):
                 return
 
             aCase = None
-            aCases =  CFDSTUDYGUI_DataModel.GetCaseList(self.CurrentStudy)
+            aCases = CFDSTUDYGUI_DataModel.GetCaseList(self.CurrentStudy)
             for c in aCases:
                 if c.GetName() == aCaseName:
                     aCase = c
@@ -628,51 +656,53 @@ class GUIActivationDialogHandler(GUIActivationDialog):
             if not len(aChildList) == 1:
                 self.ActivateBtn.setEnabled(False)
                 return
-            aDataObj =  aChildList[0]
+            aDataObj = aChildList[0]
 
-            #fill File combo-box
-            if self.xmlfile == "" :
-                aFileList = CFDSTUDYGUI_DataModel.ScanChildNames(aDataObj, ".*\.xml$")
+            # fill File combo-box
+            if self.xmlfile == "":
+                aFileList = CFDSTUDYGUI_DataModel.ScanChildNames(
+                    aDataObj, ".*\.xml$")
                 if len(aFileList) == 0:
-                    self.FileCheckBox.setEnabled(False);
+                    self.FileCheckBox.setEnabled(False)
 
                 for i in aFileList:
                     self.FileCB.addItem(i)
 
                 self.FileCB.setEnabled(self.FileCheckBox.isChecked())
-            else :
+            else:
                 self.FileCB.addItem(self.xmlfile)
                 self.FileCB.setEnabled(self.FileCheckBox.isChecked())
 
-            #check for activation file SaturneGUI or NeptuneGUI
+            # check for activation file SaturneGUI or NeptuneGUI
             if not CFDSTUDYGUI_DataModel.checkCaseLaunchGUI(aCase):
-                #Warning message
+                # Warning message
                 if CFD_Code() == CFD_Saturne:
-                    mess = cfdstudyMess.trMessage(self.tr("ICSACTIVATE_DLG_BAD_CASE_MESS"),[])
+                    mess = cfdstudyMess.trMessage(
+                        self.tr("ICSACTIVATE_DLG_BAD_CASE_MESS"), [])
                 elif CFD_Code() == CFD_Neptune:
-                    mess = cfdstudyMess.trMessage(self.tr("IPBACTIVATE_DLG_BAD_CASE_MESS"),[])
+                    mess = cfdstudyMess.trMessage(
+                        self.tr("IPBACTIVATE_DLG_BAD_CASE_MESS"), [])
                 cfdstudyMess.warningMessage(mess)
                 self.ActivateBtn.setEnabled(False)
 
-
     # use before fill data
+
     def setCurrentCase(self, aCase):
         self.CurrentCase = aCase
 
-
     # use before fill data
+
     def setCurrentStudy(self, theStudy):
         self.CurrentStudy = theStudy
 
-
     # use after fill data
+
     def setCurrentXMLfile(self, aFile):
         if self.CurrentCase != None:
             self.FileCheckBox.setChecked(True)
             self.FileCB.setEnabled(True)
-            #self.FileCB.setEditText(aFile)
+            # self.FileCB.setEditText(aFile)
             self.xmlfile = aFile
-
 
     def currentCaseName(self):
         if self.CaseCB.currentText() == 0:
@@ -680,20 +710,16 @@ class GUIActivationDialogHandler(GUIActivationDialog):
 
         return str(self.CaseCB.currentText())
 
-
     def currentXMLfile(self):
         if not self.FileCB.isEnabled():
             return None
         return self.FileCB.currentText()
 
-
     def isUseXmlFile(self):
         return self.FileCheckBox.isChecked()
 
-
     def slotUseXMLfileChange(self):
         self.FileCB.setEnabled(self.FileCheckBox.isChecked())
-
 
 
 class CFDSTUDYGUI_DialogCollector:
@@ -703,11 +729,12 @@ class CFDSTUDYGUI_DialogCollector:
         self.ECSConversionDialog = ECSConversionDialogHandler()
         self.GUIActivationDialog = GUIActivationDialogHandler()
 
+
 if __name__ == "__main__":
     import sys
     app = QApplication(sys.argv)
     lang = "en"
-    qm = ["en","fr"]
+    qm = ["en", "fr"]
     if len(sys.argv) == 2:
         lang = sys.argv[1]
 
@@ -716,7 +743,7 @@ if __name__ == "__main__":
 
     if not fi.exists():
         QMessageBox.warning(None, "File error",
-            "Cannot find translation for language: "+lang)
+                            "Cannot find translation for language: "+lang)
     else:
         translator = QTranslator()
         translator.load(QM_FILE)

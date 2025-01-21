@@ -28,6 +28,7 @@ import os
 from .CLSMainWindow import getSalomePyQt
 from . import CFDSTUDYGUI_DataModel
 
+
 def processText(text):
     '''
     Remove "\n" sumbol from end of line
@@ -66,7 +67,7 @@ class SATURNE8_DataModel:
             logging.debug("child: %s", child)
         logging.debug("done")
         return children
-        
+
     def findInStudy(self, text):
         logging.debug("findInStudy %s", text)
         caseObjs = self.getSaturne8Studies()

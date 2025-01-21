@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 
 # This file is part of Code_Saturne, a general-purpose CFD tool.
 #
@@ -20,7 +20,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51 Franklin
 # Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 
 """
 Desktop Manager
@@ -31,37 +31,39 @@ It contains a menu bar, tool bars, and central area for GUI controls of
 components: Object Browser, Python console, 3D/2D viewers, etc.
 """
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 # Standard modules
-#-------------------------------------------------------------------------------
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 # Third-party modules
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 
-from code_saturne.gui.base.QtCore    import *
+from code_saturne.gui.base.QtCore import *
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 # Salome modules
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 # Application modules
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 
 from .CFDSTUDYGUI_Commons import Trace
 from .CFDSTUDYGUI_ActionsHandler import CFDSTUDYGUI_ActionsHandler
 from .CFDSTUDYGUI_Agents import *
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 # Classes definition
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
+
 
 class CFDSTUDYGUI_DesktopMgr(QObject):
     """
     Auxilliary class for GUI management amoung opened SALOME studies.
     It helps to destroy objects with corresponding Desktop.
     """
+
     def __init__(self):
         """
         Constructor.
@@ -69,16 +71,15 @@ class CFDSTUDYGUI_DesktopMgr(QObject):
         QObject.__init__(self, None)
         self._ActionHandlerMap = {}
 
-
     def slotDeleteDsk(self):
         """
         Destroys objects with corresponding Desktop.
         """
         dsk = self.sender()
-        if Trace(): print("CFDSTUDYGUI_DesktopMgr::slotDeleteDsk() ", dsk)
+        if Trace():
+            print("CFDSTUDYGUI_DesktopMgr::slotDeleteDsk() ", dsk)
         if dsk in self._ActionHandlerMap:
             del self._ActionHandlerMap[dsk]
-
 
     def getActionHandler(self, dsk):
         """
@@ -97,7 +98,6 @@ class CFDSTUDYGUI_DesktopMgr(QObject):
 
         return self._ActionHandlerMap[dsk]
 
-
     def setWorkspace(self, dsk, ws):
         """
         Stores a workspace I{ws} to an associated desktop I{dsk}.
@@ -110,4 +110,4 @@ class CFDSTUDYGUI_DesktopMgr(QObject):
         ah = self.getActionHandler(dsk)
         ah.dskAgent().setWorkspace(ws)
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------

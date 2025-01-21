@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 
 # This file is part of Code_Saturne, a general-purpose CFD tool.
 #
@@ -20,7 +20,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51 Franklin
 # Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 
 """
 Data Model
@@ -59,28 +59,28 @@ Every branch of the tree is represented by an SObject.
 WARNING: a SALOME Study should not be confused with a CFD study.
 """
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 # Standard modules
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 import os
 import re
 import string
 import logging
 import subprocess
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 # Third-party modules
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 
-from code_saturne.gui.base.QtCore    import *
+from code_saturne.gui.base.QtCore import *
 from code_saturne.gui.base.QtWidgets import *
 from PyQt5.QtGui import QIcon
 
 from omniORB import CORBA
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 # Salome modules
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 from omniORB import CORBA
 from LifeCycleCORBA import LifeCycleCORBA
 import SALOMEDS
@@ -89,9 +89,9 @@ import SALOMEDS_Attributes_idl
 import SMESH
 import salome
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 # Application modules
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 
 from .CFDSTUDYGUI_Commons import CFD_Code, BinCode, Trace, sg
 from .CFDSTUDYGUI_Commons import CaseInProcessStart, CaseInProcessEnd
@@ -103,247 +103,268 @@ from .CFDSTUDYGUI_Message import cfdstudyMess
 from .constants import col
 from code_saturne.base.cs_exec_environment import separate_args
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 # Module name. Attribut "AttributeName" for the related SObject.
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 
 __MODULE_NAME__ = "SATURNE8"
-__MODULE_ID__   = 10000
-__OBJECT_ID__   = 10010
+__MODULE_ID__ = 10000
+__OBJECT_ID__ = 10010
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 # Definition of the type of objects for representation in the Object Browser.
 # Attribut "AttributeLocalID" for the related SObject.
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 
 dict_object = {}
 
-dict_object["CFDSTUDY"]      = 101000
-dict_object["OtherFile"]     = 100000
-dict_object["OtherFolder"]   = 100001
-dict_object["Study"]         = 100002
-dict_object["Case"]          = 100003
+dict_object["CFDSTUDY"] = 101000
+dict_object["OtherFile"] = 100000
+dict_object["OtherFolder"] = 100001
+dict_object["Study"] = 100002
+dict_object["Case"] = 100003
 dict_object["CaseInProcess"] = 100004
 
-dict_object["DATAFolder"]             = 100010
-dict_object["REFERENCEDATAFolder"]    = 100011
-dict_object["REFERENCEDATAFile"]      = 100012
-dict_object["DATAFile"]               = 100013
-dict_object["DRAFTFolder"]            = 100014
-dict_object["DATADRAFTFile"]          = 100015
-dict_object["DATAPyFile"]             = 100016
+dict_object["DATAFolder"] = 100010
+dict_object["REFERENCEDATAFolder"] = 100011
+dict_object["REFERENCEDATAFile"] = 100012
+dict_object["DATAFile"] = 100013
+dict_object["DRAFTFolder"] = 100014
+dict_object["DATADRAFTFile"] = 100015
+dict_object["DATAPyFile"] = 100016
 
-dict_object["DATARunConf"]            = 100017
-dict_object["DATALaunch"]             = 100018
-dict_object["DATAfileXML"]            = 100019
+dict_object["DATARunConf"] = 100017
+dict_object["DATALaunch"] = 100018
+dict_object["DATAfileXML"] = 100019
 
-dict_object["SRCFolder"]          = 100020
-dict_object["SRCFile"]            = 100021
-dict_object["SRCDRAFTFile"]       = 100022
-dict_object["LOGSRCFile"]         = 100023
-dict_object["USERSFolder"]        = 100024
-dict_object["USRSRCFile"]         = 100025
+dict_object["SRCFolder"] = 100020
+dict_object["SRCFile"] = 100021
+dict_object["SRCDRAFTFile"] = 100022
+dict_object["LOGSRCFile"] = 100023
+dict_object["USERSFolder"] = 100024
+dict_object["USRSRCFile"] = 100025
 
-dict_object["RESUSubErrFolder"]  = 100029
-dict_object["RESUFolder"]     = 100030
-dict_object["RESUFile"]       = 100031
-dict_object["RESUSubFolder"]  = 100032
-dict_object["RESSRCFolder"]   = 100033
-dict_object["RESSRCFile"]     = 100034
-dict_object["HISTFolder"]     = 100035
-dict_object["HISTFile"]       = 100036
-dict_object["PRETFolder"]     = 100037
-dict_object["SUITEFolder"]    = 100038
-dict_object["RESMEDFile"]     = 100039
-dict_object["RESXMLFile"]     = 100040
-dict_object["POSTPROFolder"]  = 100041
+dict_object["RESUSubErrFolder"] = 100029
+dict_object["RESUFolder"] = 100030
+dict_object["RESUFile"] = 100031
+dict_object["RESUSubFolder"] = 100032
+dict_object["RESSRCFolder"] = 100033
+dict_object["RESSRCFile"] = 100034
+dict_object["HISTFolder"] = 100035
+dict_object["HISTFile"] = 100036
+dict_object["PRETFolder"] = 100037
+dict_object["SUITEFolder"] = 100038
+dict_object["RESMEDFile"] = 100039
+dict_object["RESXMLFile"] = 100040
+dict_object["POSTPROFolder"] = 100041
 dict_object["RESENSIGHTFile"] = 100042
-dict_object["RESUPNGFile"]    = 100043
+dict_object["RESUPNGFile"] = 100043
 
-dict_object["MESHFolder"]     = 100070
-dict_object["MEDFile"]        = 100071
-dict_object["DESFile"]        = 100072
-dict_object["MESHFile"]       = 100073
-dict_object["DATFile"]        = 100074
-dict_object["CGNSFile"]       = 100075
-dict_object["CcmFile"]        = 100076
-dict_object["CaseFile"]       = 100077
-dict_object["NeuFile"]        = 100078
-dict_object["MSHFile"]        = 100079
-dict_object["HexFile"]        = 100080
-dict_object["UnvFile"]        = 100081
-dict_object["SYRMESHFile"]    = 100082
+dict_object["MESHFolder"] = 100070
+dict_object["MEDFile"] = 100071
+dict_object["DESFile"] = 100072
+dict_object["MESHFile"] = 100073
+dict_object["DATFile"] = 100074
+dict_object["CGNSFile"] = 100075
+dict_object["CcmFile"] = 100076
+dict_object["CaseFile"] = 100077
+dict_object["NeuFile"] = 100078
+dict_object["MSHFile"] = 100079
+dict_object["HexFile"] = 100080
+dict_object["UnvFile"] = 100081
+dict_object["SYRMESHFile"] = 100082
 
-dict_object["POSTFolder"]     = 100090
-dict_object["POSTFile"]       = 100091
+dict_object["POSTFolder"] = 100090
+dict_object["POSTFile"] = 100091
 
-#Model objects for COUPLING with SYRTHES CODE
-dict_object["CouplingFilePy"]           = 100100
-dict_object["RESU_COUPLINGFolder"]      = 100101
-dict_object["SYRCaseFolder"]            = 100102
-dict_object["SyrthesFile"]              = 100103
-dict_object["SyrthesSydFile"]           = 100104
-dict_object["CouplingLauncher"]         = 100105
-dict_object["RESU_COUPLINGSubFolder"]   = 100106
-dict_object["RESUSubFolderSYR"]         = 100107
-dict_object["SRCSYRFolder"]             = 100108
-dict_object["USRSRCSYRFile"]            = 100109
-dict_object["CouplingStudy"]            = 100110
-dict_object["OpenSyrthesCaseFile"]      = 100111
+# Model objects for COUPLING with SYRTHES CODE
+dict_object["CouplingFilePy"] = 100100
+dict_object["RESU_COUPLINGFolder"] = 100101
+dict_object["SYRCaseFolder"] = 100102
+dict_object["SyrthesFile"] = 100103
+dict_object["SyrthesSydFile"] = 100104
+dict_object["CouplingLauncher"] = 100105
+dict_object["RESU_COUPLINGSubFolder"] = 100106
+dict_object["RESUSubFolderSYR"] = 100107
+dict_object["SRCSYRFolder"] = 100108
+dict_object["USRSRCSYRFile"] = 100109
+dict_object["CouplingStudy"] = 100110
+dict_object["OpenSyrthesCaseFile"] = 100111
 
-dict_object["Display"]   = 100200
-dict_object["Show"]      = 100201
-dict_object["ShowOnly"]  = 100202
-dict_object["Hide"]      = 100203
-dict_object["FitAll"]    = 100204
+dict_object["Display"] = 100200
+dict_object["Show"] = 100201
+dict_object["ShowOnly"] = 100202
+dict_object["Hide"] = 100203
+dict_object["FitAll"] = 100204
 
-d_dirMesh      = {}
+d_dirMesh = {}
 MESHSubFolder = "MESHSubFolder"
 MESHSubFolder_int = 200000
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 # Definition of the icon of objects to represent in the Object Browser.
 # Attribut "AttributePixMap" for the related SObject.
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 
 icon_collection = {}
 
-icon_collection[dict_object["CFDSTUDY"]]      = "CFDSTUDY_ICON"
+icon_collection[dict_object["CFDSTUDY"]] = "CFDSTUDY_ICON"
 
-icon_collection[dict_object["OtherFile"]]      = "CFDSTUDY_UNKNOWN_OBJ_ICON"
-icon_collection[dict_object["OtherFolder"]]    = "CFDSTUDY_FOLDER_OBJ_ICON"
-icon_collection[dict_object["Study"]]          = "CFDSTUDY_STUDY_OBJ_ICON"
-icon_collection[dict_object["Case"]]           = "CFDSTUDY_CASE_OBJ_ICON"
-icon_collection[dict_object["CaseInProcess"]]  = "CFDSTUDY_CASE_IN_PROC_OBJ_ICON"
+icon_collection[dict_object["OtherFile"]] = "CFDSTUDY_UNKNOWN_OBJ_ICON"
+icon_collection[dict_object["OtherFolder"]] = "CFDSTUDY_FOLDER_OBJ_ICON"
+icon_collection[dict_object["Study"]] = "CFDSTUDY_STUDY_OBJ_ICON"
+icon_collection[dict_object["Case"]] = "CFDSTUDY_CASE_OBJ_ICON"
+icon_collection[dict_object["CaseInProcess"]
+                ] = "CFDSTUDY_CASE_IN_PROC_OBJ_ICON"
 
-icon_collection[dict_object["DATAFolder"]]     = "CFDSTUDY_FOLDER_OBJ_ICON"
-icon_collection[dict_object["DATAFile"]]       = "CFDSTUDY_EDIT_DOCUMENT_OBJ_ICON"
-icon_collection[dict_object["DATAPyFile"]]       = "CFDSTUDY_EDIT_DOCUMENT_OBJ_ICON"
-icon_collection[dict_object["DRAFTFolder"]]    = "CFDSTUDY_FOLDER_OBJ_ICON"
-icon_collection[dict_object["REFERENCEDATAFolder"]] = "CFDSTUDY_FOLDER_OBJ_ICON"
+icon_collection[dict_object["DATAFolder"]] = "CFDSTUDY_FOLDER_OBJ_ICON"
+icon_collection[dict_object["DATAFile"]] = "CFDSTUDY_EDIT_DOCUMENT_OBJ_ICON"
+icon_collection[dict_object["DATAPyFile"]] = "CFDSTUDY_EDIT_DOCUMENT_OBJ_ICON"
+icon_collection[dict_object["DRAFTFolder"]] = "CFDSTUDY_FOLDER_OBJ_ICON"
+icon_collection[dict_object["REFERENCEDATAFolder"]
+                ] = "CFDSTUDY_FOLDER_OBJ_ICON"
 
-icon_collection[dict_object["DATADRAFTFile"]]  = "CFDSTUDY_EDIT_DOCUMENT_OBJ_ICON"
+icon_collection[dict_object["DATADRAFTFile"]
+                ] = "CFDSTUDY_EDIT_DOCUMENT_OBJ_ICON"
 
-icon_collection[dict_object["REFERENCEDATAFile"]] = "CFDSTUDY_DOCUMENT_OBJ_ICON"
+icon_collection[dict_object["REFERENCEDATAFile"]
+                ] = "CFDSTUDY_DOCUMENT_OBJ_ICON"
 
-icon_collection[dict_object["DATARunConf"]]    = "CFDSTUDY_EDIT_DOCUMENT_OBJ_ICON"
-icon_collection[dict_object["DATALaunch"]]     = "CFDSTUDY_EXECUTABLE_OBJ_ICON"
-icon_collection[dict_object["DATAfileXML"]]    = "CFDSTUDY_DATA_XML_FILE_OBJ_ICON"
+icon_collection[dict_object["DATARunConf"]] = "CFDSTUDY_EDIT_DOCUMENT_OBJ_ICON"
+icon_collection[dict_object["DATALaunch"]] = "CFDSTUDY_EXECUTABLE_OBJ_ICON"
+icon_collection[dict_object["DATAfileXML"]] = "CFDSTUDY_DATA_XML_FILE_OBJ_ICON"
 
-icon_collection[dict_object["SRCFolder"]]      = "CFDSTUDY_FOLDER_OBJ_ICON"
-icon_collection[dict_object["SRCFile"]]        = "CFDSTUDY_EDIT_DOCUMENT_OBJ_ICON"
-icon_collection[dict_object["SRCDRAFTFile"]]   = "CFDSTUDY_EDIT_DOCUMENT_OBJ_ICON"
-icon_collection[dict_object["LOGSRCFile"]]     = "CFDSTUDY_DOCUMENT_OBJ_ICON"
-icon_collection[dict_object["USERSFolder"]]    = "CFDSTUDY_FOLDER_OBJ_ICON"
-icon_collection[dict_object["USRSRCFile"]]     = "CFDSTUDY_EDIT_DOCUMENT_OBJ_ICON"
+icon_collection[dict_object["SRCFolder"]] = "CFDSTUDY_FOLDER_OBJ_ICON"
+icon_collection[dict_object["SRCFile"]] = "CFDSTUDY_EDIT_DOCUMENT_OBJ_ICON"
+icon_collection[dict_object["SRCDRAFTFile"]
+                ] = "CFDSTUDY_EDIT_DOCUMENT_OBJ_ICON"
+icon_collection[dict_object["LOGSRCFile"]] = "CFDSTUDY_DOCUMENT_OBJ_ICON"
+icon_collection[dict_object["USERSFolder"]] = "CFDSTUDY_FOLDER_OBJ_ICON"
+icon_collection[dict_object["USRSRCFile"]] = "CFDSTUDY_EDIT_DOCUMENT_OBJ_ICON"
 
-icon_collection[dict_object["RESUFolder"]]     = "CFDSTUDY_FOLDER_OBJ_ICON"
-icon_collection[dict_object["RESUFile"]]       = "CFDSTUDY_DOCUMENT_OBJ_ICON"
-icon_collection[dict_object["RESUSubFolder"]]  = "CFDSTUDY_FOLDER_OBJ_ICON"
-icon_collection[dict_object["RESUSubErrFolder"]]  = "CFDSTUDY_FOLDER_RED_OBJ_ICON"
-icon_collection[dict_object["RESSRCFolder"]]   = "CFDSTUDY_FOLDER_OBJ_ICON"
-icon_collection[dict_object["RESSRCFile"]]     = "CFDSTUDY_DOCUMENT_OBJ_ICON"
-icon_collection[dict_object["HISTFolder"]]     = "CFDSTUDY_FOLDER_OBJ_ICON"
-icon_collection[dict_object["HISTFile"]]       = "POST_FILE_ICON"
-icon_collection[dict_object["PRETFolder"]]     = "CFDSTUDY_FOLDER_OBJ_ICON"
-icon_collection[dict_object["SUITEFolder"]]    = "CFDSTUDY_FOLDER_OBJ_ICON"
-icon_collection[dict_object["RESMEDFile"]]     = "VISU_OBJ_ICON"
-icon_collection[dict_object["RESXMLFile"]]     = "CFDSTUDY_EXECUTABLE_OBJ_ICON"
-icon_collection[dict_object["POSTPROFolder"]]  = "CFDSTUDY_FOLDER_OBJ_ICON"
+icon_collection[dict_object["RESUFolder"]] = "CFDSTUDY_FOLDER_OBJ_ICON"
+icon_collection[dict_object["RESUFile"]] = "CFDSTUDY_DOCUMENT_OBJ_ICON"
+icon_collection[dict_object["RESUSubFolder"]] = "CFDSTUDY_FOLDER_OBJ_ICON"
+icon_collection[dict_object["RESUSubErrFolder"]
+                ] = "CFDSTUDY_FOLDER_RED_OBJ_ICON"
+icon_collection[dict_object["RESSRCFolder"]] = "CFDSTUDY_FOLDER_OBJ_ICON"
+icon_collection[dict_object["RESSRCFile"]] = "CFDSTUDY_DOCUMENT_OBJ_ICON"
+icon_collection[dict_object["HISTFolder"]] = "CFDSTUDY_FOLDER_OBJ_ICON"
+icon_collection[dict_object["HISTFile"]] = "POST_FILE_ICON"
+icon_collection[dict_object["PRETFolder"]] = "CFDSTUDY_FOLDER_OBJ_ICON"
+icon_collection[dict_object["SUITEFolder"]] = "CFDSTUDY_FOLDER_OBJ_ICON"
+icon_collection[dict_object["RESMEDFile"]] = "VISU_OBJ_ICON"
+icon_collection[dict_object["RESXMLFile"]] = "CFDSTUDY_EXECUTABLE_OBJ_ICON"
+icon_collection[dict_object["POSTPROFolder"]] = "CFDSTUDY_FOLDER_OBJ_ICON"
 icon_collection[dict_object["RESENSIGHTFile"]] = "VISU_OBJ_ICON"
-icon_collection[dict_object["RESUPNGFile"]]    = "VIEW_ACTION_ICON"
+icon_collection[dict_object["RESUPNGFile"]] = "VIEW_ACTION_ICON"
 
-icon_collection[dict_object["MESHFolder"]]     = "CFDSTUDY_FOLDER_OBJ_ICON"
-icon_collection[dict_object["MEDFile"]]        = "MESH_OBJ_ICON"
-icon_collection[dict_object["MESHFile"]]       = "CFDSTUDY_DOCUMENT_OBJ_ICON"
-icon_collection[dict_object["DESFile"]]        = "MESH_OBJ_ICON"
-icon_collection[dict_object["DATFile"]]        = "CFDSTUDY_EDIT_DOCUMENT_OBJ_ICON"
-icon_collection[dict_object["CGNSFile"]]       = "MESH_OBJ_ICON"
-icon_collection[dict_object["CcmFile"]]       = "MESH_OBJ_ICON"
-icon_collection[dict_object["CaseFile"]]       = "MESH_OBJ_ICON"
-icon_collection[dict_object["NeuFile"]]        = "MESH_OBJ_ICON"
-icon_collection[dict_object["MSHFile"]]        = "MESH_OBJ_ICON"
-icon_collection[dict_object["HexFile"]]        = "MESH_OBJ_ICON"
-icon_collection[dict_object["UnvFile"]]        = "MESH_OBJ_ICON"
-icon_collection[dict_object["SYRMESHFile"]]    = "MESH_OBJ_ICON"
+icon_collection[dict_object["MESHFolder"]] = "CFDSTUDY_FOLDER_OBJ_ICON"
+icon_collection[dict_object["MEDFile"]] = "MESH_OBJ_ICON"
+icon_collection[dict_object["MESHFile"]] = "CFDSTUDY_DOCUMENT_OBJ_ICON"
+icon_collection[dict_object["DESFile"]] = "MESH_OBJ_ICON"
+icon_collection[dict_object["DATFile"]] = "CFDSTUDY_EDIT_DOCUMENT_OBJ_ICON"
+icon_collection[dict_object["CGNSFile"]] = "MESH_OBJ_ICON"
+icon_collection[dict_object["CcmFile"]] = "MESH_OBJ_ICON"
+icon_collection[dict_object["CaseFile"]] = "MESH_OBJ_ICON"
+icon_collection[dict_object["NeuFile"]] = "MESH_OBJ_ICON"
+icon_collection[dict_object["MSHFile"]] = "MESH_OBJ_ICON"
+icon_collection[dict_object["HexFile"]] = "MESH_OBJ_ICON"
+icon_collection[dict_object["UnvFile"]] = "MESH_OBJ_ICON"
+icon_collection[dict_object["SYRMESHFile"]] = "MESH_OBJ_ICON"
 
-icon_collection[dict_object["POSTFolder"]]     = "CFDSTUDY_FOLDER_OBJ_ICON"
-icon_collection[dict_object["POSTFile"]]       = "CFDSTUDY_DOCUMENT_OBJ_ICON"
+icon_collection[dict_object["POSTFolder"]] = "CFDSTUDY_FOLDER_OBJ_ICON"
+icon_collection[dict_object["POSTFile"]] = "CFDSTUDY_DOCUMENT_OBJ_ICON"
 
-#Icons for coupling with SYRTHES CODE
-icon_collection[dict_object["SYRCaseFolder"]]         = "SYRTHES_CASE_ICON"
-icon_collection[dict_object["SyrthesFile"]]           = "CFDSTUDY_EDIT_DOCUMENT_OBJ_ICON"
-icon_collection[dict_object["SyrthesSydFile"]]        = "CFDSTUDY_EDIT_DOCUMENT_OBJ_ICON"
-icon_collection[dict_object["CouplingFilePy"]]        = "CFDSTUDY_EDIT_DOCUMENT_OBJ_ICON"
-icon_collection[dict_object["CouplingLauncher"]]      = "CFDSTUDY_EDIT_DOCUMENT_OBJ_ICON"
-icon_collection[dict_object["RESU_COUPLINGFolder"]]   = "CFDSTUDY_FOLDER_OBJ_ICON"
-icon_collection[dict_object["RESU_COUPLINGSubFolder"]]= "CFDSTUDY_FOLDER_OBJ_ICON"
-icon_collection[dict_object["RESUSubFolderSYR"]]      = "CFDSTUDY_FOLDER_OBJ_ICON"
-icon_collection[dict_object["SRCSYRFolder"]]          = "CFDSTUDY_FOLDER_OBJ_ICON"
-icon_collection[dict_object["USRSRCSYRFile"]]         = "CFDSTUDY_EDIT_DOCUMENT_OBJ_ICON"
-icon_collection[dict_object["CouplingStudy"]]         = "CFDSTUDY_STUDY_OBJ_ICON"
+# Icons for coupling with SYRTHES CODE
+icon_collection[dict_object["SYRCaseFolder"]] = "SYRTHES_CASE_ICON"
+icon_collection[dict_object["SyrthesFile"]] = "CFDSTUDY_EDIT_DOCUMENT_OBJ_ICON"
+icon_collection[dict_object["SyrthesSydFile"]
+                ] = "CFDSTUDY_EDIT_DOCUMENT_OBJ_ICON"
+icon_collection[dict_object["CouplingFilePy"]
+                ] = "CFDSTUDY_EDIT_DOCUMENT_OBJ_ICON"
+icon_collection[dict_object["CouplingLauncher"]
+                ] = "CFDSTUDY_EDIT_DOCUMENT_OBJ_ICON"
+icon_collection[dict_object["RESU_COUPLINGFolder"]
+                ] = "CFDSTUDY_FOLDER_OBJ_ICON"
+icon_collection[dict_object["RESU_COUPLINGSubFolder"]
+                ] = "CFDSTUDY_FOLDER_OBJ_ICON"
+icon_collection[dict_object["RESUSubFolderSYR"]] = "CFDSTUDY_FOLDER_OBJ_ICON"
+icon_collection[dict_object["SRCSYRFolder"]] = "CFDSTUDY_FOLDER_OBJ_ICON"
+icon_collection[dict_object["USRSRCSYRFile"]
+                ] = "CFDSTUDY_EDIT_DOCUMENT_OBJ_ICON"
+icon_collection[dict_object["CouplingStudy"]] = "CFDSTUDY_STUDY_OBJ_ICON"
 
 _CFDTreeWidget = None
 
-    
-#-------------------------------------------------------------------------------
+
+# -------------------------------------------------------------------------------
 # ObjectTR is a convenient object for traduction purpose
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 
 ObjectTR = QObject()
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 # Internal methods
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 
 ###
 # Get ORB reference
 ###
 __orb__ = None
+
+
 def getORB():
     global __orb__
     if __orb__ is None:
-        __orb__ = CORBA.ORB_init( [''], CORBA.ORB_ID )
+        __orb__ = CORBA.ORB_init([''], CORBA.ORB_ID)
         pass
     return __orb__
 
-#--------------------------------------------------------------------------
+# --------------------------------------------------------------------------
 ###
 # Get naming service instance
 ###
+
+
 def getNS():
     import salome
     return salome.naming_service
 
-#--------------------------------------------------------------------------
+
+# --------------------------------------------------------------------------
 ##
 # Get life cycle CORBA instance
 ##
 __lcc__ = None
+
+
 def getLCC():
     global __lcc__
     if __lcc__ is None:
-        __lcc__ = LifeCycleCORBA( getORB() )
+        __lcc__ = LifeCycleCORBA(getORB())
         pass
     return __lcc__
 
 
-#--------------------------------------------------------------------------
+# --------------------------------------------------------------------------
 ##
 # Get study
 ###
 __study__ = None
+
+
 def _getStudy():
     global __study__
     if __study__ is None:
-        obj = getNS().Resolve( '/Study' )
-        __study__ = obj._narrow( SALOMEDS.Study )
+        obj = getNS().Resolve('/Study')
+        __study__ = obj._narrow(SALOMEDS.Study)
         pass
     return __study__
 
 
 def _getNewBuilder():
-    study   = _getStudy()
+    study = _getStudy()
     builder = study.NewBuilder()
     return builder
 
@@ -357,8 +378,6 @@ def _getComponent():
     """
     study = _getStudy()
     return study.FindComponent(__MODULE_NAME__)
-
-
 
 
 def _findOrCreateComponent():
@@ -383,25 +402,29 @@ def _findOrCreateComponent():
 
     return father
 
+
 def getCFDTW():
     global _CFDTreeWidget
     if _CFDTreeWidget is None:
         _CFDTreeWidget = CFDTreeWidget()
     return _CFDTreeWidget
 
+
 def getQIcon(category):
     id = dict_object[category]
-    iconPath = os.path.join(os.getenv("SATURNE8_ROOT_DIR"), 
-                            "share/salome/resources/saturne8", 
+    iconPath = os.path.join(os.getenv("SATURNE8_ROOT_DIR"),
+                            "share/salome/resources/saturne8",
                             ObjectTR.tr(icon_collection[id]))
     logging.debug("icon: %s %s", category, iconPath)
     return QIcon(iconPath)
 
+
 def getTWIid(category):
     return dict_object[category]
 
+
 class CFDTreeWidget():
-    
+
     def __init__(self):
         from .clientgui import getClientGui
         from .CLSMainWindow import getSalomePyQt
@@ -412,19 +435,19 @@ class CFDTreeWidget():
         self.pathToTwi = {}
         self.entryToTwi = {}
         self.entryToSO = {}
-        
+
     def getObjFromTwi(self, twItem):
         entry = twItem.text(col.entry)
         if entry in self.entryToSO:
             return self.entryToSO[entry]
         return None
-    
+
     def getTwiFromEntry(self, entry):
         if entry in self.entryToTwi:
             return self.entryToTwi[entry]
         else:
             return None
-        
+
     def getObjFromEntry(self, entry):
         if entry in self.entryToSO:
             return self.entryToSO[entry]
@@ -436,7 +459,7 @@ class CFDTreeWidget():
         if path in self.pathToTwi:
             twi = self.pathToTwi[path]
         return twi
-    
+
     def removeObjFromTwi(self, baseTwi):
         """
         remove Salome Study object (CFD study, case, mesh folder)
@@ -456,10 +479,10 @@ class CFDTreeWidget():
                     path = twi.text(col.details)
                     if basePath in path:
                         entriesToRemove.append(entry)
-                                      
+
             for entry in entriesToRemove:
                 self.removeObject(entry)
-            
+
     def removeTwiWithChildren(self, twItem):
         """
         recursive remove of Tree Widget Items
@@ -473,7 +496,7 @@ class CFDTreeWidget():
             if basePath in path:
                 pathsToRemove.append(path)
         for path in pathsToRemove:
-            self.pathToTwi.pop(path)        
+            self.pathToTwi.pop(path)
         parentTwi = twItem.parent()
         parentTwi.removeChild(twItem)
 
@@ -497,7 +520,7 @@ class CFDTreeWidget():
             logging.debug("child: %s", child)
         logging.debug("done")
         return children
-        
+
     def findCFDStudyInSalomeStudy(self, text):
         logging.debug("findCFDStudyInSalomeStudy %s", text)
         studyEntries = self.getSaturne8Studies()
@@ -518,7 +541,8 @@ class CFDTreeWidget():
         Returns a list of children data from a parent branch data.
         The list of the children is filtered whith a regular expression.
         """
-        logging.debug("ScanChildrenObj %s %s", theObject.GetName(), theObject.getEntry())
+        logging.debug("ScanChildrenObj %s %s",
+                      theObject.GetName(), theObject.getEntry())
         ChildList = []
         childrenEntries = self.getSalomePyQt().getChildren(theObject.getEntry())
         for ch in childrenEntries:
@@ -528,16 +552,16 @@ class CFDTreeWidget():
             if not aName == "" and re.match(theRegExp, aName):
                 ChildList.append(child)
         return ChildList
-    
-    def getSObject(self, theParent,Name) :
+
+    def getSObject(self, theParent, Name):
         logging.debug("getSObject %s %s", theParent.GetName(), Name)
         Sobjlist = self.ScanChildrenObj(theParent,  ".*")
         SObj = None
-        for i in Sobjlist :
-            if i.GetName() == Name :
+        for i in Sobjlist:
+            if i.GetName() == Name:
                 SObj = i
         return SObj
-   
+
     def findSOinSalomeStudy(self, thePath, parentSO):
         logging.debug("findSOinSalomeStudy")
         childrenSO = self.ScanChildrenObj(parentSO,  ".*")
@@ -545,7 +569,7 @@ class CFDTreeWidget():
             if childSO.getPath() == thePath:
                 return childSO
         return None
-                
+
     def getObject(self, entry):
         '''
         Return SATURNE8_DataObject by its entry.
@@ -571,12 +595,13 @@ class CFDTreeWidget():
         else:
             obj = self.getObjFromEntry(entry)
         return obj
-    
+
     def findOrCreateChildSO(self, name, parentSO):
         """
         Find or create Salome Study Object as a child of an SO 
         """
-        logging.debug("findOrCreateChildSO: %s parentSO: %s", name, parentSO.GetName())
+        logging.debug("findOrCreateChildSO: %s parentSO: %s",
+                      name, parentSO.GetName())
         childrenSO = self.ScanChildrenObj(parentSO,  ".*")
         for childSO in childrenSO:
             if childSO.GetName() == name:
@@ -588,7 +613,7 @@ class CFDTreeWidget():
         entry = obj.getEntry()
         self.entryToSO[entry] = obj
         return obj
-        
+
     def removeObject(self, entry):
         ''' 
         Remove object by its entry
@@ -625,17 +650,17 @@ class CFDTreeWidget():
                 return cur
             cur = cur.parent()
         logging.debug("************* outside Study ? *****************")
-        return None    
-    
+        return None
+
     def findOrCreateStudyTWI(self, studyObject, studyPath):
         logging.debug("findOrCreateStudyTWI %s", studyPath)
         twiRoot = self.moduleFolder
-        studyName = os.path.basename(studyPath) # = studyObject.GetName()
+        studyName = os.path.basename(studyPath)  # = studyObject.GetName()
         # --- check if study is already in tree
         twiStudy = self.getTwiChildWithName(twiRoot, studyName)
         if twiStudy:
             return twiStudy
-        # --- create  
+        # --- create
         twiStudy = QTreeWidgetItem()
         twiStudy.setText(col.name, studyName)
         twiStudy.setText(col.details, studyPath)
@@ -655,7 +680,7 @@ class CFDTreeWidget():
         twiCase = self.getTwiChildWithName(twiStudy, caseName)
         if twiCase:
             return twiCase
-        # --- create  
+        # --- create
         twiCase = QTreeWidgetItem()
         twiCase.setText(col.name, caseName)
         twiCase.setText(col.details, casePath)
@@ -674,7 +699,7 @@ class CFDTreeWidget():
         twiMesh = self.getTwiChildWithName(twiStudy, meshName)
         if twiMesh:
             return twiMesh
-        # --- create  
+        # --- create
         twiMesh = QTreeWidgetItem()
         twiMesh.setText(col.name, meshObject.GetName())
         twiMesh.setText(col.details, meshPath)
@@ -687,22 +712,23 @@ class CFDTreeWidget():
         return twiMesh
 
     def createTWItem(self, parentTWI, itemName, itemPath):
-        logging.debug("createTWItem %s %s %s", itemPath, itemName, parentTWI.text(col.name))
-        
+        logging.debug("createTWItem %s %s %s", itemPath,
+                      itemName, parentTWI.text(col.name))
+
         # TODO: first, find or create SALOME study objects for "Study", "case" and "MESH"
-        
+
         twItem = QTreeWidgetItem()
         twItem.setText(col.name, itemName)
         twItem.setText(col.details, itemPath)
         self.pathToTwi[itemPath] = twItem
-        
+
         # --- parent is study
         if parentTWI == self.findAncestorStudyItemFromSelected():
             studyObj = self.findOrCreateStudySO(parentTWI.text(col.details))
             if os.path.isdir(itemPath):
                 if CFDSTUDYGUI_Commons.isaCFDCase(itemPath):
                     self.setIdAndIcon(twItem, "Case")
-                    obj =self.findOrCreateChildSO(itemName,studyObj)
+                    obj = self.findOrCreateChildSO(itemName, studyObj)
                     if obj:
                         entry = obj.GetID()
                         twItem.setText(col.entry, entry)
@@ -713,31 +739,31 @@ class CFDTreeWidget():
                     for i in dirList:
                         if re.match(".*\.syd$", i) or re.match(".*\.syd_example$", i):
                             boo = True
-                    if boo :
+                    if boo:
                         self.setIdAndIcon(twItem, "SYRCaseFolder")
                     else:
                         if itemName == "MESH":
-                            obj = self.findOrCreateChildSO("MESH",studyObj)
+                            obj = self.findOrCreateChildSO("MESH", studyObj)
                             self.setIdAndIcon(twItem, "MESHFolder")
                         elif itemName == "POST":
                             self.setIdAndIcon(twItem, "POSTFolder")
                         else:
-                            self.setIdAndIcon(twItem, "OtherFolder")   
+                            self.setIdAndIcon(twItem, "OtherFolder")
             if itemName in ("code_saturne", "neptune_cfd", "runcase"):
                 self.setIdAndIcon(twItem, "CouplingLauncher")
             elif itemName == "RESU_COUPLING":
                 self.setIdAndIcon(twItem, "RESU_COUPLINGFolder")
-                                        
+
         # --- parent is Syrthes Case
         elif parentTWI.text(col.id) == str(dict_object["SYRCaseFolder"]):
             if os.path.isdir(itemPath):
                 if itemName == "usr_examples":
                     self.setIdAndIcon(twItem, "SRCSYRFolder")
-            if itemName in ["Makefile","syrthes.py","user_cond.c"]:
+            if itemName in ["Makefile", "syrthes.py", "user_cond.c"]:
                 self.setIdAndIcon(twItem, "SyrthesFile")
-            if re.match(".*\.syd$", itemName) or re.match(".*\.syd_example$", itemName) :
+            if re.match(".*\.syd$", itemName) or re.match(".*\.syd_example$", itemName):
                 self.setIdAndIcon(twItem, "SyrthesSydFile")
-                
+
         # --- parent is Syrthes user examples
         elif parentTWI.text(col.id) == str(dict_object["SRCSYRFolder"]):
             if re.match(".*\.c$", itemName):
@@ -768,49 +794,50 @@ class CFDTreeWidget():
                     self.setIdAndIcon(twItem, "OtherFile")
                 elif itemName[0:10] == "run.cfg":
                     self.setIdAndIcon(twItem, "DATARunConf")
-                elif re.match("^dp_", itemName) or re.match("^meteo",itemName) or re.match("^cs_", itemName):
+                elif re.match("^dp_", itemName) or re.match("^meteo", itemName) or re.match("^cs_", itemName):
                     self.setIdAndIcon(twItem, "DATAFile")
                 elif re.match(".*\.py$", itemName):
                     self.setIdAndIcon(twItem, "DATAPyFile")
                 else:
                     if os.path.isfile(itemPath):
-                        fd = os.open(itemPath , os.O_RDONLY)
+                        fd = os.open(itemPath, os.O_RDONLY)
                         try:
                             f = os.fdopen(fd)
                             l1 = f.readline()
                             if l1.startswith('''<?xml version="1.0" encoding="utf-8"?><Code_Saturne_GUI''') or l1.startswith('''<?xml version="1.0" encoding="utf-8"?><NEPTUNE_CFD_GUI'''):
                                 self.setIdAndIcon(twItem, "DATAfileXML")
-                            elif l1.startswith('''<?xml version="1.0" encoding="utf-8"?>''') :
+                            elif l1.startswith('''<?xml version="1.0" encoding="utf-8"?>'''):
                                 l2 = f.readline()
                                 if l2.startswith('''<Code_Saturne_GUI''') or l2.startswith('''<NEPTUNE_CFD_GUI'''):
                                     self.setIdAndIcon(twItem, "DATAfileXML")
                             else:
-                                    self.setIdAndIcon(twItem, "DATAFile")
+                                self.setIdAndIcon(twItem, "DATAFile")
                             f.close()
                         except:
                             pass
 
         # --- parent is DRAFT folder
         elif parentTWI.text(col.id) == str(dict_object["DRAFTFolder"]):
-            draftParentFolder = os.path.basename(parentTWI.parent().text(col.details.id))
+            draftParentFolder = os.path.basename(
+                parentTWI.parent().text(col.details.id))
             if os.path.isfile(itemPath):
                 if draftParentFolder == "DATA":
-                    if re.match("^dp_", itemName) or re.match("^meteo",itemName) or re.match("^cs_", itemName):
+                    if re.match("^dp_", itemName) or re.match("^meteo", itemName) or re.match("^cs_", itemName):
                         self.setIdAndIcon(twItem, "DATADRAFTFile")
                 elif draftParentFolder == "SRC":
                     if re.match(".*\.[fF]$", itemName) or \
-                        re.match(".*\.[fF]90$", itemName) or \
-                        re.match(".*\.for$", itemName) or \
-                        re.match(".*\.FOR$", itemName):
+                            re.match(".*\.[fF]90$", itemName) or \
+                            re.match(".*\.for$", itemName) or \
+                            re.match(".*\.FOR$", itemName):
                         self.setIdAndIcon(twItem, "SRCDRAFTFile")
                     elif re.match(".*\.c$", itemName):
                         self.setIdAndIcon(twItem, "SRCDRAFTFile")
                     elif re.match(".*\.cxx$", itemName) or \
-                        re.match(".*\.cpp$", itemName):
+                            re.match(".*\.cpp$", itemName):
                         self.setIdAndIcon(twItem, "SRCDRAFTFile")
                     elif re.match(".*\.h$", itemName) or \
-                        re.match(".*\.hxx$", itemName) or \
-                        re.match(".*\.hpp$", itemName):
+                            re.match(".*\.hxx$", itemName) or \
+                            re.match(".*\.hpp$", itemName):
                         self.setIdAndIcon(twItem, "SRCDRAFTFile")
             elif os.path.isdir(itemPath):
                 self.setIdAndIcon(twItem, "OtherFolder")
@@ -818,7 +845,7 @@ class CFDTreeWidget():
         # --- parent is REFERENCE folder into DATA folder
         elif parentTWI.text(col.id) == str(dict_object["REFERENCEDATAFolder"]):
             if os.path.isfile(itemPath):
-                if re.match("^dp_", itemName) or re.match("^meteo",itemName) or re.match("^cs_", itemName):
+                if re.match("^dp_", itemName) or re.match("^meteo", itemName) or re.match("^cs_", itemName):
                     self.setIdAndIcon(twItem, "REFERENCEDATAFile")
             elif os.path.isdir(itemPath):
                 self.setIdAndIcon(twItem, "OtherFolder")
@@ -830,7 +857,7 @@ class CFDTreeWidget():
                 if d_dirMesh != {}:
                     for key in d_dirMesh:
                         if itemPath in d_dirMesh[key]:
-                            for k,v in dict_object.items():
+                            for k, v in dict_object.items():
                                 if v == key:
                                     self.setIdAndIcon(twItem, k)
                                     break
@@ -871,7 +898,7 @@ class CFDTreeWidget():
         elif parentTWI.text(col.id) == str(dict_object["SRCFolder"]):
             if os.path.isfile(itemPath):
                 if re.match(".*\.[fF]$", itemName) or re.match(".*\.[fF]90$", itemName) \
-                or re.match(".*\.for$", itemName) or re.match(".*\.FOR$", itemName):
+                        or re.match(".*\.for$", itemName) or re.match(".*\.FOR$", itemName):
                     self.setIdAndIcon(twItem, "SRCFile")
                 elif re.match(".*\.c$", itemName):
                     self.setIdAndIcon(twItem, "SRCFile")
@@ -882,7 +909,7 @@ class CFDTreeWidget():
                 elif re.match(".*\.log$", itemName):
                     self.setIdAndIcon(twItem, "LOGSRCFile")
             elif os.path.isdir(itemPath):
-                if itemName == "REFERENCE" or itemName == "EXAMPLES" :
+                if itemName == "REFERENCE" or itemName == "EXAMPLES":
                     self.setIdAndIcon(twItem, "USERSFolder")
                 elif itemName == "DRAFT":
                     self.setIdAndIcon(twItem, "DRAFTFolder")
@@ -893,7 +920,7 @@ class CFDTreeWidget():
         elif parentTWI.text(col.id) == str(dict_object["USERSFolder"]):
             if os.path.isfile(itemPath):
                 if re.match(".*\.[fF]$", itemName) or re.match(".*\.[fF]90$", itemName) \
-                or re.match(".*\.for$", itemName) or re.match(".*\.FOR$", itemName):
+                        or re.match(".*\.for$", itemName) or re.match(".*\.FOR$", itemName):
                     self.setIdAndIcon(twItem, "USRSRCFile")
                 elif re.match(".*\.c$", itemName):
                     self.setIdAndIcon(twItem, "USRSRCFile")
@@ -904,8 +931,8 @@ class CFDTreeWidget():
                 elif re.match(".*\.log$", itemName):
                     self.setIdAndIcon(twItem, "LOGSRCFile")
             elif os.path.isdir(itemPath):
-                if itemName in ("atmo", "base", "cplv", "cfbl", "cogz", \
-                            "ctwr", "elec", "fuel", "lagr", "pprt", "rayt"):
+                if itemName in ("atmo", "base", "cplv", "cfbl", "cogz",
+                                "ctwr", "elec", "fuel", "lagr", "pprt", "rayt"):
                     self.setIdAndIcon(twItem, "USERSFolder")
                 else:
                     self.setIdAndIcon(twItem, "OtherFolder")
@@ -922,7 +949,7 @@ class CFDTreeWidget():
         elif parentTWI.text(col.id) == str(dict_object["RESSRCFolder"]):
             if os.path.isfile(itemPath):
                 if re.match(".*\.[fF]$", itemName) or re.match(".*\.[fF]90$", itemName) \
-                or re.match(".*\.for$", itemName) or re.match(".*\.FOR$", itemName):
+                        or re.match(".*\.for$", itemName) or re.match(".*\.FOR$", itemName):
                     self.setIdAndIcon(twItem, "RESSRCFile")
                 elif re.match(".*\.c$", itemName):
                     self.setIdAndIcon(twItem, "RESSRCFile")
@@ -982,7 +1009,7 @@ class CFDTreeWidget():
         # --- parent is RESU_COUPLING sub folder
         elif parentTWI.text(col.id) == str(dict_object["RESU_COUPLINGSubFolder"]):
             if os.path.isdir(itemPath):
-                if os.path.isfile(os.path.join(itemPath,"syrthes")):
+                if os.path.isfile(os.path.join(itemPath, "syrthes")):
                     self.setIdAndIcon(twItem, "RESUSubFolderSYR")
                 else:
                     # test if folder is a result cfd folder?
@@ -1014,7 +1041,7 @@ class CFDTreeWidget():
                 if d_dirMesh != {}:
                     for key in d_dirMesh:
                         if itemPath in d_dirMesh[key]:
-                            for k,v in dict_object.items():
+                            for k, v in dict_object.items():
                                 if v == key:
                                     self.setIdAndIcon(twItem, k)
                                     break
@@ -1044,38 +1071,41 @@ class CFDTreeWidget():
                 else:
                     self.setIdAndIcon(twItem, "MESHFile")
 
-
         if twItem.text(col.id) == str(dict_object["OtherFile"]):
             if re.match(".*\.[fF]$", itemName) or \
-            re.match(".*\.[fF]90$", itemName) or \
-            re.match(".*\.for$", itemName) or \
-            re.match(".*\.FOR$", itemName):
+                    re.match(".*\.[fF]90$", itemName) or \
+                    re.match(".*\.for$", itemName) or \
+                    re.match(".*\.FOR$", itemName):
                 if self.detectUSERSitem(parentTWI):
-                    logging.debug("****************************** %s", itemPath)
+                    logging.debug(
+                        "****************************** %s", itemPath)
                     self.setIdAndIcon(twItem, self.detectSRCitem(parentTWI))
             elif re.match(".*\.c$", itemName):
                 if self.detectUSERSitem(parentTWI):
-                    logging.debug("****************************** %s", itemPath)
+                    logging.debug(
+                        "****************************** %s", itemPath)
                     self.setIdAndIcon(twItem, self.detectSRCitem(parentTWI))
             elif re.match(".*\.cpp$", itemName) or \
-                re.match(".*\.cxx$", itemName):
+                    re.match(".*\.cxx$", itemName):
                 if self.detectUSERSitem(parentTWI):
-                    logging.debug("****************************** %s", itemPath)
+                    logging.debug(
+                        "****************************** %s", itemPath)
                     self.setIdAndIcon(twItem, self.detectSRCitem(parentTWI))
             elif re.match(".*\.h$", itemName) or \
-                re.match(".*\.hxx$", itemName) or \
-                re.match(".*\.hpp$", itemName):
+                    re.match(".*\.hxx$", itemName) or \
+                    re.match(".*\.hpp$", itemName):
                 if self.detectUSERSitem(parentTWI):
-                    logging.debug("****************************** %s", itemPath)
+                    logging.debug(
+                        "****************************** %s", itemPath)
                     self.setIdAndIcon(twItem, self.detectSRCitem(parentTWI))
 
         if twItem.text(col.id) == str(dict_object["OtherFile"]):
             if os.path.isdir(itemPath):
                 self.setIdAndIcon(twItem, "OtherFolder")
-                
+
         parentTWI.addChild(twItem)
         return twItem
-            
+
     def rebuildTWRecursively(self, twItem):
         """
         Compare the children (if any) of the tree item with the content of the
@@ -1084,20 +1114,20 @@ class CFDTreeWidget():
         remove the items corresponding to files or directories that are no more
         on the disk.
         """
-        # --- find the path corresponding to the current item. 
+        # --- find the path corresponding to the current item.
         #     Do not consider items with no path (for instance, mesh groups).
-        
+
         itemPath = twItem.text(col.details)
         logging.debug("rebuildTWRecursively %s", itemPath)
         if itemPath is None:
             return
-        
+
         # --- if the item path exists and is a directory, get the names of the files on disk in this directory
         lst = []
         if os.path.isdir(itemPath):
             lst = os.listdir(itemPath)
         lst.sort()
-        
+
         # --- get the paths of children of the item
         nbChildren = twItem.childCount()
         childPaths = {}
@@ -1106,13 +1136,13 @@ class CFDTreeWidget():
             pth = itm.text(col.details)
             if pth:
                 childPaths[pth] = itm
-        
+
         # --- find the new paths on disk, create the corresponding tree items as new children of the current item
         for aName in lst:
             aPath = os.path.join(itemPath, aName)
             if aPath not in childPaths:
                 nc = self.createTWItem(twItem, aName, aPath)
-        
+
         # --- find the items corresponding to files or directories no longer present on the disk and are removed
         #     only the items coresponding to a file or directory are taken into account,
         #     (the items corresponding to mesh groups have no path, and are not removed)
@@ -1121,10 +1151,12 @@ class CFDTreeWidget():
             if aName not in lst:
                 itmPth = itm.text(col.details)
                 if itmPth:
-                    self.removeObjFromTwi(itm)       # remove SALOME Objects first (recursive)
-                    self.removeTwiWithChildren(itm)  # then remove tree widget items (recursive)
+                    # remove SALOME Objects first (recursive)
+                    self.removeObjFromTwi(itm)
+                    # then remove tree widget items (recursive)
+                    self.removeTwiWithChildren(itm)
 
-        # --- recursive call with the updated children of the item 
+        # --- recursive call with the updated children of the item
         nbChildren = twItem.childCount()
         for i in range(nbChildren):
             itm = twItem.child(i)
@@ -1157,7 +1189,7 @@ class CFDTreeWidget():
             cur = cur.parent()
         logging.debug("outside Study ?")
         return "USRSRCFile"
-    
+
     def findCaseItem(self, twItem):
         cur = twItem
         while cur:
@@ -1166,7 +1198,7 @@ class CFDTreeWidget():
             cur = cur.parent()
         logging.debug("************* outside Case ? *****************")
         return cur
-    
+
     def findStudyItem(self, twItem):
         cur = twItem
         while cur:
@@ -1182,14 +1214,14 @@ class CFDTreeWidget():
         to find one with the given name
         """
         nbChildren = parentTwi.childCount()
-        for i in range(nbChildren) :
+        for i in range(nbChildren):
             child = parentTwi.child(i)
             if child.text(col.name) == name:
                 return child
         return None
 
-    def _SetStudyLocation(self, theStudyPath, theCaseName,theCreateOpt,
-                        theCopyOpt, theNameRef = "", theSyrthesOpt =False, theSyrthesCase = "",theNprocs=""):
+    def _SetStudyLocation(self, theStudyPath, theCaseName, theCreateOpt,
+                          theCopyOpt, theNameRef="", theSyrthesOpt=False, theSyrthesCase="", theNprocs=""):
         """
         Constructs the tree representation of a CFD study (with the
         associated cases) for the Object Browser. Only the CFD Studies and cases are 
@@ -1201,13 +1233,14 @@ class CFDTreeWidget():
         if theCopyOpt:
             if not os.path.exists(theNameRef):
                 raise ValueError("reference case is not a repository")
-        if os.path.exists(theStudyPath) :
+        if os.path.exists(theStudyPath):
 
             if theCreateOpt:
-                mess = cfdstudyMess.trMessage(ObjectTR.tr("STUDY_DIRECTORY_ALREADY_EXISTS"),[""])
+                mess = cfdstudyMess.trMessage(ObjectTR.tr(
+                    "STUDY_DIRECTORY_ALREADY_EXISTS"), [""])
                 cfdstudyMess.criticalMessage(mess)
                 return False
-        if theCreateOpt or (not theCreateOpt and theCaseName!=""):
+        if theCreateOpt or (not theCreateOpt and theCaseName != ""):
             iok = _CallCreateScript(theStudyPath, theCreateOpt, theCaseName,
                                     theCopyOpt, theNameRef, theSyrthesOpt, theSyrthesCase)
 
@@ -1218,57 +1251,59 @@ class CFDTreeWidget():
             twiStudy = self.findOrCreateStudyTWI(studyObject, theStudyPath)
         else:
             twiStudy = self.entryToTwi[studyObject.GetID()]
-        
+
         self.getClientGui().getCLSMainWindow().initialSelection(twiStudy)
         if theCaseName:
-            # --- find or create case SO 
+            # --- find or create case SO
             theCasePath = os.path.join(theStudyPath, theCaseName)
             caseObject = self.FindCaseByPath(theCasePath)
             if caseObject is None:
                 caseObject = self.findOrCreateChildSO(theCaseName, studyObject)
-            twiCase = self.findOrCreateCaseTWI(caseObject, twiStudy, theCasePath)
+            twiCase = self.findOrCreateCaseTWI(
+                caseObject, twiStudy, theCasePath)
             self.rebuildTWRecursively(twiCase)
-            
+
         self.UpdateSubTree(twiStudy)
-            
+
         # TODO handle number of procs required in a consistant manner for coupled cases
         # Better handled using models/BatchRunningModel
         # if "run.cfg" in os.listdir(theStudyPath) and theCreateOpt:
         #     if theNprocs != "":
         #         pass
 
-
         return iok
 
     def _SetCaseLocation(self, theCasePath):
-        logging.debug("_SetCaseLocation %s", theCasePath)        
-        theStudyPath  = os.path.dirname(theCasePath)
-        theCaseName   = os.path.basename(theCasePath)
-        studyObject   = self.FindStudyObjectByPath(theStudyPath)
+        logging.debug("_SetCaseLocation %s", theCasePath)
+        theStudyPath = os.path.dirname(theCasePath)
+        theCaseName = os.path.basename(theCasePath)
+        studyObject = self.FindStudyObjectByPath(theStudyPath)
         if studyObject is None:
             if CFDSTUDYGUI_Commons.isaCFDStudy(theStudyPath):
                 studyObject = self.findOrCreateStudySO(theStudyPath)
                 twiStudy = self.findOrCreateStudyTWI(studyObject, theStudyPath)
             else:
-                logging.critical("the study path %s does not correspond to a CFD study...")
+                logging.critical(
+                    "the study path %s does not correspond to a CFD study...")
                 return
         else:
-            twiStudy = self.entryToTwi[studyObject.GetID()]                
+            twiStudy = self.entryToTwi[studyObject.GetID()]
         if theCaseName:
-            # --- find or create case SO 
+            # --- find or create case SO
             theCasePath = os.path.join(theStudyPath, theCaseName)
             caseObject = self.FindCaseByPath(theCasePath)
             if caseObject is None:
                 caseObject = self.findOrCreateChildSO(theCaseName, studyObject)
-            twiCase = self.findOrCreateCaseTWI(caseObject, twiStudy, theCasePath)
+            twiCase = self.findOrCreateCaseTWI(
+                caseObject, twiStudy, theCasePath)
             self.rebuildTWRecursively(twiCase)
-        if self.getSObject(studyObject,"MESH") == None:
+        if self.getSObject(studyObject, "MESH") == None:
             meshPath = os.path.join(theStudyPath, "MESH")
             meshObject = self.findOrCreateChildSO("MESH", studyObject)
             twiMesh = self.findOrCreateMeshTWI(meshObject, twiStudy, meshPath)
             self.rebuildTWRecursively(twiMesh)
-        self.getClientGui().getCLSMainWindow().expandTree()        
-    
+        self.getClientGui().getCLSMainWindow().expandTree()
+
     def FindStudyObjectByPath(self, theStudyPath):
         """
         Return the SALOME Study object (SO) representing 
@@ -1304,7 +1339,7 @@ class CFDTreeWidget():
             getCFDTW().rebuildTWRecursively(twItem)
             self.getClientGui().getCLSMainWindow().expandTree()
 
-    def GetCaseNameList(self,studyItem):
+    def GetCaseNameList(self, studyItem):
         """
         Returns the list of the existing cases names from a CFD study in the Object Browser.
         Used into slotAddCase to verify the existing cases
@@ -1347,11 +1382,11 @@ def FindCaseByPath(theCasePath):
     study = _getStudy()
     builder = study.NewBuilder()
     studyCfdObject = FindStudyByPath(os.path.dirname(theCasePath))
-    iter  = study.NewChildIterator(studyCfdObject)
+    iter = study.NewChildIterator(studyCfdObject)
     while iter.More():
         attr = builder.FindOrCreateAttribute(iter.Value(), "AttributeLocalID")
         if attr.Value() == dict_object["Case"]:
-            #compare case path
+            # compare case path
             aCurCasePath = _GetPath(iter.Value())
             if aCurCasePath == theCasePath:
                 return iter.Value()
@@ -1374,13 +1409,13 @@ def _CallCreateScript(theStudyPath, isCreateStudy, theCaseNames,
     """
     logging.debug("_CallCreateScript")
     mess = ""
-    scrpt, c ,mess = BinCode()
-    if mess == "" :
+    scrpt, c, mess = BinCode()
+    if mess == "":
         curd = os.getcwd()
 
         start_dir = ""
         if isCreateStudy:
-            fatherdir,etude = os.path.split(theStudyPath)
+            fatherdir, etude = os.path.split(theStudyPath)
             start_dir = fatherdir
         else:
             start_dir = theStudyPath
@@ -1394,14 +1429,14 @@ def _CallCreateScript(theStudyPath, isCreateStudy, theCaseNames,
         if theCaseNames != "":
             for i in theCaseNames.split(' '):
                 args.append("--case")
-                args.append(os.path.join(theStudyPath,i))
+                args.append(os.path.join(theStudyPath, i))
         if theCopyOpt:
             args.append("--copy-from")
             args.append(theNameRef)
 
         if theSyrthesOpt:
             args.append("--syrthes")
-            args.append(os.path.join(theStudyPath,theSyrthesCase))
+            args.append(os.path.join(theStudyPath, theSyrthesCase))
 
         runCommand(args, start_dir, "")
 
@@ -1409,12 +1444,13 @@ def _CallCreateScript(theStudyPath, isCreateStudy, theCaseNames,
         cfdstudyMess.criticalMessage(mess)
     return mess == ""
 
+
 def updateCasePath(theCasePath):
 
     logging.debug("updateCasePath")
     mess = ""
-    scrpt, c ,mess = BinCode()
-    if mess == "" :
+    scrpt, c, mess = BinCode()
+    if mess == "":
         curd = os.getcwd()
 
         start_dir = ""
@@ -1426,8 +1462,6 @@ def updateCasePath(theCasePath):
     else:
         cfdstudyMess.criticalMessage(mess)
     return mess == ""
-
-
 
 
 # def _CreateObject(theFather, theBuilder, theName):
@@ -1453,33 +1487,34 @@ def updateCasePath(theCasePath):
 #     return newChild
 
 
-
-def getNameCodeFromXmlCasePath(XMLCasePath) :
+def getNameCodeFromXmlCasePath(XMLCasePath):
     """
     """
     logging.debug("getNameCodeFromXmlCasePath")
     code = ""
     if os.path.isfile(XMLCasePath):
-        fd = os.open(XMLCasePath,os.O_RDONLY)
+        fd = os.open(XMLCasePath, os.O_RDONLY)
         f = os.fdopen(fd)
         l1 = f.readline()
         if l1.startswith('''<?xml version="1.0" encoding="utf-8"?><Code_Saturne_GUI''') or l1.startswith('''<?xml version="1.0" encoding="utf-8"?><NEPTUNE_CFD_GUI'''):
-            if "Code_Saturne" in l1 :
+            if "Code_Saturne" in l1:
                 code = "Code_Saturne"
-            elif "NEPTUNE_CFD" in l1 :
+            elif "NEPTUNE_CFD" in l1:
                 code = "NEPTUNE_CFD"
-        elif l1.startswith('''<?xml version="1.0" encoding="utf-8"?>''') :
+        elif l1.startswith('''<?xml version="1.0" encoding="utf-8"?>'''):
             l2 = f.readline()
             if l2.startswith('''<Code_Saturne_GUI''') or l2.startswith('''<NEPTUNE_CFD_GUI'''):
-                if "Code_Saturne" in l2 :
+                if "Code_Saturne" in l2:
                     code = "Code_Saturne"
-                elif "NEPTUNE_CFD" in l2 :
+                elif "NEPTUNE_CFD" in l2:
                     code = "NEPTUNE_CFD"
-            else :
-                mess = cfdstudyMess.trMessage(ObjectTR.tr("XML_DATA_FILE"),[XMLCasePath])
+            else:
+                mess = cfdstudyMess.trMessage(
+                    ObjectTR.tr("XML_DATA_FILE"), [XMLCasePath])
                 cfdstudyMess.warningMessage(mess)
-        else :
-            mess = cfdstudyMess.trMessage(ObjectTR.tr("XML_DATA_FILE"),[XMLCasePath])
+        else:
+            mess = cfdstudyMess.trMessage(
+                ObjectTR.tr("XML_DATA_FILE"), [XMLCasePath])
             cfdstudyMess.warningMessage(mess)
         f.close()
     return code
@@ -1502,17 +1537,18 @@ def parseDir(dirname):
     """
     global d_dirMesh
     niveau = 0
-    for root,dirs,files in os.walk(dirname):
+    for root, dirs, files in os.walk(dirname):
         l_dirs = []
         if dirs != []:
             for j in dirs:
-                l_dirs.append(os.path.join(root,j))
+                l_dirs.append(os.path.join(root, j))
             niveau = searchDepth(root)+1
             key = MESHSubFolder_int+niveau
             if key not in list(d_dirMesh.keys()):
                 d_dirMesh[key] = l_dirs
                 dict_object[MESHSubFolder+str(niveau)] = key
-                icon_collection[dict_object[MESHSubFolder+str(niveau)]]  = "CFDSTUDY_FOLDER_OBJ_ICON"
+                icon_collection[dict_object[MESHSubFolder +
+                                            str(niveau)]] = "CFDSTUDY_FOLDER_OBJ_ICON"
             else:
                 d_dirMesh[key] = d_dirMesh[key]+l_dirs
 
@@ -1540,7 +1576,7 @@ def _GetDirList(theObject):
     @return: list of unix pathes of directory.
     @rtype: C{List} of C{String}
     """
-    study   = _getStudy()
+    study = _getStudy()
     builder = study.NewBuilder()
 
     path = _GetPath(theObject)
@@ -1561,7 +1597,7 @@ def _DetectUSERSObject(theObject):
     @return: C{True} if the I{theObject} represents the USERS folder
     @rtype: C{True} or C{False}
     """
-    study   = _getStudy()
+    study = _getStudy()
     builder = study.NewBuilder()
     cur = theObject.GetFather()
     attr = builder.FindOrCreateAttribute(cur, "AttributeLocalID")
@@ -1588,7 +1624,7 @@ def _DetectSRCObject(theObject):
     @return: type of the I{theObject} which represents files in the SRC folder.
     @rtype: C{int}
     """
-    study   = _getStudy()
+    study = _getStudy()
     builder = study.NewBuilder()
     cur = theObject.GetFather()
     attr = builder.FindOrCreateAttribute(cur, "AttributeLocalID")
@@ -1618,7 +1654,7 @@ def GetFirstStudy():
     if component == None:
         return None
 
-    iter  = study.NewChildIterator(component)
+    iter = study.NewChildIterator(component)
     return iter.Value()
 
 
@@ -1634,7 +1670,7 @@ def GetStudyByObj(theObject):
     if theObject == None:
         return None
 
-    study   = _getStudy()
+    study = _getStudy()
     builder = study.NewBuilder()
     cur = theObject
 
@@ -1651,7 +1687,6 @@ def GetStudyByObj(theObject):
     return None
 
 
-
 def getXmlCaseNameList(caseItem):
     """
     Returns a list of xml file names in the DATA folder of a case
@@ -1663,7 +1698,7 @@ def getXmlCaseNameList(caseItem):
         print("There are no data folder in selected by user case")
         return
 
-    dataItem =  aChildList[0]
+    dataItem = aChildList[0]
     aDataPath = dataItem.text(col.details)
     nbChildren = dataItem.childCount()
     XmlCaseNameList = []
@@ -1673,7 +1708,8 @@ def getXmlCaseNameList(caseItem):
         if "XML" in subprocess.check_output(["file", path]).decode():
             XmlCaseNameList.append(childItem.text(col.name))
     return XmlCaseNameList
-    
+
+
 def ScanChildren(twItem, theRegExp):
     """
     Returns a list of children data from a parent branch data.
@@ -1703,10 +1739,10 @@ def ScanChildNames(theObject, theRegExp):
     """
     NameList = []
 
-    study   = _getStudy()
+    study = _getStudy()
     builder = study.NewBuilder()
 
-    iter  = study.NewChildIterator(theObject)
+    iter = study.NewChildIterator(theObject)
 
     while iter.More():
         aName = iter.Value().GetName()
@@ -1714,14 +1750,14 @@ def ScanChildNames(theObject, theRegExp):
             NameList.append(aName)
         iter.Next()
 
-    #log.debug("ScanChildNames: %s -> %s" % (theObject.GetName(), NameList))
+    # log.debug("ScanChildNames: %s -> %s" % (theObject.GetName(), NameList))
     return NameList
 
 
 def getType(theObject):
     if theObject == None:
         return None
-    study   = _getStudy()
+    study = _getStudy()
     builder = study.NewBuilder()
     attr = builder.FindOrCreateAttribute(theObject, "AttributeLocalID")
     return attr.Value()
@@ -1736,7 +1772,7 @@ def checkCaseLaunchGUI(theCase):
     @rtype: C{True} or C{False}
     @return: C{True} if C{theCase} has the script to start GUI in the DATA folder.
     """
-    
+
     caseItem = getCFDTW().getTwiFromEntry(theCase.GetID())
     if caseItem.text(col.id) != str(dict_object["Case"]):
         return False
@@ -1747,7 +1783,7 @@ def checkCaseLaunchGUI(theCase):
         print("There is no data folder in case selected by user")
         return False
 
-    aDataObj =  aChildList[0]
+    aDataObj = aChildList[0]
     aDataPath = _GetPath(aDataObj)
 
     import sys
@@ -1789,7 +1825,7 @@ def setCaseInProcess(theCasePath, isInProcess):
             print("Study by case path not found")
         return
 
-    #get case object
+    # get case object
     lst = ScanChildren(aStudyObj, aCaseName)
     if len(lst) != 1:
         if Trace():
@@ -1798,15 +1834,15 @@ def setCaseInProcess(theCasePath, isInProcess):
 
     aCaseObj = lst[0]
 
-    study   = _getStudy()
+    study = _getStudy()
     builder = study.NewBuilder()
 
     attr = builder.FindOrCreateAttribute(aCaseObj, "AttributePixMap")
     if isInProcess:
-        attr.SetPixMap(str(ObjectTR.tr(icon_collection[dict_object["CaseInProcess"]])))
+        attr.SetPixMap(
+            str(ObjectTR.tr(icon_collection[dict_object["CaseInProcess"]])))
     else:
         attr.SetPixMap(str(ObjectTR.tr(icon_collection[dict_object["Case"]])))
-
 
 
 def getOrLoadObject(item):
@@ -1817,7 +1853,8 @@ def getOrLoadObject(item):
     object = item.GetObject()
     return object
 
-def getMeshFromMesh(meshSobjItem) :
+
+def getMeshFromMesh(meshSobjItem):
     """
     return: The SALOMEDS._objref_SObject instance of the mesh, if the meshSobjItem is a sobj of a mesh, None if not
     """
@@ -1829,12 +1866,14 @@ def getMeshFromMesh(meshSobjItem) :
             meshItem = salome.ObjectToSObject(mesh)
     return meshItem
 
-def SetAutoColor(meshSobjItem) :
+
+def SetAutoColor(meshSobjItem):
     obj = getOrLoadObject(meshSobjItem)
     if obj is not None:
         mesh = obj._narrow(SMESH.SMESH_Mesh)
         if mesh is not None:
             mesh.SetAutoColor(1)
+
 
 def getMeshFromGroup(meshGroupItem):
     """
@@ -1853,11 +1892,10 @@ def getMeshFromGroup(meshGroupItem):
 
     if obj is not None:
         group = obj._narrow(SMESH.SMESH_GroupBase)
-        if group != None: # The type of the object is ok
+        if group != None:  # The type of the object is ok
             meshObj = group.GetMesh()
             meshItem = salome.ObjectToSObject(meshObj)
     return meshItem, group
-
 
 
 class SATURNE8_DataObject:
@@ -1877,15 +1915,16 @@ class SATURNE8_DataObject:
         if parent:
             parentName = parent.GetName()
             entry = getSalomePyQt().createObject(name,
-                                                "SATURNE8_CASE_ICON",
-                                                path,
-                                                parent.getEntry())
-            logging.debug("name: %s path: %s entry: %s parent %s",name, path, entry, parentName)
+                                                 "SATURNE8_CASE_ICON",
+                                                 path,
+                                                 parent.getEntry())
+            logging.debug("name: %s path: %s entry: %s parent %s",
+                          name, path, entry, parentName)
         else:
             entry = getSalomePyQt().createObject(name,
-                                                "SATURNE8_CASE_ICON",
-                                                path)
-            logging.debug("name: %s path: %s entry: %s",name, path, entry)
+                                                 "SATURNE8_CASE_ICON",
+                                                 path)
+            logging.debug("name: %s path: %s entry: %s", name, path, entry)
         getSalomePyQt().setIcon(entry, "SATURNE8_CASE_ICON")
         self.entry = entry
         self.path = path
@@ -1904,7 +1943,7 @@ class SATURNE8_DataObject:
         """
         logging.debug("GetID %s", self.entry)
         return self.entry
-                      
+
     def getPath(self):
         '''
         Return text string
@@ -1917,5 +1956,4 @@ class SATURNE8_DataObject:
         for compatibility avec standard Salome Study Objects
         """
         logging.debug("GetName %s", self.name)
-        return self.name        
-        
+        return self.name

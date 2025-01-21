@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 
 # This file is part of Code_Saturne, a general-purpose CFD tool.
 #
@@ -20,34 +20,35 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51 Franklin
 # Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 
 """
 Command Manager
 ===============
 """
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 # Standard modules
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 
-import os, logging
+import os
+import logging
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 # Third-party modules
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 
-from code_saturne.gui.base.QtCore    import *
-from code_saturne.gui.base.QtGui     import *
+from code_saturne.gui.base.QtCore import *
+from code_saturne.gui.base.QtGui import *
 from code_saturne.gui.base.QtWidgets import *
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 # Salome modules
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 # Application modules
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 
 from . import CFDSTUDYGUI_Commons, CFDSTUDYGUI_SolverGUI
 from .CFDSTUDYGUI_Commons import sgPyQt, LoggingMgr
@@ -55,14 +56,15 @@ from .CFDSTUDYGUI_QProcessDialog_ui import Ui_CFDSTUDYGUI_QProcessDialog
 from . import CFDSTUDYGUI_DataModel
 
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 # Classes definitions
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 
 class CFDSTUDYGUI_QProcessDialog(QDialog, Ui_CFDSTUDYGUI_QProcessDialog):
     """
     Advanced dialog.
     """
+
     def __init__(self, parent, title, cmd_list, obj_directory="", start_directory=""):
         """
         Constructor
@@ -91,7 +93,6 @@ class CFDSTUDYGUI_QProcessDialog(QDialog, Ui_CFDSTUDYGUI_QProcessDialog):
         QApplication.setOverrideCursor(cursor)
         self.__process()
 
-
     def __process(self):
         if self.proc.exitStatus() == QProcess.NormalExit and not self.procErrorFlag:
             if self.start_directory != "":
@@ -99,10 +100,11 @@ class CFDSTUDYGUI_QProcessDialog(QDialog, Ui_CFDSTUDYGUI_QProcessDialog):
             self.proc.start(self.cmd)
             if self.cmd_list:
                 self.cmd = self.cmd_list.pop(0)
-                self.proc.finished['int', 'QProcess::ExitStatus'].connect(self.__process)
+                self.proc.finished['int', 'QProcess::ExitStatus'].connect(
+                    self.__process)
             else:
-                self.proc.finished['int', 'QProcess::ExitStatus'].connect(self.__finished)
-
+                self.proc.finished['int', 'QProcess::ExitStatus'].connect(
+                    self.__finished)
 
     def __readFromStdout(self):
         """
@@ -114,10 +116,10 @@ class CFDSTUDYGUI_QProcessDialog(QDialog, Ui_CFDSTUDYGUI_QProcessDialog):
 
         while self.proc and self.proc.canReadLine():
             ba = self.proc.readLine()
-            if ba.isNull(): return
+            if ba.isNull():
+                return
             s = (ba.data()).decode("utf-8")[:-1]
             self.logText.append(s)
-
 
     def __readFromStderr(self):
         """
@@ -129,20 +131,20 @@ class CFDSTUDYGUI_QProcessDialog(QDialog, Ui_CFDSTUDYGUI_QProcessDialog):
 
         while self.proc and self.proc.canReadLine():
             ba = self.proc.readLine()
-            if ba.isNull(): return
+            if ba.isNull():
+                return
             s = (ba.data()).decode("utf-8")[:-1]
             self.logText.append('<font color="red">' + s + '</font>')
             self.procErrorFlag = True
 
-
     def __finished(self):
         from .CFDSTUDYGUI_DataModel import getCFDTW
         if self.objBr:
-            twi = CFDSTUDYGUI_DataModel.getCFDTW().entryToTwi[self.objBr.GetID()]
+            twi = CFDSTUDYGUI_DataModel.getCFDTW(
+            ).entryToTwi[self.objBr.GetID()]
             getCFDTW().UpdateSubTree(twi)
         QApplication.restoreOverrideCursor()
         self.pushButton.setEnabled(True)
-
 
     def event(self, e):
         if e.type() == 9999:
@@ -157,9 +159,9 @@ class CFDSTUDYGUI_QProcessDialog(QDialog, Ui_CFDSTUDYGUI_QProcessDialog):
         return QDialog.event(self, e)
 
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 #
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 
 def runCommand(cmd, start_directory, prefix, *args):
     """
@@ -169,14 +171,16 @@ def runCommand(cmd, start_directory, prefix, *args):
     import subprocess
     import os
     try:
-        pipe = subprocess.Popen(cmd, bufsize = 0, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        pipe = subprocess.Popen(
+            cmd, bufsize=0, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
         while True:
             text = pipe.stdout.readline().decode()
             if not text:
                 break
 
-            sgPyQt.message( prefix + text, False )
+            sgPyQt.message(prefix + text, False)
 
     except OSError as e:
-        sgPyQt.message( prefix + "Exception had occured during script execution " + e.__str__(), True )
+        sgPyQt.message(
+            prefix + "Exception had occured during script execution " + e.__str__(), True)

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 
 # This file is part of Code_Saturne, a general-purpose CFD tool.
 #
@@ -20,7 +20,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51 Franklin
 # Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 
 """
 Management of windows in the SALOME GUI
@@ -28,91 +28,93 @@ Management of windows in the SALOME GUI
 called by CFDSTUDYGUI_SolverGUI.
 """
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 # Standard modules
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 
-import os, sys, logging
+import os
+import sys
+import logging
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 # Class definitions
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
+
 
 class Mapper:
-    def __init__(self, d1, d2 = {} ):
+    def __init__(self, d1, d2={}):
         self.d1 = d1
         self.d2 = d2
-    def __getitem__(self,expr):
+
+    def __getitem__(self, expr):
         try:
             return eval(expr, self.d1, self.d2)
         except SyntaxError as m:
             print("Syntax Error '%s' in the mapper" % expr)
         raise
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
+
 
 class CFDGUI_Management:
     """
     Dock windows are managed by CFDGUI_Management class
     CFDGUI_Management.d_CfdCases.append([dock,mw,aStudyCFD,aCaseCFD,xmlFileName,sobjXML])
     """
+
     def __init__(self):
-      self.dockPosInListe                  = 0
-      self.mwCFDPosInListe                 = 1
-      self.studyCFDPosInListe              = 2
-      self.caseCFDPosInListe               = 3
-      self.xmlCFDFileNamePosInListe        = 4
+        self.dockPosInListe = 0
+        self.mwCFDPosInListe = 1
+        self.studyCFDPosInListe = 2
+        self.caseCFDPosInListe = 3
+        self.xmlCFDFileNamePosInListe = 4
 
-      self.nbelem                          = 6
+        self.nbelem = 6
 
-      self.dock                            = None
-      self.aMwCFD                          = None
-      self.aStudyCFD                       = None
-      self.aCaseCFD                        = None
-      self.aXmlCFDFile                     = None
+        self.dock = None
+        self.aMwCFD = None
+        self.aStudyCFD = None
+        self.aCaseCFD = None
+        self.aXmlCFDFile = None
 
-      self.d_CfdCases                      = []
-
+        self.d_CfdCases = []
 
     def set_d_CfdCases(self,
                        dock, mwCFD,
                        aStudyCFD, aCaseCFD,
                        axmlCFDFile):
-      """
-      Add a new Solver GUI in the SALOME desktop.
-      """
+        """
+        Add a new Solver GUI in the SALOME desktop.
+        """
 
-      self.d_CfdCases.append([dock, mwCFD,
-                              aStudyCFD, aCaseCFD,
-                              axmlCFDFile])
+        self.d_CfdCases.append([dock, mwCFD,
+                                aStudyCFD, aCaseCFD,
+                                axmlCFDFile])
 
-      self.dock          = dock
-      self.aMwCFD        = mwCFD
-      self.aStudyCFD     = aStudyCFD
-      self.aCaseCFD      = aCaseCFD
-      self.aXmlCFDFile   = axmlCFDFile
+        self.dock = dock
+        self.aMwCFD = mwCFD
+        self.aStudyCFD = aStudyCFD
+        self.aCaseCFD = aCaseCFD
+        self.aXmlCFDFile = axmlCFDFile
 
-      logging.debug("set_d_CfdCases \n\tdock = %s\n\tmwCFD = %s\n\taStudyCFD = %s\n\taCaseCFD = %s\n\taxmlCFDFile = %s" % \
-                 (dock, mwCFD, aStudyCFD, aCaseCFD, axmlCFDFile))
-
+        logging.debug("set_d_CfdCases \n\tdock = %s\n\tmwCFD = %s\n\taStudyCFD = %s\n\taCaseCFD = %s\n\taxmlCFDFile = %s" %
+                      (dock, mwCFD, aStudyCFD, aCaseCFD, axmlCFDFile))
 
     def checkDockWindowsLists(self):
-      if self.d_CfdCases!= []:
-          return True
-      else:
-          return False
-
+        if self.d_CfdCases != []:
+            return True
+        else:
+            return False
 
     def getDockListe(self):
-      """
-      return a liste which contains all the CFD DockWidget instances opened in GUI
-      """
-      listeDock = []
-      if self.checkDockWindowsLists():
-          for liste in self.d_CfdCases:
-              listeDock.append(liste[self.dockPosInListe])
-      return listeDock
-
+        """
+        return a liste which contains all the CFD DockWidget instances opened in GUI
+        """
+        listeDock = []
+        if self.checkDockWindowsLists():
+            for liste in self.d_CfdCases:
+                listeDock.append(liste[self.dockPosInListe])
+        return listeDock
 
     def getElem(self, elempos):
 
@@ -124,13 +126,11 @@ class CFDGUI_Management:
                 d[liste[elempos]] = self.d_CfdCases.index(liste)
         return d
 
-
     def getDocks(self):
         """
         return a liste l - called in CFDSTUDYGUI_SolverGUI
         """
         return self.getElem(self.dockPosInListe)
-
 
     def getDockListeWithCFDStudyAndCaseNames(self, studyCFDName, caseName):
         """
@@ -141,20 +141,18 @@ class CFDGUI_Management:
             return l
         for liste in self.d_CfdCases:
             if liste[self.studyCFDPosInListe].GetName() == studyCFDName \
-              and liste[self.caseCFDPosInListe].GetName() == caseName:
+                    and liste[self.caseCFDPosInListe].GetName() == caseName:
                 l.append(liste)
         return l
-
 
     def getListeWithCFDNames(self, studyCFDName, caseName, xmlName):
         l = []
         for liste in self.d_CfdCases:
             if liste[self.studyCFDPosInListe].GetName() == studyCFDName \
-              and liste[self.caseCFDPosInListe].GetName() == caseName \
-              and liste[self.xmlCFDFileNamePosInListe] == xmlName:
+                    and liste[self.caseCFDPosInListe].GetName() == caseName \
+                    and liste[self.xmlCFDFileNamePosInListe] == xmlName:
                 return liste
         return l
-
 
     def getDockWithCFDNames(self, studyCFDName, caseName, xmlName):
         l = self.getListeWithCFDNames(studyCFDName, caseName, xmlName)
@@ -163,17 +161,15 @@ class CFDGUI_Management:
         else:
             return None
 
-
     def getStudyCaseXmlNames(self, mw):
         logging.debug("getStudyCaseXmlNames mw = %s" % mw)
         if self.checkDockWindowsLists():
             for l in self.d_CfdCases:
                 if l[self.mwCFDPosInListe] == mw:
                     return l[self.studyCFDPosInListe].GetName(), \
-                            l[self.caseCFDPosInListe].GetName(), \
-                            l[self.xmlCFDFileNamePosInListe]
+                        l[self.caseCFDPosInListe].GetName(), \
+                        l[self.xmlCFDFileNamePosInListe]
         return None, None, None
-
 
     def getCase(self, mw):
         if self.checkDockWindowsLists():
@@ -181,7 +177,6 @@ class CFDGUI_Management:
                 if l[self.mwCFDPosInListe] == mw:
                     return l[self.caseCFDPosInListe]
         return None
-
 
     def hideDocks(self):
         if not self.checkDockWindowsLists():
@@ -191,7 +186,6 @@ class CFDGUI_Management:
                 liste[self.dockPosInListe].hide()
                 liste[self.dockPosInListe].toggleViewAction().setVisible(False)
 
-
     def showDocks(self):
         if not self.checkDockWindowsLists():
             return
@@ -200,7 +194,6 @@ class CFDGUI_Management:
                 liste[self.dockPosInListe].show()
                 liste[self.dockPosInListe].setVisible(True)
                 liste[self.dockPosInListe].toggleViewAction().setVisible(True)
-
 
     def findElem(self, xmlName, caseName, studyCFDName):
         boo = False
@@ -226,12 +219,12 @@ class CFDGUI_Management:
                             boo = True
         return boo
 
-
     def delDockfromStudyAndCaseNames(self, dsk, studyCFDName, caseName):
         """
         Delete all the opened dock windows from a study name and a case name
         """
-        liste = self.getDockListeWithCFDStudyAndCaseNames(studyCFDName, caseName)
+        liste = self.getDockListeWithCFDStudyAndCaseNames(
+            studyCFDName, caseName)
         if liste == []:
             return
         for l in liste:
@@ -243,7 +236,6 @@ class CFDGUI_Management:
             # remove the list which contains the removed docks in
             # the main list self.d_CfdCases
             self.d_CfdCases.remove(l)
-
 
     def delDock(self, dsk, studyCFDName, caseName, xmlName):
         """
@@ -260,15 +252,15 @@ class CFDGUI_Management:
         # remove the liste which contains the removed docks in the dictionary
         self.d_CfdCases.remove(liste)
 
-
     def cleanAllDock(self, dsk):
         """
         clean all dock windows of cfd cases and clean attached main liste;
         called when closing salome study and remaining into the desktop
         """
         logging.debug("cleanAllDock")
-        if self.d_CfdCases == [] : return
-        for liste_object in self.d_CfdCases :
+        if self.d_CfdCases == []:
+            return
+        for liste_object in self.d_CfdCases:
             dockcfd = liste_object[self.dockPosInListe]
             if dockcfd != None:
                 dsk.removeDockWidget(dockcfd)
@@ -276,4 +268,3 @@ class CFDGUI_Management:
                 dockcfd.close()
         # clean the associated dictionary
         self.d_CfdCases.clear()
-

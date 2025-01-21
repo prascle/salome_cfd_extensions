@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 
 # This file is part of Code_Saturne, a general-purpose CFD tool.
 #
@@ -20,53 +20,55 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51 Franklin
 # Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 
 """
 Common
 ======
 
 """
-from code_saturne.gui.base.QtCore    import *
+import libSALOME_Swig
+from code_saturne.gui.base.QtCore import *
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 # Standard modules
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 
-import os, re, subprocess
+import os
+import re
+import subprocess
 import logging
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 # Salome modules
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 from .CFDSTUDYGUI_Message import cfdstudyMess
 # Get SALOME PyQt interface
 import SalomePyQt
 sgPyQt = SalomePyQt.SalomePyQt()
 
 # Get SALOME Swig interface
-import libSALOME_Swig
 sg = libSALOME_Swig.SALOMEGUI_Swig()
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 # Application modules
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 # Global variables
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 
 CFD_Saturne = "Code_Saturne"
 CFD_Neptune = "NEPTUNE_CFD"
 
-_CFD_solvers = {CFD_Saturne:'code_saturne',
-                CFD_Neptune:'neptune_cfd'}
+_CFD_solvers = {CFD_Saturne: 'code_saturne',
+                CFD_Neptune: 'neptune_cfd'}
 
 # ObjectTR is a convenient object for traduction purpose
 ObjectTR = QObject()
 
 # Main variable for solver
-_CFD_Code = None #By default
+_CFD_Code = None  # By default
 
 # True or false for log tracing
 _Trace = False  #
@@ -74,19 +76,21 @@ _Trace = False  #
 # If True all stdout redirected to MassageWindow
 _LogModeOn = True
 
-#---Enumerations---
-#Event type for indicate of case in process
-CaseInProcessStart  = -1000
-CaseInProcessEnd    = -1001
-UpdateScriptFolder  = -1002
+# ---Enumerations---
+# Event type for indicate of case in process
+CaseInProcessStart = -1000
+CaseInProcessEnd = -1001
+UpdateScriptFolder = -1002
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 # Functions definitions
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
+
 
 def CFD_Code():
     global _CFD_Code
     return _CFD_Code
+
 
 def getCFDSolverName(code_name=None):
     """
@@ -102,6 +106,7 @@ def getCFDSolverName(code_name=None):
         solver_name = _CFD_solvers[code_name]
 
     return solver_name
+
 
 def _SetCFDCode(var):
     logging.debug("_SetCFDCode : var = %s" % var)
@@ -141,16 +146,16 @@ def CheckCFD_CodeEnv(code):
 
     if code not in [CFD_Saturne, CFD_Neptune]:
         mess = cfdstudyMess.trMessage(ObjectTR.tr("CFDSTUDY_INVALID_SOLVER_NAME"),
-                                      [code,CFD_Saturne,CFD_Neptune])
-        iok= False
+                                      [code, CFD_Saturne, CFD_Neptune])
+        iok = False
         return iok, mess
 
     else:
         iok = False
-        _solver_name = getCFDSolverName(code);
+        _solver_name = getCFDSolverName(code)
         try:
             from code_saturne.base.cs_package import package
-            pkg = package(name = _solver_name)
+            pkg = package(name=_solver_name)
             b = os.path.join(pkg.get_dir('bindir'),
                              _solver_name+pkg.config.shext)
             if os.path.isfile(b):
@@ -159,21 +164,21 @@ def CheckCFD_CodeEnv(code):
                 mess = cfdstudyMess.trMessage(ObjectTR.tr("INFO_DLG_INVALID_ENV"),
                                               [code]) + e.__str__()
                 mess += cfdstudyMess.trMessage(ObjectTR.tr("CHECK_CODE_INSTALLATION"),
-                                               [_solver_name,code])
+                                               [_solver_name, code])
 
         except:
             mess = cfdstudyMess.trMessage(ObjectTR.tr("INFO_DLG_INVALID_ENV"),
                                           [code]) + e.__str__()
             if "cs_package" in e.__str__():
                 mess += cfdstudyMess.trMessage(ObjectTR.tr("CHECK_CODE_PACKAGE"),
-                                               ["cs_package",code])
+                                               ["cs_package", code])
             elif _solver_name in e.__str__():
                 mess += cfdstudyMess.trMessage(ObjectTR.tr("CHECK_CODE_PACKAGE"),
-                                               [_solver_name,code])
+                                               [_solver_name, code])
 
     if iok:
-        _solver_name = getCFDSolverName(code);
-        pkg = package(name = _solver_name)
+        _solver_name = getCFDSolverName(code)
+        pkg = package(name=_solver_name)
         prefix = pkg.get_dir('prefix')
         logging.debug("CheckCFD_CodeEnv -> prefix = %s" % (prefix))
 
@@ -215,15 +220,17 @@ def BinCode():
     logging.debug("BinCode -> \n    %s\n    %s" % (b, c))
     return b, c, mess
 
+
 def isaCFDCase(theCasePath):
     logging.debug("isaCFDCase")
     dirList = []
     if os.path.isdir(theCasePath):
         dirList = os.walk(theCasePath).__next__()[1]
-        if (dirList.count("DATA") or \
-            dirList.count("SRC")):
+        if (dirList.count("DATA") or
+                dirList.count("SRC")):
             return True
     return False
+
 
 def isaCFDStudy(theStudyPath):
     logging.debug("isaCFDStudy %s", theStudyPath)
@@ -231,15 +238,16 @@ def isaCFDStudy(theStudyPath):
     if os.path.isdir(theStudyPath):
         dirList = os.walk(theStudyPath).__next__()[1]
         for i in dirList:
-            logging.debug(" --- %s",i)
-            if i not in ["MESH"] :
-                if isaCFDCase(os.path.join(theStudyPath,i)) :
+            logging.debug(" --- %s", i)
+            if i not in ["MESH"]:
+                if isaCFDCase(os.path.join(theStudyPath, i)):
                     return True
     return False
 
+
 def isSyrthesCase(theCasePath):
     logging.debug("isSyrthesCase")
-#a minima
+# a minima
     iok = True
     if os.path.isdir(theCasePath):
         dirList = os.listdir(theCasePath)
@@ -247,13 +255,15 @@ def isSyrthesCase(theCasePath):
             iok = False
     return iok
 
+
 def isaSaturneSyrthesCouplingStudy(theStudyPath):
     logging.debug("isaSaturneSyrthesCouplingStudy")
     iok = False
-    hasCFDCase     = False
+    hasCFDCase = False
     hasSyrthesCase = False
     if not os.path.isdir(theStudyPath):
-        mess = cfdstudyMess.trMessage(ObjectTR.tr("MUST_BE_A_DIRECTORY"),[theStudyPath])
+        mess = cfdstudyMess.trMessage(ObjectTR.tr(
+            "MUST_BE_A_DIRECTORY"), [theStudyPath])
         cfdstudyMess.criticalMessage(mess)
         return False
     # TODO replace by a more robust test, using a query function of the
@@ -262,7 +272,7 @@ def isaSaturneSyrthesCouplingStudy(theStudyPath):
     if not (dirList.count("RESU_COUPLING") and dirList.count("run.cfg")):
         return False
     for i in dirList:
-        ipath = os.path.join(theStudyPath,i)
+        ipath = os.path.join(theStudyPath, i)
         if os.path.isdir(ipath):
             if i not in ["MESH", "RESU_COUPLING"]:
                 if isaCFDCase(ipath):
@@ -273,48 +283,46 @@ def isaSaturneSyrthesCouplingStudy(theStudyPath):
         iok = True
     return iok
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 # Classes definitions
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
+
 
 class LoggingAgent:
-    def __init__(self, stream ):
+    def __init__(self, stream):
         self.stream = stream
 
-
-    def write( self, Text ):
+    def write(self, Text):
         global _LogModeOn
         global sgPyQt
 
-        #self.stream.write( Text )
+        # self.stream.write( Text )
 
         if len(Text) == 0:
             return
 
-        lst = re.split( "\n", Text )
+        lst = re.split("\n", Text)
         for s in lst:
             if not len(s) == 0:
-                sgPyQt.message( re.sub('<','&lt;',re.sub( '>', '&gt;', s)), False )
-
+                sgPyQt.message(
+                    re.sub('<', '&lt;', re.sub('>', '&gt;', s)), False)
 
     def close(self):
         return self.stream
 
 
 class LoggingMgr:
-    def __init__(self ):
+    def __init__(self):
         pass
 
-
-    def start( self, sys_obj):
-        self.AgentOut = LoggingAgent( sys_obj.stdout )
+    def start(self, sys_obj):
+        self.AgentOut = LoggingAgent(sys_obj.stdout)
         sys_obj.stdout = self.AgentOut
 
-        self.AgentErr = LoggingAgent( sys_obj.stderr )
+        self.AgentErr = LoggingAgent(sys_obj.stderr)
         sys_obj.stderr = self.AgentErr
 
-
-    def finish( self, sys_obj):
+    def finish(self, sys_obj):
 
         if self.AgentOut != None:
             sys_obj.stdout = self.AgentOut.close()

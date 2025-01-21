@@ -89,33 +89,33 @@ class ClientGui():
 
         self.casesToReload = []
 
-    
     def getVTKViewer(self):
         return self._VTKViewer
-    
+
     def getActionsHandler(self):
         return self.ah
 
     def initialize(self):
         """
         """
-        logging.debug("initialize")       
-        
+        logging.debug("initialize")
+
         # ObjectTR is a convenient object for traduction purpose
-        
+
         self.ObjectTR = QObject()
         DEFAULT_EDITOR_NAME = self.ObjectTR.tr("CFDSTUDY_PREF_EDITOR")
         DEFAULT_READER_NAME = self.ObjectTR.tr("CFDSTUDY_PREF_READER")
-        DEFAULT_DISPLAY_VIEWER_NAME = self.ObjectTR.tr("CFDSTUDY_PREF_DISPLAY_VIEWER")
-        if not getSalomePyQt().hasSetting( "SATURNE8", "ExternalEditor"):
-            getSalomePyQt().addSetting( "SATURNE8", "ExternalEditor", DEFAULT_EDITOR_NAME )
-        if not getSalomePyQt().hasSetting( "SATURNE8", "ExternalReader"):
-            getSalomePyQt().addSetting( "SATURNE8", "ExternalReader", DEFAULT_READER_NAME )
-        if not getSalomePyQt().hasSetting( "SATURNE8", "ExternalDisplay"):
-            getSalomePyQt().addSetting( "SATURNE8", "ExternalDisplay", DEFAULT_DISPLAY_VIEWER_NAME )
+        DEFAULT_DISPLAY_VIEWER_NAME = self.ObjectTR.tr(
+            "CFDSTUDY_PREF_DISPLAY_VIEWER")
+        if not getSalomePyQt().hasSetting("SATURNE8", "ExternalEditor"):
+            getSalomePyQt().addSetting("SATURNE8", "ExternalEditor", DEFAULT_EDITOR_NAME)
+        if not getSalomePyQt().hasSetting("SATURNE8", "ExternalReader"):
+            getSalomePyQt().addSetting("SATURNE8", "ExternalReader", DEFAULT_READER_NAME)
+        if not getSalomePyQt().hasSetting("SATURNE8", "ExternalDisplay"):
+            getSalomePyQt().addSetting("SATURNE8", "ExternalDisplay", DEFAULT_DISPLAY_VIEWER_NAME)
 
         # preload code_saturne package to handle configuration file
-        
+
         cs_root_dir = os.getenv('CS_ROOT_DIR')
         if cs_root_dir == None:
             try:
@@ -205,24 +205,26 @@ class ClientGui():
                 else:
                     self.publishCase(case, "", "")
             self.casesToReload = []
-            
+
         env_saturne, msg = CheckCFD_CodeEnv(CFD_Saturne)
         logging.debug("activate -> env_saturne = %s" % env_saturne)
         if not env_saturne:
             QMessageBox.critical(getSalomePyQt().getDesktop(),
-                                "Error", msg, QMessageBox.Ok, 0)
+                                 "Error", msg, QMessageBox.Ok, 0)
             return False
 
         if msg != "":
-            mess = cfdstudyMess.trMessage(self.ObjectTR.tr("CFDSTUDY_INVALID_ENV"),[]) + " ; "+ msg
+            mess = cfdstudyMess.trMessage(self.ObjectTR.tr(
+                "CFDSTUDY_INVALID_ENV"), []) + " ; " + msg
             cfdstudyMess.aboutMessage(msg)
             return False
         else:
             self.ah.DialogCollector.InfoDialog.setCode(env_saturne)
         self.ah.setSolverParentWidget(self.clsmainw.ui.tw_case)
-        self.ah._SalomeSelection.currentSelectionChanged.connect(self.ah.updateActions)
+        self.ah._SalomeSelection.currentSelectionChanged.connect(
+            self.ah.updateActions)
         self.ah.connectSolverGUI()
-                   
+
         return True
 
     def closeStudy(self):
@@ -325,7 +327,6 @@ class ClientGui():
         logging.debug("closeWelcomeDialog")
         if self.widget is not None:
             self.widget.close()
-
 
     def unloadCase(self, caseName):
         """
@@ -473,7 +474,7 @@ class ClientGui():
 
     def getTWSelectedItems(self):
         return self.clsmainw.ui.tw_gauche.selectedItems()
-    
+
     def treeItemMenuMgr(self, position):
         """
         Defines all the specific actions related to each item of the tree
@@ -488,36 +489,6 @@ class ClientGui():
             item = items[0]
             self.selectedItem = item
             self.ah.customPopup(item, menu)
-            # if item.text(col.name) == "Saturne cases":
-            #     menu.addAction("create or load case", self.createOrLoadCase)
-            # if os.path.splitext(item.text(col.name))[1] == '.syd':
-            #     self.currentFile = os.path.join(
-            #         item.text(col.details), item.text(col.name))
-            #     self.currentEntry = ""
-            #     menu.addAction("unload case", self.actUnloadCase)
-            #     menu.addAction("reload case", self.actReloadCase)
-            # elif os.path.splitext(item.text(col.name))[1] == '.med':
-            #     self.currentFile = os.path.join(
-            #         item.text(col.details), item.text(col.name))
-            #     self.currentEntry = item.text(col.entry)
-            #     menu.addAction("load mesh", self.actLoadMesh)
-            #     menu.addAction("show", self.actShow)
-            #     menu.addAction("show only", self.actShowOnly)
-            #     menu.addAction("hide", self.actHide)
-            #     menu.addAction("FitAll", self.actFitAll)
-            #     menu.addAction("ResetView", self.actResetView)
-            # elif "Groups" in item.text(col.name):
-            #     self.currentFile = ""
-            #     self.currentEntry = item.text(col.entry)
-            # else:
-            #     self.currentFile = ""
-            #     self.currentEntry = item.text(col.entry)
-            #     menu.addAction("show", self.actShow)
-            #     menu.addAction("show only", self.actShowOnly)
-            #     menu.addAction("hide", self.actHide)
-            #     menu.addAction("FitAll", self.actFitAll)
-            #     menu.addAction("ResetView", self.actResetView)
-
         menu.exec_(self.clsmainw.ui.tw_gauche.viewport().mapToGlobal(position))
 
     def getCurrentEntry(self):

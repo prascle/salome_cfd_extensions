@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 
 # This file is part of Code_Saturne, a general-purpose CFD tool.
 #
@@ -20,7 +20,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51 Franklin
 # Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 
 """
 Solver GUI
@@ -31,27 +31,29 @@ purpose of the class C{CFDSTUDYGUI_SolverGUI} is to display the solver GUI of
 the selected code in the SALOME workspace.
 """
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 # Standard modules
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 
-import os, sys, logging
+import os
+import sys
+import logging
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 # Third-party modules
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 
-from code_saturne.gui.base.QtCore    import *
-from code_saturne.gui.base.QtGui     import *
+from code_saturne.gui.base.QtCore import *
+from code_saturne.gui.base.QtGui import *
 from code_saturne.gui.base.QtWidgets import *
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 # Salome modules
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 # Application modules
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 
 from .CFDSTUDYGUI_Commons import CFD_Code, CFD_Saturne, CFD_Neptune, getCFDSolverName, sgPyQt, sg
 from .CFDSTUDYGUI_Commons import LoggingMgr
@@ -61,17 +63,17 @@ from .constants import col
 from code_saturne.base import cs_info
 from code_saturne.base import cs_run_conf
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 # Global definitions
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 
 mw = None
 
 _c_CFDGUI = CFDGUI_Management()
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 # Function definitions
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 
 
 def findObjectBrowserDockWindow():
@@ -100,8 +102,9 @@ def tabifyCfdGui():
 
     objectBrowserDockWindow = findObjectBrowserDockWindow()
     if len(ldockMainWin) >= 1:
-        dsk.splitDockWidget(objectBrowserDockWindow,ldockMainWin[0],Qt.Horizontal)
-        dsk.tabifyDockWidget(objectBrowserDockWindow,ldockMainWin[0])
+        dsk.splitDockWidget(objectBrowserDockWindow,
+                            ldockMainWin[0], Qt.Horizontal)
+        dsk.tabifyDockWidget(objectBrowserDockWindow, ldockMainWin[0])
     for i in range(1, len(ldockMainWin)):
         dsk.tabifyDockWidget(ldockMainWin[0], ldockMainWin[i])
         dsk.tabifyDockWidget(objectBrowserDockWindow, ldockMainWin[i])
@@ -123,19 +126,21 @@ def findDockWindow(xmlName, caseName, studyCFDName):
     bool_findDockWindow = False
 
     if _c_CFDGUI != None:
-        bool_findDockWindow = _c_CFDGUI.findElem(xmlName, caseName, studyCFDName)
+        bool_findDockWindow = _c_CFDGUI.findElem(
+            xmlName, caseName, studyCFDName)
 
     return bool_findDockWindow
 
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 # Classes definition
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 
 class CFDSTUDYGUI_SolverGUI(QObject):
     """
     Auxilliary class for interaction with solvers GUI
     """
+
     def __init__(self):
         logging.debug("CFDSTUDY_SolverGUI.__init__: ")
         QObject.__init__(self, None)
@@ -145,10 +150,9 @@ class CFDSTUDYGUI_SolverGUI(QObject):
         self.casePathToMainWin = {}
         self.casePathToMw = {}
         from .clientgui import getClientGui
-        self.getClientGui  = getClientGui
+        self.getClientGui = getClientGui
         from .CFDSTUDYGUI_DataModel import getCFDTW
         self.getCFDTW = getCFDTW
-    
 
     def ExecGUI(self, parentWidget, xmlFileName, caseTwi):
         """
@@ -160,7 +164,7 @@ class CFDSTUDYGUI_SolverGUI(QObject):
         aStartPath = None
         caseName = None
         studyName = None
-        
+
         if caseTwi:
             caseName = caseTwi.text(col.name)
             studyTwi = caseTwi.parent()
@@ -178,8 +182,9 @@ class CFDSTUDYGUI_SolverGUI(QObject):
         if xmlFileName:
             # --- check for already opened case
             if caseTwi:
-                 if findDockWindow(aTitle, caseName, studyName):
-                    fileN = str(studyName + "." + caseName()) + '.' + str(aTitle)
+                if findDockWindow(aTitle, caseName, studyName):
+                    fileN = str(studyName + "." + caseName()) + \
+                        '.' + str(aTitle)
                     mess = "Case file " + fileN + " is already opened"
                     QMessageBox.warning(None, "Warning: ", mess)
                     return
@@ -199,7 +204,7 @@ class CFDSTUDYGUI_SolverGUI(QObject):
         mw = self.launchGUI(parentWidget, caseTwi, xmlFileName)
         if mw != None:
             self._CurrentWindow = mw
-        self._isActive =True
+        self._isActive = True
 
         return mw
 
@@ -214,11 +219,9 @@ class CFDSTUDYGUI_SolverGUI(QObject):
                 logging.debug("twi %s", twi.text(col.name))
                 self.getClientGui().getCLSMainWindow().caseSelectionChanged(twi)
                 break
-            
 
     def isActive(self):
         return self._isActive
-
 
     def okToContinue(self):
         logging.debug("okToContinue")
@@ -228,7 +231,6 @@ class CFDSTUDYGUI_SolverGUI(QObject):
             return True
         else:
             return False
-
 
     def SaveXmlFile(self):
         logging.debug("SaveXmlFile")
@@ -257,7 +259,6 @@ class CFDSTUDYGUI_SolverGUI(QObject):
 
         return old_xml_file, xml_file
 
-
     def getDockTitleName(self, xml_file):
         """
         Build the Dock Title Name STUDY.CASE.file.xml with the entire file Name path
@@ -265,20 +266,17 @@ class CFDSTUDYGUI_SolverGUI(QObject):
         lnames = xml_file.split("/")
         if len(lnames) < 4:
             return None
-        xmlname   = lnames[-1]
-        casename  = lnames[-3]
+        xmlname = lnames[-1]
+        casename = lnames[-3]
         studyname = lnames[-4]
         return '.'.join([studyname, casename, xmlname])
-
 
     def getDockTitleNameFromOB(self, studyname, casename, xmlname):
         return '.'.join([studyname, casename, xmlname])
 
-
     def onUndo(self):
         if self._CurrentWindow != None:
             self._CurrentWindow.slotUndo()
-
 
     def onRedo(self):
         if self._CurrentWindow != None:
@@ -292,31 +290,25 @@ class CFDSTUDYGUI_SolverGUI(QObject):
         if self._CurrentWindow != None:
             self._CurrentWindow.openXterm()
 
-
     def onDisplayCase(self):
         if self._CurrentWindow != None:
             self._CurrentWindow.displayCase()
-
 
     def onEditSRCFiles(self):
         if self._CurrentWindow != None:
             self._CurrentWindow.fileEditorOpen()
 
-
     def onCheckSRCFiles(self):
         if self._CurrentWindow != None:
             self._CurrentWindow.testUserFilesCompilation()
-
 
     def onViewLogFiles(self):
         if self._CurrentWindow != None:
             self._CurrentWindow.fileViewerOpen()
 
-
     def onLaunchSolver(self):
         if self._CurrentWindow != None:
             self._CurrentWindow.runOrSubmit()
-
 
     def onLaunchOT(self):
         if self._CurrentWindow != None:
@@ -326,74 +318,62 @@ class CFDSTUDYGUI_SolverGUI(QObject):
         if self._CurrentWindow != None:
             self._CurrentWindow.displayAbout()
 
-
     def onSaturneHelpLicense(self):
         if self._CurrentWindow != None:
             self._CurrentWindow.displayLicence()
-
 
     def onSaturneHelpManual(self):
         from code_saturne.base.cs_package import package
         argv_info = ['--guide', 'user']
         cs_info.main(argv_info, package())
 
-
     def onSaturneHelpTutorial(self):
         from code_saturne.base.cs_package import package
         msg = "See http://code-saturne.org web site for tutorials."
         QMessageBox.about(self._CurrentWindow, 'code_saturne Interface', msg)
-
 
     def onSaturneHelpKernel(self):
         from code_saturne.base.cs_package import package
         argv_info = ['--guide', 'theory']
         cs_info.main(argv_info, package())
 
-
     def onSaturneHelpRefcard(self):
         from code_saturne.base.cs_package import package
         argv_info = ['--guide', 'refcard']
         cs_info.main(argv_info, package())
-
 
     def onSaturneHelpDoxygen(self):
         from code_saturne.base.cs_package import package
         argv_info = ['--guide', 'Doxygen']
         cs_info.main(argv_info, package())
 
-
     def onNeptuneHelpManual(self):
         from code_saturne.base.cs_package import package
         argv_info = ['--guide', 'user']
         cs_info.main(argv_info, package(name='neptune_cfd'))
-
 
     def onNeptuneHelpTutorial(self):
         from code_saturne.base.cs_package import package
         argv_info = ['--guide', 'tutorial']
         cs_info.main(argv_info, package(name='neptune_cfd'))
 
-
     def onNeptuneHelpKernel(self):
         from code_saturne.base.cs_package import package
         argv_info = ['--guide', 'theory']
         cs_info.main(argv_info, package(name='neptune_cfd'))
-
 
     def onNeptuneHelpDoxygen(self):
         from code_saturne.base.cs_package import package
         argv_info = ['--guide', 'Doxygen']
         cs_info.main(argv_info, package(name='neptune_cfd'))
 
-
-    def setWindowTitle_CFD(self,mw,caseTwi,baseTitleName):
+    def setWindowTitle_CFD(self, mw, caseTwi, baseTitleName):
         caseName = caseTwi.text(col.name)
-        studyName =caseTwi.parent().text(col.name)
+        studyName = caseTwi.parent().text(col.name)
         aTitle = studyName + '.' + caseName + '.' + baseTitleName
         if mw != None:
             mw.setWindowTitle(aTitle)
         return aTitle
-
 
     def launchGUI(self, tabWidget, caseTwi, xmlFileName):
         """
@@ -409,7 +389,7 @@ class CFDSTUDYGUI_SolverGUI(QObject):
 
         # Get current solver name
         _solver_name = getCFDSolverName()
-        pkg = package(name = _solver_name)
+        pkg = package(name=_solver_name)
 
         args = []
         if xmlFileName != None:
@@ -430,23 +410,23 @@ class CFDSTUDYGUI_SolverGUI(QObject):
         # Put the standard panel of the MainView inside a QDockWidget
         # in the SALOME Desktop
         aTitle = self.setWindowTitle_CFD(mw, caseTwi, Title)
-        #dsk = sgPyQt.getDesktop()
+        # dsk = sgPyQt.getDesktop()
 
-        #objectBrowserDockWindow = findObjectBrowserDockWindow()
+        # objectBrowserDockWindow = findObjectBrowserDockWindow()
 
         self.mainWin = QMainWindow()
         self.mainWin.setWindowTitle(aTitle)
         self.mainWin.setCentralWidget(mw.centralwidget)
-        self.mainWin.addDockWidget(Qt.LeftDockWidgetArea,mw.dockWidgetBrowser)
-        
+        self.mainWin.addDockWidget(Qt.LeftDockWidgetArea, mw.dockWidgetBrowser)
+
         wd_case = QWidget()
         gl_case = QGridLayout(wd_case)
         self.mainWin.setParent(wd_case)
-        gl_case.addWidget(self.mainWin, 0, 0 ,1, 1)
+        gl_case.addWidget(self.mainWin, 0, 0, 1, 1)
         indexTab = tabWidget.addTab(wd_case, aTitle)
         tabWidget.setCurrentIndex(indexTab)
         casePath = caseTwi.text(col.details)
-        self.casePathToMainWin[casePath] =self.mainWin
+        self.casePathToMainWin[casePath] = self.mainWin
         self.casePathToMw[casePath] = mw
 
         getClientGui().getCLSMainWindow().setHSplitterSizes(300, 600, 750)
@@ -457,31 +437,32 @@ class CFDSTUDYGUI_SolverGUI(QObject):
         """
         called by closeStudy in CFDSTUDYGUI.py because the Object Browser size is stored into ~/.config/salome/SalomeApprc.xxx file xxx is the salome version
         """
-        logging.debug("resizeObjectBrowserDock ***************************************************************************************")
+        logging.debug(
+            "resizeObjectBrowserDock ***************************************************************************************")
         # dsk = sgPyQt.getDesktop()
         # if dsk != None:
         #     objectBrowserDockWindow = findObjectBrowserDockWindow()
         #     if objectBrowserDockWindow != None:
         #         dsk.resizeDocks({objectBrowserDockWindow}, {300},Qt.Horizontal)
 
-
-    def resizeMainWindowDock(self,visible):
+    def resizeMainWindowDock(self, visible):
         """
         visible referred to Object Browser dock widget
         """
-        logging.debug("resizeMainWindowDock ********************************************************************************************")
+        logging.debug(
+            "resizeMainWindowDock ********************************************************************************************")
         # dsk = sgPyQt.getDesktop()
         # if dsk != None:
         #     dock = self.sender()
         #     if visible:
         #         dsk.resizeDocks({dock}, {900},Qt.Horizontal)
 
-
-    def resizeObjectBrowserDock(self,visible):
+    def resizeObjectBrowserDock(self, visible):
         """
         visible referred to Object Browser dock widget
         """
-        logging.debug("resizeObjectBrowserDock ******************************************************************************************")
+        logging.debug(
+            "resizeObjectBrowserDock ******************************************************************************************")
         # dsk = sgPyQt.getDesktop()
         # if dsk != None:
         #     if visible:
@@ -492,7 +473,6 @@ class CFDSTUDYGUI_SolverGUI(QObject):
         #         if self.dockMainWin != None :
         #             dsk.resizeDocks({self.dockMainWin}, {900},Qt.Horizontal)
 
-
     def hideDocks(self):
         _c_CFDGUI.hideDocks()
         ob = sgPyQt.getObjectBrowser()
@@ -500,14 +480,12 @@ class CFDSTUDYGUI_SolverGUI(QObject):
         if ob != None:
             ob.clearSelection()
 
-
     def showDocks(self):
         _c_CFDGUI.showDocks()
         ob = sgPyQt.getObjectBrowser()
         # Clear the current selection in the SALOME object browser, which does not match with the shown dock window
         if ob != None:
             ob.clearSelection()
-
 
     def disconnectDockWindows(self):
         """
@@ -519,7 +497,6 @@ class CFDSTUDYGUI_SolverGUI(QObject):
             if _c_CFDGUI.d_CfdCases != []:
                 self.hideDocks()
 
-
     def connectDockWindows(self):
         """
         Show all the dock windows of CFDSTUDY GUI, when activating Salome CFDSTUDY module
@@ -530,37 +507,36 @@ class CFDSTUDYGUI_SolverGUI(QObject):
                 self.showDocks()
                 tabifyCfdGui()
 
-
     def getStudyCaseXmlNames(self, mw):
         if _c_CFDGUI != None:
-            studyCFDName, caseName, xmlName  = _c_CFDGUI.getStudyCaseXmlNames(mw)
+            studyCFDName, caseName, xmlName = _c_CFDGUI.getStudyCaseXmlNames(
+                mw)
         return studyCFDName, caseName, xmlName
-
 
     def getCase(self, mw):
         if _c_CFDGUI != None:
-            case  = _c_CFDGUI.getCase(mw)
+            case = _c_CFDGUI.getCase(mw)
         return case
-
 
     def removeDockWindowfromStudyAndCaseNames(self, studyCFDName, caseName):
         """
         Close the CFD_study_dock_windows if opened from close Study popup menu
         into the object browser
         """
-        logging.debug("removeDockWindowfromStudyAndCaseNames -> %s %s" % (studyCFDName, caseName))
+        logging.debug("removeDockWindowfromStudyAndCaseNames -> %s %s" %
+                      (studyCFDName, caseName))
         dsk = sgPyQt.getDesktop()
         if _c_CFDGUI != None:
             _c_CFDGUI.delDockfromStudyAndCaseNames(dsk, studyCFDName, caseName)
-
 
     def removeDockWindow(self, studyCFDName, caseName, xmlName):
         """
         Close the CFD_study_dock_windows from remove  popup menu in object browser
         """
-        logging.debug("removeDockWindow -> %s %s %s" % (studyCFDName, caseName, xmlName))
+        logging.debug("removeDockWindow -> %s %s %s" %
+                      (studyCFDName, caseName, xmlName))
         dsk = sgPyQt.getDesktop()
         if _c_CFDGUI != None:
             _c_CFDGUI.delDock(dsk, studyCFDName, caseName, xmlName)
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
