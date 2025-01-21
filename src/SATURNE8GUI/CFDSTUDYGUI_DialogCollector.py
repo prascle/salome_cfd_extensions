@@ -65,13 +65,7 @@ from . import CFDSTUDYGUI_Commons
 from .CFDSTUDYGUI_Commons import CFD_Code, getCFDSolverName, sgPyQt
 from .CFDSTUDYGUI_Commons import CFD_Saturne, CFD_Neptune, CheckCFD_CodeEnv
 from .CFDSTUDYGUI_Message import cfdstudyMess
-#-------------------------------------------------------------------------------
-# log config
-#-------------------------------------------------------------------------------
 
-# logging.basicConfig()
-# log = logging.getLogger("CFDSTUDYGUI_DialogCollector")
-# log.setLevel(logging.NOTSET)
 #-------------------------------------------------------------------------------
 # Dialog definitions
 #-------------------------------------------------------------------------------

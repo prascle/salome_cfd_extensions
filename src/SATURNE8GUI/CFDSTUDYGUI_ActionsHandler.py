@@ -72,14 +72,6 @@ from .CFDSTUDYGUI_Message import cfdstudyMess
 from .constants import col
 
 #-------------------------------------------------------------------------------
-# log config
-#-------------------------------------------------------------------------------
-
-# logging.basicConfig()
-# log = logging.getLogger("CFDSTUDYGUI_ActionsHandler")
-# log.setLevel(logging.NOTSET)
-
-#-------------------------------------------------------------------------------
 # Global definitions
 #-------------------------------------------------------------------------------
 
@@ -451,18 +443,6 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         self._ActionMap[action_id] = action
         self._CommonActionIdMap[ExportInSMESHAction] = action_id
 
-# popup added to vizualise the mesh. It is not necessary to switch into SMESH Component
-
-        # action = sgPyQt.createAction(-1,\
-        #                               "Display mesh",\
-        #                               "Display mesh",\
-        #                               "Display mesh",\
-        #                               ObjectTR.tr("MESH_OBJ_ICON"))
-        # action.triggered.connect(self.slotDisplayMESH)
-        # action_id = sgPyQt.actionId(action)
-        # self._ActionMap[action_id] = action
-        # self._CommonActionIdMap[DisplayMESHAction] = action_id
-
         action = sgPyQt.createAction(-1,\
                                       "Show",\
                                       "Show the mesh or submesh in 3D View",\
@@ -502,59 +482,6 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         action_id = sgPyQt.actionId(action)
         self._ActionMap[action_id] = action
         self._CommonActionIdMap[FitAllAction] = action_id  
-
-        # action = QAction("show", sgPyQt.getDesktop())
-        # action.setToolTip("Show the mesh or submesh in 3D View")
-        # action.setIcon(ObjectTR.tr("MESH_OBJ_ICON"))
-        # action.triggered.connect(self.slotViewAction)
-        # action_id = 123456
-        # self._ActionMap[action_id] = action
-        # self._CommonActionIdMap[ViewAction] = action_id
-
-
-# popup added to hide the mesh.
-
-        # action = sgPyQt.createAction(-1,\
-        #                               "Hide mesh",\
-        #                               "Hide mesh",\
-        #                               "Hide mesh",\
-        #                               ObjectTR.tr("MESH_OBJ_ICON"))
-        # action.triggered.connect(self.slotHideMESH)
-        # action_id = sgPyQt.actionId(action)
-        # self._ActionMap[action_id] = action
-        # self._CommonActionIdMap[HideMESHAction] = action_id
-
-# popup added to vizualise the mesh groups. It is not necessary to switch into SMESH Component
-
-        # action = sgPyQt.createAction(-1,\
-        #                               "Display",\
-        #                               "Display",\
-        #                               "Display",\
-        #                               ObjectTR.tr("MESH_TREE_OBJ_ICON"))
-        # action.triggered.connect(self.slotDisplayMESHGroups)
-        # action_id = sgPyQt.actionId(action)
-        # self._ActionMap[action_id] = action
-        # self._CommonActionIdMap[DisplayGroupMESHAction] = action_id
-
-        # action = sgPyQt.createAction(-1,\
-        #                               "Display only",\
-        #                               "Display only",\
-        #                               "Display only",\
-        #                               ObjectTR.tr("MESH_TREE_OBJ_ICON"))
-        # action.triggered.connect(self.slotDisplayOnlyMESHGroups)
-        # action_id = sgPyQt.actionId(action)
-        # self._ActionMap[action_id] = action
-        # self._CommonActionIdMap[DisplayOnlyGroupMESHAction] = action_id
-
-        # action = sgPyQt.createAction(-1,\
-        #                               "Hide",\
-        #                               "Hide",\
-        #                               "Hide",\
-        #                               ObjectTR.tr("MESH_TREE_OBJ_ICON"))
-        # action.triggered.connect(self.slotHideMESHGroups)
-        # action_id = sgPyQt.actionId(action)
-        # self._ActionMap[action_id] = action
-        # self._CommonActionIdMap[HideGroupMESHAction] = action_id
 
         action = sgPyQt.createAction(-1,\
                                       ObjectTR.tr("ECS_CONVERT_ACTION_TEXT"),\
@@ -1230,36 +1157,6 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         elif id == "VTKViewer":
             popup.addAction(self.commonAction(DisplayTypeSHADED))
             popup.addAction(self.commonAction(DisplayTypeWIREFRAME))
-                  
-        # else:
-        #     # TODO: simplify
-        #     for sobj in self._multipleSelectedObject():
-        #         if sobj != None:
-        #             if sobj.GetFatherComponent().GetName() == "Mesh":
-        #                 if sobj.GetFather().GetName() == "Mesh":
-        #                     #Comment: mesh under Mesh module root in the Object browser
-
-        #                     CFDSTUDYGUI_DataModel.SetAutoColor(sobj.GetFather())
-
-        #                     for i in [DisplayMESHAction, HideMESHAction]:
-        #                         popup.addAction(self.commonAction(i))
-        #                         self.commonAction(i).setEnabled(True)
-
-        #                 meshGroupObject, group = CFDSTUDYGUI_DataModel.getMeshFromGroup(sobj) # on teste et on recupere le groupe
-
-        #                 if meshGroupObject != None:
-        #                     if len(self.l_color) == 0:
-        #                         self.l_color = self.ul_color
-        #                     if len(self.l_color) != 0:
-        #                         a = self.l_color[0]
-        #                         self.ul_color.append(a)
-        #                         self.l_color.remove(a)
-        #                         x,y,z=a
-        #                         group.SetColor(SALOMEDS.Color(x,y,z))
-
-        #                     for i in [DisplayGroupMESHAction, DisplayOnlyGroupMESHAction, HideGroupMESHAction]:
-        #                         popup.addAction(self.commonAction(i))
-        #                         self.commonAction(i).setEnabled(True)
            
         if id ==id == CFDSTUDYGUI_DataModel.dict_object["MEDFile"] \
              or id == CFDSTUDYGUI_DataModel.dict_object["Display"]:
@@ -1514,15 +1411,6 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         logging.debug("slotRemoveAction")
         if self.selectedItem is not None:
             self.removeAction_obj(self.selectedItem)
-        # listSobj = self._multipleSelectedObject()
-        # study = CFDSTUDYGUI_DataModel._getStudy()
-        # if listSobj != [] :
-        #     self.removeAction_multipleSobjects(listSobj)
-
-    # def removeAction_multipleSobjects(self,listSobj):
-    #     for sobj in listSobj:
-    #         if sobj != None:
-    #             self.removeAction_obj(sobj)
 
     def removeAction_obj(self, twItem):
         """
@@ -1745,41 +1633,6 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         QApplication.restoreOverrideCursor()
 
 
-    # def slotDisplayMESH(self):
-    #     """
-    #     Changed on November 2010 for the popup menu: SMESH Mesh objects can have the slotDisplayMESH directly
-    #     the old code with referenced objects is deleted
-    #     """
-    #     logging.debug("slotDisplayMESH")
-    #     waitCursor = QCursor(Qt.WaitCursor)
-    #     QApplication.setOverrideCursor(waitCursor)
-
-    #     if self._multipleSelectedObject() == None:
-    #         mess = cfdstudyMess.trMessage(self.tr("MESH_NO_OBJECT_SELECTED_INTO_OBJECT_BROWSER"),[])
-    #         cfdstudyMess.warningMessage(mess)
-    #         return
-    #     smeshgui = salome.ImportComponentGUI("SMESH")
-
-    #     logging.debug("slotDisplayMESH -> self._multipleSelectedObject()[0].GetName()= %s" % self._multipleSelectedObject()[0].GetName())
-    #     for  sobj in self._multipleSelectedObject():
-    #         if sobj != None:
-    #             entry = sobj.GetID()
-    #             if entry == None:
-    #                 mess = cfdstudyMess.trMessage(self.tr("MESH_NO_OBJECT_UNDER_MESH_INTO_OBJECT_BROWSER"),[sobj.GetName()])
-    #                 cfdstudyMess.warningMessage(mess)
-    #                 QApplication.restoreOverrideCursor()
-    #                 return
-    #             #Displaying Mesh
-    #             if CFDSTUDYGUI_DataModel.getMeshFromMesh(sobj):
-    #                 smeshgui.display(entry)
-    #                 sg.updateObjBrowser()
-    #                 sg.UpdateView()
-    #                 sg.FitAll()
-    #         else:
-    #             mess = cfdstudyMess.trMessage(self.tr("MESH_NO_ENTRY_ID_MESH"),[sobj.GetName()])
-    #             cfdstudyMess.warningMessage(mess)
-    #     QApplication.restoreOverrideCursor()
-
     def slotShow(self):
         """
         """
@@ -1822,111 +1675,6 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         logging.debug("menu FitAll %s", entry)
         salome.sg.FitAll()
             
-    # def slotDisplayMESHGroups(self):
-    #     """
-    #     Changed on November 2010 for the popup menu: SMESH Group Mesh objects can have the slotDisplayMESHGroups directly
-    #     the old code with referenced objects is deleted
-    #     """
-    #     logging.debug("slotDisplayMESHGroups")
-    #     waitCursor = QCursor(Qt.WaitCursor)
-    #     QApplication.setOverrideCursor(waitCursor)
-
-    #     if self._multipleSelectedObject() == None:
-    #         mess = cfdstudyMess.trMessage(self.tr("MESH_GROUP_NO_OBJECT_SELECTED_INTO_OBJECT_BROWSER"),[])
-    #         cfdstudyMess.warningMessage(mess)
-    #         return
-    #     smeshgui = salome.ImportComponentGUI("SMESH")
-
-    #     for sobj_group in self._multipleSelectedObject():
-    #         if sobj_group != None:
-    #             meshgroup,group = CFDSTUDYGUI_DataModel.getMeshFromGroup(sobj_group)
-    #             if meshgroup:
-    #                 smeshgui.display(sobj_group.GetID())
-    #         else:
-    #             mess = cfdstudyMess.trMessage(self.tr("MESH_GROUP_NO_GROUP_WITH_FATHER"),[sobj_group.GetName(),sobj_group.GetFatherComponent().GetName()])
-    #             cfdstudyMess.warningMessage(mess)
-    #     sg.UpdateView()
-    #     sg.FitAll()
-
-    #     QApplication.restoreOverrideCursor()
-
-
-    # def slotDisplayOnlyMESHGroups(self):
-    #     """
-    #     """
-    #     logging.debug("slotDisplayOnlyMESHGroups")
-    #     waitCursor = QCursor(Qt.WaitCursor)
-    #     QApplication.setOverrideCursor(waitCursor)
-
-    #     sobj = self._singleSelectedObject()
-    #     id = sobj.GetID()
-    #     if id:
-    #         sg.EraseAll()
-    #         #sg.Display(entryIdGroup)#Only(entryIdGroup)
-    #         smeshgui = salome.ImportComponentGUI("SMESH")
-    #         smeshgui.display(id)
-    #     else:
-    #         mess = cfdstudyMess.trMessage(self.tr("MESH_GROUP_NO_ENTRY_ID"),[sobj.GetName(),sobj.GetFatherComponent().GetName()])
-    #         cfdstudyMess.warningMessage(mess)
-    #     sg.UpdateView()
-    #     sg.FitAll()
-
-    #     QApplication.restoreOverrideCursor()
-
-
-    # def slotHideMESHGroups(self):
-    #     """
-    #     """
-    #     logging.debug("slotHideMESHGroups")
-    #     waitCursor = QCursor(Qt.WaitCursor)
-    #     QApplication.setOverrideCursor(waitCursor)
-
-    #     if self._multipleSelectedObject() == None:
-    #         mess = cfdstudyMess.trMessage(self.tr("HIDE_MESH_GROUP_NO_OBJECT_SELECTED"),[])
-    #         cfdstudyMess.warningMessage(mess)
-    #         return
-
-    #     for sobj in self._multipleSelectedObject():
-    #         id = sobj.GetID()
-    #         if id:
-    #             meshgroup,group = CFDSTUDYGUI_DataModel.getMeshFromGroup(sobj)
-    #             if meshgroup:
-    #                 sg.Erase(id)
-    #         else:
-    #             mess = cfdstudyMess.trMessage(self.tr("MESH_GROUP_NO_ENTRY_ID"),[sobj.GetName(),sobj.GetFatherComponent().GetName()])
-    #             cfdstudyMess.warningMessage(mess)
-    #     sg.UpdateView()
-    #     sg.FitAll()
-
-    #     QApplication.restoreOverrideCursor()
-
-
-    # def slotHideMESH(self):
-    #     """
-    #     Changed on November 2010 for the popup menu: SMESH Mesh objects can have the slotHideMESH directly
-    #     """
-    #     logging.debug("slotHideMESH")
-    #     waitCursor = QCursor(Qt.WaitCursor)
-    #     QApplication.setOverrideCursor(waitCursor)
-
-    #     if self._multipleSelectedObject() == None:
-    #         mess = cfdstudyMess.trMessage(self.tr("HIDE_MESH_NO_OBJECT_SELECTED"),[])
-    #         cfdstudyMess.warningMessage(mess)
-    #         return
-
-    #     for sobj in self._multipleSelectedObject():
-    #         id = sobj.GetID()
-    #         if id:
-    #             if CFDSTUDYGUI_DataModel.getMeshFromMesh(sobj):
-    #                 sg.Erase(id)
-    #         else:
-    #             mess = cfdstudyMess.trMessage(self.tr("MESH_NO_ENTRY_ID_MESH"),[sobj.GetName()])
-    #             cfdstudyMess.warningMessage(mess)
-    #     sg.UpdateView()
-    #     sg.FitAll()
-
-    #     QApplication.restoreOverrideCursor()
-
 
     def OpenCFD_GUI(self,item):
         """
@@ -2530,31 +2278,6 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
             raise ActionError("Invalid action map content")
 
         return self._ActionMap[action_id]
-
-
-    # def actionId(self, theId):
-    #     """
-    #     """
-    #     action_id = None
-
-    #     if theId in self._CommonActionIdMap:
-    #         action_id =  self._CommonActionIdMap[theId]
-    #     elif theId in self._SolverActionIdMap:
-    #         action_id =  self._SolverActionIdMap[theId]
-    #     elif theId in self._HelpActionIdMap:
-    #         action_id = self._HelpActionIdMap[theId]
-
-    #     if action_id == None:
-    #         raise ActionError("Invalid action id")
-
-    #     return action_id
-
-
-    # def dskAgent(self):
-    #     """
-    #     Returns the dekstop Agent.
-    #     """
-    #     return self._DskAgent
 
 
     def disconnectSolverGUI(self):

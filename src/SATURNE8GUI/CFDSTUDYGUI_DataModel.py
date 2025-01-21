@@ -341,15 +341,6 @@ def _getStudy():
         pass
     return __study__
 
-#--------------------------------------------------------------------------
-# __engine__ = None
-# def _getEngine():
-#     global __engine__
-#     if __engine__ is None:
-#         __engine__ = getLCC().FindOrLoadComponent( "FactoryServerPy", __MODULE_NAME__ )
-#         pass
-#     return __engine__
-
 
 def _getNewBuilder():
     study   = _getStudy()
@@ -368,24 +359,6 @@ def _getComponent():
     return study.FindComponent(__MODULE_NAME__)
 
 
-# def _hasChildren(sobj):
-#     """
-#     Returns 1 if object has children.
-
-#     @type sobj: C{SObject}
-#     @param sobj: branch of the tree
-#     @return: 1 if I{sobj} has children, 0 if not.
-#     @rtype: C{int}
-#     """
-#     if sobj:
-#         study = _getStudy()
-#         iter  = study.NewChildIterator(sobj)
-#         while iter.More():
-#             name = iter.Value().GetName()
-#             if name:
-#                 return 1
-#             iter.Next()
-#     return 0
 
 
 def _findOrCreateComponent():
@@ -408,10 +381,6 @@ def _findOrCreateComponent():
         attr = builder.FindOrCreateAttribute(father, "AttributePixMap")
         attr.SetPixMap("CFDSTUDY.png")
 
-        # try:
-        #     builder.DefineComponentInstance(father, _getEngine())
-        # except:
-        #     pass
     return father
 
 def getCFDTW():
@@ -573,8 +542,6 @@ class CFDTreeWidget():
         logging.debug("findSOinSalomeStudy")
         childrenSO = self.ScanChildrenObj(parentSO,  ".*")
         for childSO in childrenSO:
-            #twItem = self.getTwiFromEntry(childSO.GetID())
-            #path = twItem.text(col.details)
             if childSO.getPath() == thePath:
                 return childSO
         return None
@@ -1461,57 +1428,30 @@ def updateCasePath(theCasePath):
     return mess == ""
 
 
-            
 
-# def closeCFDStudyTree(theObject):
+
+# def _CreateObject(theFather, theBuilder, theName):
 #     """
-#     Close a CFD Study from the Object browser
-#     """
-#     logging.debug("closeCFDStudyTree")
-#     # TODO : check usage
-#     # if theObject == None:
-#     #     return
-#     # study   = _getStudy()
-#     # builder = study.NewBuilder()
-#     # builder.RemoveObjectWithChildren(theObject)
-#     return
+#     Creates a child branch in the tree from the father branch I{theFather}.
+#     Sets the AttributeName value of this new child with the name theName of the child object
+#     Calls _FillObject which sets the AttributeLocalID of the child
+#     _FillObject calls _setIcon which sets the AttributePixMap and AttributeComment of the child object
 
-
-def _CreateObject(theFather, theBuilder, theName):
-    """
-    Creates a child branch in the tree from the father branch I{theFather}.
-    Sets the AttributeName value of this new child with the name theName of the child object
-    Calls _FillObject which sets the AttributeLocalID of the child
-    _FillObject calls _setIcon which sets the AttributePixMap and AttributeComment of the child object
-
-    Result : an object entry in the Object Browser with AttributeName, AttributeLocalID, AttributePixMap, AttributeComment
-    @type theFather: C{SObject}
-    @param theFather: branch of the tree to add a child.
-    @type theBuilder: C{SUIT_Study}
-    @param theBuilder: C{SObject} constructor.
-    @type theName: C{String}
-    @param theName: AttributeName of the new child branch.
-    """
-    logging.debug("_CreateObject: %s" % theName)
-    newChild = theBuilder.NewObject(theFather)
-    attr = theBuilder.FindOrCreateAttribute(newChild, "AttributeName")
-    attr.SetValue(theName)
-    _FillObject(newChild, theFather, theBuilder)
-    return newChild
-
-
-# def _CreateItem(theFather,theNewName) :
-#     """
-#     Creates a child with name theNewName under theFather root into Object Browser
+#     Result : an object entry in the Object Browser with AttributeName, AttributeLocalID, AttributePixMap, AttributeComment
 #     @type theFather: C{SObject}
-#     @type theNewName : C{String}
+#     @param theFather: branch of the tree to add a child.
+#     @type theBuilder: C{SUIT_Study}
+#     @param theBuilder: C{SObject} constructor.
+#     @type theName: C{String}
+#     @param theName: AttributeName of the new child branch.
 #     """
-#     logging.debug("_CreateItem: NewItem = %s with Parent = %s" % (theNewName,theFather.GetName()))
-#     if theNewName not in ScanChildNames(theFather,  ".*") :
-#         theBuilder = _getNewBuilder()
-#         newChild = _CreateObject(theFather, theBuilder, theNewName)
-#         return newChild
-#     return None
+#     logging.debug("_CreateObject: %s" % theName)
+#     newChild = theBuilder.NewObject(theFather)
+#     attr = theBuilder.FindOrCreateAttribute(newChild, "AttributeName")
+#     attr.SetValue(theName)
+#     _FillObject(newChild, theFather, theBuilder)
+#     return newChild
+
 
 
 def getNameCodeFromXmlCasePath(XMLCasePath) :
@@ -1577,430 +1517,6 @@ def parseDir(dirname):
                 d_dirMesh[key] = d_dirMesh[key]+l_dirs
 
 
-def _FillObject(theObject, theParent, theBuilder):
-    """
-    Creates the attribute "AttributeLocalID" for the branch I{theObject}.
-    This attribute keeps the type of the I{theObject}.
-
-    @type theObject: C{SObject}
-    @param theObject: branch of the tree to add an attribut.
-    @type theParent: C{SObject}
-    @param theParent: parent of the branch I{theObject}.
-    @type theBuilder: C{SUIT_Study}
-    @param theBuilder: C{SObject} constructor for create an attribut.
-    """
-    logging.debug("_FillObject")
-    attr = theBuilder.FindOrCreateAttribute(theParent, "AttributeLocalID")
-    parentId = attr.Value()
-    name = theObject.GetName()
-    objectId = dict_object["OtherFile"]
-    path = os.path.join(_GetPath(theParent), name)
-    logging.debug("_FillObject Object Name : %s" % name)
-    logging.debug("_FillObject Parent Name : %s" % theParent.GetName())
-    # Parent is study
-    if parentId == dict_object["Study"] or parentId == dict_object["CouplingStudy"]:
-        if Trace(): print("_FillObject : parent is Study ", theParent.GetName())
-        #check for case
-        if os.path.isdir(path):
-            if CFDSTUDYGUI_Commons.isaCFDCase(path):
-                objectId = dict_object["Case"]
-            else:
-                boo = False
-                dirList = os.listdir(path)
-                for i in dirList:
-                    if re.match(".*\.syd$", i) or re.match(".*\.syd_example$", i): boo = True
-                if boo :
-                    objectId = dict_object["SYRCaseFolder"]
-                else:
-                    if name == "MESH":
-                        objectId = dict_object["MESHFolder"]
-                        parseDir(path)
-                    elif name == "POST":
-                        objectId = dict_object["POSTFolder"]
-                    else:
-                        objectId = dict_object["OtherFolder"]
-
-        if name in ("code_saturne", "neptune_cfd", "runcase"):
-            objectId = dict_object["CouplingLauncher"]
-        elif name == "RESU_COUPLING":
-            objectId = dict_object["RESU_COUPLINGFolder"]
-    #parent is Syrthes Case
-    elif parentId == dict_object["SYRCaseFolder"]:
-        if os.path.isdir(path):
-            if name == "usr_examples":
-                objectId = dict_object["SRCSYRFolder"]
-        if name in ["Makefile","syrthes.py","user_cond.c"]:
-            objectId = dict_object["SyrthesFile"]
-        if re.match(".*\.syd$", name) or re.match(".*\.syd_example$", name) :
-            objectId = dict_object["SyrthesSydFile"]
-    #parent is Syrthes user examples
-    elif parentId == dict_object["SRCSYRFolder"]:
-        if re.match(".*\.c$", name):
-            objectId = dict_object["USRSRCSYRFile"]
-
-    #parent is Case
-    elif parentId == dict_object["Case"]:
-        if os.path.isdir(path):
-            if name == "DATA":
-                objectId = dict_object["DATAFolder"]
-            elif name == "SRC":
-                objectId = dict_object["SRCFolder"]
-            elif name == "RESU":
-                objectId = dict_object["RESUFolder"]
-            else:
-                objectId = dict_object["OtherFolder"]
-
-    # parent is DATA folder
-    elif parentId == dict_object["DATAFolder"]:
-        if os.path.isdir(path):
-            if name == "REFERENCE":
-                objectId = dict_object["REFERENCEDATAFolder"]
-            if name == "DRAFT":
-                objectId = dict_object["DRAFTFolder"]
-        else:
-            if name[0:12] == "code_saturne" or name[0:10] == "neptune_cfd":
-                 # could use "DATALaunch" but prefer to hide this wrapper.
-                objectId = dict_object["OtherFile"]
-            elif name[0:10] == "run.cfg":
-                objectId = dict_object["DATARunConf"]
-            elif re.match("^dp_", name) or re.match("^meteo",name) or re.match("^cs_", name):
-                objectId = dict_object["DATAFile"]
-            elif re.match(".*\.py$", name):
-                objectId = dict_object["DATAPyFile"]
-            else:
-                if os.path.isfile(path):
-                    fd = os.open(path , os.O_RDONLY)
-                    try:
-                        f = os.fdopen(fd)
-                        l1 = f.readline()
-                        if l1.startswith('''<?xml version="1.0" encoding="utf-8"?><Code_Saturne_GUI''') or l1.startswith('''<?xml version="1.0" encoding="utf-8"?><NEPTUNE_CFD_GUI'''):
-                            objectId = dict_object["DATAfileXML"]
-                        elif l1.startswith('''<?xml version="1.0" encoding="utf-8"?>''') :
-                            l2 = f.readline()
-                            if l2.startswith('''<Code_Saturne_GUI''') or l2.startswith('''<NEPTUNE_CFD_GUI'''):
-                                objectId = dict_object["DATAfileXML"]
-                        else:
-                                objectId = dict_object["DATAFile"]
-                        f.close()
-                    except:
-                        pass
-
-    # parent is DRAFT folder
-    elif parentId == dict_object["DRAFTFolder"]:
-        draftParentFolder = os.path.basename(_GetPath(theParent.GetFather()))
-        if os.path.isfile(path):
-            if draftParentFolder == "DATA":
-                if re.match("^dp_", name) or re.match("^meteo",name) or re.match("^cs_", name):
-                    objectId = dict_object["DATADRAFTFile"]
-            elif draftParentFolder == "SRC":
-                if re.match(".*\.[fF]$", name) or \
-                    re.match(".*\.[fF]90$", name) or \
-                    re.match(".*\.for$", name) or \
-                    re.match(".*\.FOR$", name):
-                    objectId = dict_object["SRCDRAFTFile"]
-                elif re.match(".*\.c$", name):
-                    objectId = dict_object["SRCDRAFTFile"]
-                elif re.match(".*\.cxx$", name) or \
-                     re.match(".*\.cpp$", name):
-                    objectId = dict_object["SRCDRAFTFile"]
-                elif re.match(".*\.h$", name) or \
-                     re.match(".*\.hxx$", name) or \
-                     re.match(".*\.hpp$", name):
-                    objectId = dict_object["SRCDRAFTFile"]
-        elif os.path.isdir(path):
-            objectId = dict_object["OtherFolder"]
-
-    # parent is REFERENCE folder into DATA folder
-    elif parentId == dict_object["REFERENCEDATAFolder"]:
-        if os.path.isfile(path):
-            if re.match("^dp_", name) or re.match("^meteo",name) or re.match("^cs_", name):
-                objectId = dict_object["REFERENCEDATAFile"]
-        elif os.path.isdir(path):
-            objectId = dict_object["OtherFolder"]
-
-    # parent is MESH folder
-    elif parentId == dict_object["MESHFolder"]:
-        if os.path.isdir(path):
-            if d_dirMesh != {}:
-                for key in list(d_dirMesh.keys()):
-                    if path in d_dirMesh[key]:
-                        objectId = key
-        else:
-            if re.match(".*\.des$", name):
-                objectId = dict_object["DESFile"]
-            elif re.match(".*\.med$", name):
-                objectId = dict_object["MEDFile"]
-            elif re.match(".*\.dat$", name):
-                objectId = dict_object["DATFile"]
-            elif re.match(".*\.cgns$", name):
-                objectId = dict_object["CGNSFile"]
-            elif re.match(".*\.ccm$", name):
-                objectId = dict_object["CcmFile"]
-            elif re.match(".*\.case$", name):
-                objectId = dict_object["CaseFile"]
-            elif re.match(".*\.neu$", name):
-                objectId = dict_object["NeuFile"]
-            elif re.match(".*\.msh$", name):
-                objectId = dict_object["MSHFile"]
-            elif re.match(".*\.hex$", name):
-                objectId = dict_object["HexFile"]
-            elif re.match(".*\.unv$", name):
-                objectId = dict_object["UnvFile"]
-            elif re.match(".*\.syr$", name):
-                objectId = dict_object["SYRMESHFile"]
-            else:
-                objectId = dict_object["MESHFile"]
-
-    # parent is POST folder
-    elif parentId == dict_object["POSTFolder"]:
-        if os.path.isdir(path):
-            objectId = dict_object["OtherFolder"]
-        else:
-            objectId = dict_object["POSTFile"]
-
-    # parent is SRC folder
-    elif parentId == dict_object["SRCFolder"]:
-        if os.path.isfile(path):
-            if re.match(".*\.[fF]$", name) or re.match(".*\.[fF]90$", name) \
-              or re.match(".*\.for$", name) or re.match(".*\.FOR$", name):
-                objectId = dict_object["SRCFile"]
-            elif re.match(".*\.c$", name):
-                objectId = dict_object["SRCFile"]
-            elif re.match(".*\.cpp$", name) or re.match(".*\.cxx$", name):
-                objectId = dict_object["SRCFile"]
-            elif re.match(".*\.h$", name) or re.match(".*\.hpp$", name) or re.match(".*\.hxx$", name):
-                objectId = dict_object["SRCFile"]
-            elif re.match(".*\.log$", name):
-                objectId = dict_object["LOGSRCFile"]
-        elif os.path.isdir(path):
-            if name == "REFERENCE" or name == "EXAMPLES" :
-                objectId = dict_object["USERSFolder"]
-            elif name == "DRAFT":
-                objectId = dict_object["DRAFTFolder"]
-            else:
-                objectId = dict_object["OtherFolder"]
-
-    # parent REFERENCE/base... folder
-    elif parentId == dict_object["USERSFolder"]:
-        if os.path.isfile(path):
-            if re.match(".*\.[fF]$", name) or re.match(".*\.[fF]90$", name) \
-              or re.match(".*\.for$", name) or re.match(".*\.FOR$", name):
-                objectId = dict_object["USRSRCFile"]
-            elif re.match(".*\.c$", name):
-                objectId = dict_object["USRSRCFile"]
-            elif re.match(".*\.cpp$", name) or re.match(".*\.cxx$", name):
-                objectId = dict_object["USRSRCFile"]
-            elif re.match(".*\.h$", name) or re.match(".*\.hpp$", name) or re.match(".*\.hxx$", name):
-                objectId = dict_object["USRSRCFile"]
-            elif re.match(".*\.log$", name):
-                objectId = dict_object["LOGSRCFile"]
-        elif os.path.isdir(path):
-            if name in ("atmo", "base", "cplv", "cfbl", "cogz", \
-                        "ctwr", "elec", "fuel", "lagr", "pprt", "rayt"):
-                objectId = dict_object["USERSFolder"]
-            else:
-                objectId = dict_object["OtherFolder"]
-
-    # parent is RESU folder
-    elif parentId == dict_object["RESUFolder"]:
-        if os.path.isdir(path):
-            if "error" in os.listdir(path):
-                objectId = dict_object["RESUSubErrFolder"]
-            else:
-                objectId = dict_object["RESUSubFolder"]
-
-    # parent is RESULT SRC folder
-    elif parentId == dict_object["RESSRCFolder"]:
-        if os.path.isfile(path):
-            if re.match(".*\.[fF]$", name) or re.match(".*\.[fF]90$", name) \
-              or re.match(".*\.for$", name) or re.match(".*\.FOR$", name):
-                objectId = dict_object["RESSRCFile"]
-            elif re.match(".*\.c$", name):
-                objectId = dict_object["RESSRCFile"]
-            elif re.match(".*\.cpp$", name) or re.match(".*\.cxx$", name):
-                objectId = dict_object["RESSRCFile"]
-            elif re.match(".*\.h$", name) or re.match(".*\.hpp$", name) or re.match(".*\.hxx$", name):
-                objectId = dict_object["RESSRCFile"]
-
-    # parent is RESULT sub folder
-    elif parentId == dict_object["RESUSubFolder"] or parentId == dict_object["RESUSubErrFolder"]:
-        if os.path.isdir(path):
-            if name == "src_neptune" or name == "src_saturne":
-                objectId = dict_object["RESSRCFolder"]
-            elif name == "monitoring":
-                objectId = dict_object["HISTFolder"]
-            elif name == "checkpoint":
-                objectId = dict_object["SUITEFolder"]
-            elif name == "mesh_input":
-                objectId = dict_object["PRETFolder"]
-            elif name == "partition_output":
-                objectId = dict_object["PRETFolder"]
-            elif name == "postprocessing":
-                objectId = dict_object["POSTPROFolder"]
-        else:
-            if re.match(".*\.dat$", name) or re.match(".*\.csv$", name):
-                objectId = dict_object["HISTFile"]
-            elif re.match(".*\.xml$", name):
-                objectId = dict_object["RESXMLFile"]
-            elif re.match(".*\.log$", name):
-                objectId = dict_object["RESUFile"]
-            elif re.match("listing$", name):
-                objectId = dict_object["RESUFile"]
-            elif re.match("error$", name):
-                objectId = dict_object["RESUFile"]
-            elif re.match(".*\.png$", name):
-                objectId = dict_object["RESUPNGFile"]
-
-    elif parentId == dict_object["POSTPROFolder"] :
-        if os.path.isfile(path):
-            if re.match(".*\.med$", name):
-                objectId = dict_object["RESMEDFile"]
-            if re.match(".*\.case$", name):
-                objectId = dict_object["RESENSIGHTFile"]
-
-    # parent is HIST folder
-    elif parentId == dict_object["HISTFolder"]:
-        if os.path.isfile(path):
-            if re.match(".*\.dat$", name) or re.match(".*\.csv$", name):
-                objectId = dict_object["HISTFile"]
-
-    # parent is RESU_COUPLING folder
-    elif parentId == dict_object["RESU_COUPLINGFolder"]:
-        if os.path.isdir(path):
-            objectId = dict_object["RESU_COUPLINGSubFolder"]
-
-    # parent is RESU_COUPLING sub folder
-    elif parentId == dict_object["RESU_COUPLINGSubFolder"]:
-        if os.path.isdir(path):
-            if os.path.isfile(os.path.join(path,"syrthes")):
-                objectId = dict_object["RESUSubFolderSYR"]
-            else:
-                # test if folder is a result cfd folder?
-                objectId = dict_object["RESUSubFolder"]
-
-    elif parentId == dict_object["RESUSubFolderSYR"]:
-        if re.match(".*\.log$", name):
-            objectId = dict_object["RESUFile"]
-        if re.match(".*\.dat$", name):
-            objectId = dict_object["RESUFile"]
-        if re.match(".*\.rdt$", name):
-            objectId = dict_object["RESUFile"]
-        if re.match(".*\.res$", name):
-            objectId = dict_object["RESUFile"]
-        if re.match(".*\.syr$", name):
-            objectId = dict_object["RESUFile"]
-        if re.match(".*\.data$", name):
-            objectId = dict_object["RESUFile"]
-        if re.match(".*\.add$", name):
-            objectId = dict_object["RESUFile"]
-        if re.match(".*\.c$", name):
-            objectId = dict_object["RESUFile"]
-        elif re.match("listing$", name):
-            objectId = dict_object["RESUFile"]
-
-#MESH sub folder
-    if parentId in list(d_dirMesh.keys()):
-        if os.path.isdir(path):
-            if d_dirMesh != {}:
-                for key in list(d_dirMesh.keys()):
-                    if path in d_dirMesh[key]:
-                        objectId = key
-        else:
-            if re.match(".*\.des$", name):
-                objectId = dict_object["DESFile"]
-            elif re.match(".*\.med$", name):
-                objectId = dict_object["MEDFile"]
-            elif re.match(".*\.dat$", name):
-                objectId = dict_object["DATFile"]
-            elif re.match(".*\.cgns$", name):
-                objectId = dict_object["CGNSFile"]
-            elif re.match(".*\.ccm$", name):
-                objectId = dict_object["CcmFile"]
-            elif re.match(".*\.case$", name):
-                objectId = dict_object["CaseFile"]
-            elif re.match(".*\.neu$", name):
-                objectId = dict_object["NeuFile"]
-            elif re.match(".*\.msh$", name):
-                objectId = dict_object["MSHFile"]
-            elif re.match(".*\.hex$", name):
-                objectId = dict_object["HexFile"]
-            elif re.match(".*\.unv$", name):
-                objectId = dict_object["UnvFile"]
-            elif re.match(".*\.syr$", name):
-                objectId = dict_object["SYRMESHFile"]
-            else:
-                objectId = dict_object["MESHFile"]
-
-
-    if objectId == dict_object["OtherFile"]:
-        if re.match(".*\.[fF]$", name) or \
-           re.match(".*\.[fF]90$", name) or \
-           re.match(".*\.for$", name) or \
-           re.match(".*\.FOR$", name):
-            if _DetectUSERSObject(theObject) == True:
-                if Trace(): print("******************************", path)
-                objectId = _DetectSRCObject(theParent)
-        elif re.match(".*\.c$", name):
-            if _DetectUSERSObject(theObject) == True:
-                if Trace(): print("******************************", path)
-                objectId = _DetectSRCObject(theParent)
-        elif re.match(".*\.cpp$", name) or \
-           re.match(".*\.cxx$", name):
-            if _DetectUSERSObject(theObject) == True:
-                if Trace(): print("******************************", path)
-                objectId = _DetectSRCObject(theParent)
-        elif re.match(".*\.h$", name) or \
-           re.match(".*\.hxx$", name) or \
-           re.match(".*\.hpp$", name):
-            if _DetectUSERSObject(theObject) == True:
-                if Trace(): print("******************************", path)
-                objectId = _DetectSRCObject(theParent)
-
-    if objectId == dict_object["OtherFile"]:
-        if os.path.isdir(path):
-            objectId = dict_object["OtherFolder"]
-
-    logging.debug("_FillObject: %s %s" % \
-        (name, [k for k, v in dict_object.items() if v == objectId][0]))
-
-    if objectId in (dict_object["OtherFile"],
-                    dict_object["OtherFolder"],
-                    dict_object["MESHFile"],
-                    dict_object["DATFile"]):
-        study   = _getStudy()
-        builder = study.NewBuilder()
-        builder.RemoveObjectWithChildren(theObject)
-        return
-
-    attr = theBuilder.FindOrCreateAttribute(theObject, "AttributeLocalID")
-    attr.SetValue(objectId)
-
-    _SetIcon(theObject, theBuilder)
-
-
-def _SetIcon(theObject, theBuilder):
-    """
-    Creates the attribute "AttributePixMap" and "AttributeComment" for the branch I{theObject}.
-
-    @type theObject: C{SObject}
-    @param theObject: branch of the tree to add an icon.
-    @type theBuilder: C{SUIT_Study}
-    @param theBuilder: C{SObject} constructor for create an attribut.
-    """
-    attr = theBuilder.FindOrCreateAttribute(theObject, "AttributeLocalID")
-    id = int(attr.Value())
-    if icon_collection[id] == "":
-        return
-    attr = theBuilder.FindOrCreateAttribute(theObject, "AttributePixMap")
-    attr.SetPixMap(str(ObjectTR.tr(icon_collection[id])))
-    #check path for link and create new attribute
-    if id != dict_object["Case"]:
-        path = _GetPath(theObject)
-        if os.path.islink(path):
-            attr = theBuilder.FindOrCreateAttribute(theObject, "AttributeComment")
-            attr.SetValue("->" + os.path.realpath(path))
-
-
 def _GetPath(theObject):
     """
     Returns the unix path of the branch I{theObject}.
@@ -2013,32 +1529,6 @@ def _GetPath(theObject):
     else:
         logging.debug("_GetPath None")
         return
-    
-    # # check for null object
-    # # check object from others component
-    # # check if CFDSTUDY component object
-
-    # if _getComponent() == None:
-    #     return ""
-
-    # if not theObject or \
-    #        theObject.GetFatherComponent().GetID() != _getComponent().GetID() or \
-    #        theObject.GetID() == _getComponent().GetID():
-    #     return ""
-
-    # study   = _getStudy()
-    # builder = study.NewBuilder()
-    # path = str(theObject.GetName())
-    # attr = builder.FindOrCreateAttribute(theObject, "AttributeLocalID")
-    # if attr.Value() == dict_object["Study"] or attr.Value() == dict_object["CouplingStudy"]:
-    #     dir = builder.FindOrCreateAttribute(theObject, "AttributeComment")
-    #     return os.path.join(dir.Value(), path)
-
-    # father = theObject.GetFather()
-    # attr = builder.FindOrCreateAttribute(father, "AttributeLocalID")
-    # path = os.path.join(_GetPath(father), path)
-
-    # return path
 
 
 def _GetDirList(theObject):
@@ -2113,40 +1603,6 @@ def _DetectSRCObject(theObject):
         attr = builder.FindOrCreateAttribute(cur, "AttributeLocalID")
 
     return dict_object["USRSRCFile"]
-
-
-# def GetCase(theObject):
-#     """
-#     Returns the case to which belongs the I{theObject}.
-
-#     @type theObject: C{SObject}
-#     @param theObject: file or folder we want to know the case.
-#     @return: case to which belongs the I{theObject}.
-#     @rtype: C{SObject}
-#     """
-#     if theObject == None:
-#         return None
-
-#     study   = _getStudy()
-#     builder = study.NewBuilder()
-#     cur = theObject
-
-#     while cur:
-#         attr = builder.FindOrCreateAttribute(cur, "AttributeLocalID")
-#         if Trace():
-#             print("attr:",attr)
-#             print("Value for Case", attr.Value())
-#         value = attr.Value()
-#         if value == dict_object["Case"]:
-#             return cur
-#         elif value == dict_object["Study"] or value == dict_object["CouplingStudy"] \
-#              or value == __MODULE_ID__ \
-#              or value == 0:
-#             return None
-
-#         cur = cur.GetFather()
-
-#     return None
 
 
 def GetFirstStudy():
@@ -2270,86 +1726,6 @@ def getType(theObject):
     attr = builder.FindOrCreateAttribute(theObject, "AttributeLocalID")
     return attr.Value()
 
-# def hasTheSameType(ListObject):
-#     if ListObject == []:
-#         return False
-#     typListBool = True
-#     typListBoolRESUSub = None
-#     typList = []
-#     typ     = getType(list(ListObject)[0])
-#     typList.append(typ)
-#     if len(ListObject)> 1:
-#         for SObject in list(ListObject)[1:]:
-#             typListBool = typListBool and getType(SObject) == typ
-#             typList.append(getType(SObject))
-#         if not typListBool:
-#             typListBoolRESUSub = True
-#             for ty in typList:
-#                 typListBoolRESUSub = typListBoolRESUSub and (ty == dict_object["RESUSubFolder"] or ty == dict_object["RESUSubErrFolder"] or ty == dict_object["RESU_COUPLINGSubFolder"])
-#     if typListBoolRESUSub != None:
-#         if typListBoolRESUSub == True:
-#             return typListBoolRESUSub
-#     else :
-#         return typListBool
-
-# def isACFDSTUDYListObject(ListObject):
-#     if ListObject == []:
-#         return False
-#     typListBool = True
-#     for sobj in ListObject :
-#         typListBool = typListBool and sobj.GetFatherComponent().GetName() == "CFDSTUDY"
-#     return typListBool
-
-# def isASmeshListObject(ListObject):
-#     if ListObject == []:
-#         return False
-#     typListBool = True
-#     for sobj in ListObject :
-#         if sobj.GetFatherComponent().GetName() == "Mesh":
-#             if getMeshFromMesh(sobj) == None:
-#                 meshGroupObject,group = getMeshFromGroup(sobj)
-#                 typListBool = typListBool and meshGroupObject != None
-#             else:
-#                 typListBool = True
-#         else:
-#            return False
-#     return typListBool
-
-# def checkType(theObject, theType):
-#     """
-#     Checks if I{theObject} has the type ("AttributeLocalID") I{theType}.
-
-#     @type theObject: C{SObject}
-#     @param theObject: object from the Object Browser.
-#     @type theType: C{String}
-#     @param theType: type of the object in the Object Browser.
-#     @rtype: C{True} or C{False}
-#     @return: C{True} if C{theObject} has the type I{theType}.
-#     """
-#     if theObject == None or theType == None:
-#         return False
-#     if theObject != None and theType!= None :
-#         return getType(theObject) == theType
-
-
-# def checkPreMEDType(theObject):
-#     """
-#     Checks if I{theObject} is a mesh file, that can be converted to med format.
-
-#     @type theObject: C{SObject}
-#     @param theObject: object from the Object Browser.
-#     @rtype: C{True} or C{False}
-#     @return: C{True} if C{theObject} is a mesh file, that can be converted to med.
-#     """
-#     return checkType(theObject, dict_object["DESFile"]) or \
-#            checkType(theObject, dict_object["CGNSFile"]) or \
-#            checkType(theObject, dict_object["CcmFile"]) or \
-#            checkType(theObject, dict_object["CaseFile"]) or \
-#            checkType(theObject, dict_object["NeuFile"]) or \
-#            checkType(theObject, dict_object["MSHFile"]) or \
-#            checkType(theObject, dict_object["HexFile"]) or \
-#            checkType(theObject, dict_object["UnvFile"])
-
 
 def checkCaseLaunchGUI(theCase):
     """
@@ -2385,54 +1761,6 @@ def checkCaseLaunchGUI(theCase):
             is_case = True
 
     return is_case
-
-
-# def checkCode(theCase):
-#     """
-#     Checks if I{theCase} is code_saturne or neptune_cfd.
-
-#     @type theCase: C{SObject}
-#     @param theCase: object from the Object Browser.
-#     @rtype: C{CFD_Saturne} or C{CFD_Neptune}
-#     @return: C{True} if C{theCase} has the script to start GUI in the DATA folder.
-#     """
-
-#     # TODO: this should be a feature od the code_saturne scripts
-#     # (for exampe a sub-command of "code_saturne run" or code_saturne.info")
-
-#     if not checkType(theCase, dict_object["Case"]):
-#         return CFD_Code()
-
-#     aChildList = ScanChildren(theCase, "^DATA$")
-#     if not len(aChildList) == 1:
-#         # no DATA folder
-#         print("There is no data folder in selected case")
-#         return CFD_Code()
-
-#     aDataObj =  aChildList[0]
-#     aDataPath = _GetPath(aDataObj)
-
-#     # code_saturne is returned by default
-#     # all xml files are read until NEPTUNE_CFD is found
-#     # thus it will not work with a mix of saturne/neptune xml files
-
-#     fileList = ScanChildren(aDataObj, "^.*$")
-
-#     for ifile in fileList:
-#         filePath = _GetPath(ifile)
-#         if os.path.isfile(filePath):
-#             fd = os.open(filePath,os.O_RDONLY)
-#             f = os.fdopen(fd)
-#             l1 = f.readline()
-#             if l1.startswith('''<?xml version="1.0" encoding="utf-8"?><NEPTUNE_CFD_GUI'''):
-#                 return CFD_Neptune
-#             elif l1.startswith('''<?xml version="1.0" encoding="utf-8"?>''') :
-#                 l2 = f.readline()
-#                 if l2.startswith('''<NEPTUNE_CFD_GUI'''):
-#                     return CFD_Neptune
-#             f.close()
-
-#     return CFD_Saturne
 
 
 def isLinkPathItem(twItem):
@@ -2480,28 +1808,6 @@ def setCaseInProcess(theCasePath, isInProcess):
         attr.SetPixMap(str(ObjectTR.tr(icon_collection[dict_object["Case"]])))
 
 
-#def getTwi(parentTwi, name):
-    
-
-#def publishInStudySalome(SO_father, objName, idElem):
-    #"""
-    #Publish objName into Object Browser under SO_father with the AttributeLocalID idElem
-    #listPublishedId is used into PublishedIntoObjectBrowser method and caracterize entries
-    #PublishedIntoObjectBrowser method adds entries into Salome Object Browser.
-    #These entries do not provide from an Unix cfd study directory, and are idendified into the object browser
-    #by a localId Attribute from the python list listPublishedId
-    #"""
-    #study = _getStudy()
-    #builder = study.NewBuilder()
-    #studyObject = builder.NewObject(SO_father)
-    #attr = builder.FindOrCreateAttribute(studyObject, "AttributeName")
-    #attr.SetValue(objName)
-    #attr = builder.FindOrCreateAttribute(studyObject, "AttributeLocalID")
-    #attr.SetValue(idElem)
-    #_SetIcon(studyObject, builder)
-    #log.debug("publishInStudySalome: %s" % ScanChildNames(SO_father,  ".*"))
-    #return studyObject
-
 
 def getOrLoadObject(item):
     """
@@ -2509,14 +1815,6 @@ def getOrLoadObject(item):
     first loading it with the corresponding engine.
     """
     object = item.GetObject()
-    # if object is None: # the engine has not been loaded yet
-    #     sComponent = item.GetFatherComponent()
-    #     study   = _getStudy()
-    #     builder = study.NewBuilder()
-    #     engine = _getEngine()
-    #     if engine is None:
-    #         print("Cannot load component ", __MODULE_NAME__)
-    #     object = item.GetObject()
     return object
 
 def getMeshFromMesh(meshSobjItem) :

@@ -67,20 +67,6 @@ class SATURNE8_DataModel:
         logging.debug("done")
         return children
         
-        # === Light module and Standard Study Object: problem! (several tries) ===
-        # # Scomp = CFDSTUDYGUI_DataModel._getComponent()
-        # study =  getSalomePyQt().getStudy()
-        # logging.debug("study")
-        # entries = study.getChildren()
-        # logging.debug("SALOME Study component entries %s", entries)
-        # # children = []
-        # logging.debug("---")
-        # # children = getSalomePyQt().getChildren(Scomp)
-        # # logging.debug("nb children %s", len(children))
-        # # for child in children:
-        # #     logging.debug("child: %s", str(child))
-        # logging.debug("done")
-
     def findInStudy(self, text):
         logging.debug("findInStudy %s", text)
         caseObjs = self.getSaturne8Studies()
