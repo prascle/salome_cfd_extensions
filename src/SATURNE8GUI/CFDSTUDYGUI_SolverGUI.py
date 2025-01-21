@@ -142,10 +142,15 @@ class CFDSTUDYGUI_SolverGUI(QObject):
         self._CurrentWindow = None
         self.dockMainWin = None
         self._isActive = False
+        self.casePathToMainWin = {}
+        self.casePathToMw = {}
         from .clientgui import getClientGui
+        self.getClientGui  = getClientGui
+        from .CFDSTUDYGUI_DataModel import getCFDTW
+        self.getCFDTW = getCFDTW
+    
 
-
-    def ExecGUI(self, WorkSpace, xmlFileName, caseTwi):
+    def ExecGUI(self, parentWidget, xmlFileName, caseTwi):
         """
         Executes GUI for solver relatively CFDCode
         """
@@ -191,13 +196,25 @@ class CFDSTUDYGUI_SolverGUI(QObject):
             if aStartPath:
                 os.chdir(aStartPath)
         logging.debug("aStartPath: %s", aStartPath)
-        mw = self.launchGUI(WorkSpace, caseTwi, xmlFileName)
+        mw = self.launchGUI(parentWidget, caseTwi, xmlFileName)
         if mw != None:
             self._CurrentWindow = mw
         self._isActive =True
 
         return mw
 
+    def setCurrentWindow(self, newMW):
+        logging.debug("setCurrentWindow %s", newMW)
+        for casePath, mw in self.casePathToMainWin.items():
+            # logging.debug("casePath %s mw %s", casePath, mw)
+            if mw == newMW:
+                logging.debug("casePath %s", casePath)
+                self._CurrentWindow = self.casePathToMw[casePath]
+                twi = self.getCFDTW().getTwiFromPath(casePath)
+                logging.debug("twi %s", twi.text(col.name))
+                self.getClientGui().getCLSMainWindow().caseSelectionChanged(twi)
+                break
+            
 
     def isActive(self):
         return self._isActive
@@ -378,7 +395,7 @@ class CFDSTUDYGUI_SolverGUI(QObject):
         return aTitle
 
 
-    def launchGUI(self, WorkSpace, caseTwi, xmlFileName):
+    def launchGUI(self, tabWidget, caseTwi, xmlFileName):
         """
         mw.dockWidgetBrowser is the Browser of the CFD MainView
         """
@@ -388,7 +405,7 @@ class CFDSTUDYGUI_SolverGUI(QObject):
         from code_saturne.base.cs_package import package
         from .clientgui import getClientGui
 
-        self.Workspace = WorkSpace
+        self.Workspace = tabWidget
 
         # Get current solver name
         _solver_name = getCFDSolverName()
@@ -413,7 +430,7 @@ class CFDSTUDYGUI_SolverGUI(QObject):
         # Put the standard panel of the MainView inside a QDockWidget
         # in the SALOME Desktop
         aTitle = self.setWindowTitle_CFD(mw, caseTwi, Title)
-        dsk = sgPyQt.getDesktop()
+        #dsk = sgPyQt.getDesktop()
 
         #objectBrowserDockWindow = findObjectBrowserDockWindow()
 
@@ -422,12 +439,16 @@ class CFDSTUDYGUI_SolverGUI(QObject):
         self.mainWin.setCentralWidget(mw.centralwidget)
         self.mainWin.addDockWidget(Qt.LeftDockWidgetArea,mw.dockWidgetBrowser)
         
-        case_name = caseTwi.parent().text(col.name) +'.' + caseTwi.text(col.name)
-        tw_case = QWidget()
-        gl_case = QGridLayout(tw_case)
-        self.mainWin.setParent(tw_case)
+        wd_case = QWidget()
+        gl_case = QGridLayout(wd_case)
+        self.mainWin.setParent(wd_case)
         gl_case.addWidget(self.mainWin, 0, 0 ,1, 1)
-        WorkSpace.addTab(tw_case, case_name)
+        indexTab = tabWidget.addTab(wd_case, aTitle)
+        tabWidget.setCurrentIndex(indexTab)
+        casePath = caseTwi.text(col.details)
+        self.casePathToMainWin[casePath] =self.mainWin
+        self.casePathToMw[casePath] = mw
+
         getClientGui().getCLSMainWindow().setHSplitterSizes(300, 600, 750)
         updateObjectBrowser()
         return mw

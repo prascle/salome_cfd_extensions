@@ -232,6 +232,9 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         self.solverParentWidget = None
         self.selectedItem = None
         
+    def getSolverGUI(self):
+        return self._SolverGUI
+        
     def setSolverParentWidget(self, solverParentWidget):
         """
         store the parent widget that will be used to embed solver GUI

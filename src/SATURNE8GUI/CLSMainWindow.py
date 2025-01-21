@@ -42,6 +42,8 @@ class CLSMainWindow(QMainWindow):
         self.ui.tw_gauche.addTopLevelItem(self.saturneFolder)
         self.ui.tw_gauche.itemSelectionChanged.connect(
             self.treeSelectionChanged)
+        self.ui.tw_case.removeTab(1)
+        self.ui.tw_case.currentChanged.connect(self.slotSelectTabCase)
         self.saturneItems = {}       # Tree item from case path
         self.saturneCondMeshes = {}  # Tree item from conduction mesh file path
         self.saturneRayMeshes = {}   # Tree item from radiation mesh file path
@@ -50,6 +52,8 @@ class CLSMainWindow(QMainWindow):
         self.selectedEntry = None
         self.selectedItem = None
         self.selectedParent = None
+        from .clientgui import getClientGui
+        self.getClientGui = getClientGui
     
     def setHSplitterSizes(self, l1, l2, l3):
         self.ui.splitter.setSizes([l1,l2,l3])
@@ -92,91 +96,21 @@ class CLSMainWindow(QMainWindow):
         self.ui.tw_gauche.setContextMenuPolicy(Qt.CustomContextMenu)
         self.ui.tw_gauche.customContextMenuRequested.connect(
             self.treeItemMenuMgr)
-
-    # def addSaturneItem(self, CaseName, meshCond, meshRay):
-    #     """
-    #     Add a Case Item in the tree, with one or two children items 
-    #     corresponding the conduction and radiation meshes
-
-    #     :param string CaseName: the Saturne case name (file path)
-    #     :param string meshCond: conduction mesh file path
-    #     :param string meshRay: radiation mesh file path (empty if no radiation)
-    #     """
-    #     logging.debug("addSaturneItem %s %s %s", CaseName, meshCond, meshRay)
-    #     saturneItem = None
-    #     if CaseName in self.saturneItems.keys():
-    #         saturneItem = self.saturneItems[CaseName]
-    #     else:
-    #         saturneItem = QTreeWidgetItem()
-    #         saturneItem.setText(col.name, os.path.basename(CaseName))
-    #         saturneItem.setText(col.details, os.path.dirname(CaseName))
-    #         saturneItem.setToolTip(col.details, os.path.dirname(CaseName))
-    #         self.saturneItems[CaseName] = saturneItem
-    #         self.saturneFolder.addChild(saturneItem)
-    #     # first case load or study reload
-    #     if len(os.path.basename(meshCond)) > 0 and saturneItem.childCount() == 0:
-    #         saturneCondMeshItem = QTreeWidgetItem()
-    #         saturneCondMeshItem.setText(col.name, os.path.basename(meshCond))
-    #         saturneCondMeshItem.setText(col.details, os.path.dirname(meshCond))
-    #         saturneCondMeshItem.setToolTip(col.details, os.path.dirname(meshCond))
-    #         self.saturneCondMeshes[meshCond] = saturneCondMeshItem
-    #         saturneItem.addChild(saturneCondMeshItem)
-    #     # first case load or study reload
-    #     if len(os.path.basename(meshRay)) > 0 and saturneItem.childCount() == 1:
-    #         saturneRayMeshItem = QTreeWidgetItem()
-    #         saturneRayMeshItem.setText(col.name, os.path.basename(meshRay))
-    #         saturneRayMeshItem.setText(col.details, os.path.dirname(meshRay))
-    #         saturneRayMeshItem.setToolTip(col.details, os.path.dirname(meshRay))
-    #         self.saturneRayMeshes[meshRay] = saturneRayMeshItem
-    #         saturneItem.addChild(saturneRayMeshItem)
-    #     self.ui.tw_gauche.setCurrentItem(saturneItem)
-    #     self.ui.tw_gauche.expandItem(saturneItem)
-    #     for i in range(4):
-    #         self.ui.tw_gauche.resizeColumnToContents(i)
-
-    # def readSyrDesc(self, medFile):
-    #     """
-    #     Transforms the .sysr_desc file in dictionaries giving Saturne references for each group.
-
-    #     The first key is the type of group in ("faces", "nodes", "edges", "volumes"),
-    #     the secong key is the name of the group.
-    #     The .syr_desc file gives the Saturne references associated to the groups in the mesh.
-    #     This file is produced at the same time as the .syr file,
-    #     with the same name, when using convert2saturne with a med file.
-    #     Some groups may be the concatenation of several other groups, for instance 2 groups of faces.
-    #     These concatenation groups, present in the med file, are not visible when opening the med file in salome.
-    #     Some groups of the med mesh may not have a reference in the .syr_desc file.
-
-    #     :param string medFile: path of the med file.
-
-    #     :return: dictionary giving Saturne reference from group type and name
-    #     :rtype: dictionary
-    #     """
-    #     logging.debug("readSyrDesc %s", medFile)
-    #     syrdesc = {}
-    #     # --- The .syr_desc file is in the same directory as the med file
-    #     syrdescFile = os.path.splitext(medFile)[0] + '.syr_desc'
-    #     if not os.path.isfile(syrdescFile):
-    #         return syrdesc
-    #     # --- we look for groups of faces, edges, volumes, nodes
-    #     groupTypes = ("faces", "nodes", "edges", "volumes")
-    #     for aType in groupTypes:
-    #         syrdesc[aType] = {}
-    #     # --- iterate on the lines in .syr_desc file, containing
-    #     #     groupType, reference, groupName
-    #     with open(syrdescFile, encoding='utf-8') as f:
-    #         for line in f:
-    #             items = line.split()
-    #             if len(items) > 2:
-    #                 groupName = items[0]
-    #                 ref = items[1]
-    #                 name = items[2]
-    #                 for aType in groupTypes:
-    #                     if aType in groupName:
-    #                         syrdesc[aType][name] = ref
-    #     logging.debug("syrdesc %s", syrdesc)
-    #     return syrdesc
-
+        
+    def slotSelectTabCase(self):
+        indexTab = self.ui.tw_case.currentIndex()
+        logging.debug("slotSelectTabCase %s", indexTab)
+        currentWd = self.ui.tw_case.currentWidget()
+        mw_case = None
+        for c in currentWd.children():
+            logging.debug("child %s",c.__class__)
+            if "QMainWindow" in str(c.__class__):
+                mw_case = c
+                break
+        ah = self.getClientGui().getActionsHandler()
+        ah.getSolverGUI().setCurrentWindow(mw_case)
+        #logging.debug("index: %s", self.ui.tw_case.indexOf(currentWd))
+        
     def detailsMeshGroups(self, medFile, meshItem, liste):
         """
         Generate tree items for each group in a mesh
@@ -248,6 +182,11 @@ class CLSMainWindow(QMainWindow):
             if entry in self.entryItems.keys():
                 item = self.entryItems[entry]
                 self.ui.tw_gauche.setCurrentItem(item)
+                
+    def caseSelectionChanged(self, twi):
+        logging.debug("caseSelectionChanged %s", twi)
+        if twi:
+            self.ui.tw_gauche.setCurrentItem(twi)
 
     def getNameAndRef(self):
         """

@@ -92,6 +92,9 @@ class ClientGui():
     
     def getVTKViewer(self):
         return self._VTKViewer
+    
+    def getActionsHandler(self):
+        return self.ah
 
     def initialize(self):
         """

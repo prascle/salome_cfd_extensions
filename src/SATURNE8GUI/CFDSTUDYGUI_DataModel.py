@@ -461,9 +461,12 @@ class CFDTreeWidget():
             return self.entryToSO[entry]
         else:
             return None
-        # study = _getStudy()
-        # obj = study.FindObjectID(entry)
-        # return obj
+
+    def getTwiFromPath(self, path):
+        twi = None
+        if path in self.pathToTwi:
+            twi = self.pathToTwi[path]
+        return twi
     
     def removeObjFromTwi(self, baseTwi):
         """
