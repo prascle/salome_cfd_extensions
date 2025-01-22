@@ -745,6 +745,10 @@ class CFDTreeWidget():
                         if itemName == "MESH":
                             obj = self.findOrCreateChildSO("MESH", studyObj)
                             self.setIdAndIcon(twItem, "MESHFolder")
+                            if obj:
+                                entry = obj.GetID()
+                                twItem.setText(col.entry, entry)
+                                self.entryToTwi[entry] = twItem
                         elif itemName == "POST":
                             self.setIdAndIcon(twItem, "POSTFolder")
                         else:
