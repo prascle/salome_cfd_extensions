@@ -389,7 +389,7 @@ class CFDSTUDYGUI_SolverGUI(QObject):
             self.mainWin = self.casePathToMainWin[casePath]
             nbTabs = tabWidget.count()
             for i in range(nbTabs):
-                wd = tabWidget.widget(i) 
+                wd = tabWidget.widget(i)
                 for c in wd.children():
                     if "QMainWindow" in str(c.__class__):
                         if c == self.mainWin:
@@ -404,6 +404,9 @@ class CFDSTUDYGUI_SolverGUI(QObject):
         from .clientgui import getClientGui
 
         self.Workspace = tabWidget
+
+        if tabWidget.tabText(0) == "CFD case not defined":
+            tabWidget.removeTab(0)
 
         # Get current solver name
         _solver_name = getCFDSolverName()
