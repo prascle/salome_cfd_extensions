@@ -379,7 +379,25 @@ class CFDSTUDYGUI_SolverGUI(QObject):
         """
         mw.dockWidgetBrowser is the Browser of the CFD MainView
         """
-        logging.debug("launchGUI")
+        casePath = caseTwi.text(col.details)
+        logging.debug("launchGUI %s", casePath)
+        # --- if there is already a solver GUI for this case path, return it
+        if casePath in self.casePathToMw:
+            mw = self.casePathToMw[casePath]
+            # retreive the tab index to select it
+            tabIndex = -1
+            self.mainWin = self.casePathToMainWin[casePath]
+            nbTabs = tabWidget.count()
+            for i in range(nbTabs):
+                wd = tabWidget.widget(i) 
+                for c in wd.children():
+                    if "QMainWindow" in str(c.__class__):
+                        if c == self.mainWin:
+                            tabIndex = i
+                            break
+            tabWidget.setCurrentIndex(tabIndex)
+            return mw
+        # --- otherwise, create it
         from code_saturne.gui.cs_gui import process_cmd_line
         from code_saturne.gui.base.MainView import MainView
         from code_saturne.base.cs_package import package
@@ -425,7 +443,6 @@ class CFDSTUDYGUI_SolverGUI(QObject):
         gl_case.addWidget(self.mainWin, 0, 0, 1, 1)
         indexTab = tabWidget.addTab(wd_case, aTitle)
         tabWidget.setCurrentIndex(indexTab)
-        casePath = caseTwi.text(col.details)
         self.casePathToMainWin[casePath] = self.mainWin
         self.casePathToMw[casePath] = mw
 
