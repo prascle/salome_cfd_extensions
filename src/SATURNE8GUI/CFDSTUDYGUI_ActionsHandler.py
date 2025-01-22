@@ -1480,18 +1480,22 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
                 return
 
             if itemId == CFDSTUDYGUI_DataModel.dict_object["Case"]:
-                caseName = twItem.text(col.name)
-                studyName = twItem.parent().text(col.name)
-                XmlCaseNameList = CFDSTUDYGUI_DataModel.getXmlCaseNameList(
-                    twItem)
-                if XmlCaseNameList != []:
-                    for i in XmlCaseNameList:
-                        if CFDSTUDYGUI_SolverGUI.findDockWindow(i, caseName, studyName):
-                            self._SolverGUI.removeDockWindow(
-                                studyName, caseName, i)
-                if CFDSTUDYGUI_SolverGUI.findDockWindow("unnamed", caseName, studyName):
-                    self._SolverGUI.removeDockWindow(
-                        studyName, caseName, "unnamed")
+                casePath = twItem.text(col.details)
+                self.getSolverGUI().removeTab(casePath)
+
+                # caseName = twItem.text(col.name)
+                # studyName = twItem.parent().text(col.name)
+                # XmlCaseNameList = CFDSTUDYGUI_DataModel.getXmlCaseNameList(
+                #     twItem)
+                # if XmlCaseNameList != []:
+                #     for i in XmlCaseNameList:
+                #         if CFDSTUDYGUI_SolverGUI.findDockWindow(i, caseName, studyName):
+                #             self._SolverGUI.removeDockWindow(
+                #                 studyName, caseName, i)
+                # if CFDSTUDYGUI_SolverGUI.findDockWindow("unnamed", caseName, studyName):
+                #     self._SolverGUI.removeDockWindow(
+                #         studyName, caseName, "unnamed")
+
             watchCursor = QCursor(Qt.WaitCursor)
             QApplication.setOverrideCursor(watchCursor)
             # --- As we remove case directory which can be the current working directory,

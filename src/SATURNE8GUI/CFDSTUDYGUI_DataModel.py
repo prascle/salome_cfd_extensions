@@ -1699,7 +1699,7 @@ def getXmlCaseNameList(caseItem):
     aChildList = ScanChildren(caseItem, "^DATA$")
     if len(aChildList) != 1:
         # --- no DATA folder
-        print("There are no data folder in selected by user case")
+        logging.debug("There are no data folder in selected by user case")
         return
 
     dataItem = aChildList[0]

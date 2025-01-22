@@ -147,6 +147,7 @@ class CFDSTUDYGUI_SolverGUI(QObject):
         self._CurrentWindow = None
         self.dockMainWin = None
         self._isActive = False
+        self.tabWidget = None
         self.casePathToMainWin = {}
         self.casePathToMw = {}
         from .clientgui import getClientGui
@@ -381,6 +382,7 @@ class CFDSTUDYGUI_SolverGUI(QObject):
         """
         casePath = caseTwi.text(col.details)
         logging.debug("launchGUI %s", casePath)
+        self.tabWidget = tabWidget
         # --- if there is already a solver GUI for this case path, return it
         if casePath in self.casePathToMw:
             mw = self.casePathToMw[casePath]
@@ -452,6 +454,24 @@ class CFDSTUDYGUI_SolverGUI(QObject):
         getClientGui().getCLSMainWindow().setHSplitterSizes(300, 600, 750)
         updateObjectBrowser()
         return mw
+
+    def removeTab(self, casePath):
+        logging.debug("removeTab %s", casePath)
+        if self.tabWidget and casePath in self.casePathToMainWin:
+            mainWin = self.casePathToMainWin[casePath]
+            tabIndex = -1
+            nbTabs = self.tabWidget.count()
+            for i in range(nbTabs):
+                wd = self.tabWidget.widget(i)
+                for c in wd.children():
+                    if "QMainWindow" in str(c.__class__):
+                        if c == mainWin:
+                            tabIndex = i
+                            break
+            logging.debug("tabIndex %s", tabIndex)
+            self.tabWidget.removeTab(tabIndex)
+            self.casePathToMainWin.pop(casePath)
+            self.casePathToMw.pop(casePath)
 
     def resizeObjBrowserDock(self):
         """
