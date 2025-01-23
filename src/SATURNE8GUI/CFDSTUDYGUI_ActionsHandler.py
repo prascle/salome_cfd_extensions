@@ -1807,6 +1807,9 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
             self.OpenCFD_GUI(XMLTwi)
             self.updateActionsXmlFileItem(XMLTwi)
 
+    def reloadCases(self, casesToReload):
+        getCFDTW().reloadCases(casesToReload)
+
     def checkCFDCaseDir(self, filepath):
         """
         Check if filepath is an XML file which belong to a CFD case directory

@@ -20,7 +20,7 @@ from .CLSMainWindow import CLSMainWindow
 from .CLSMainWindow import getSalomePyQt
 from .CLSMainWindow import col
 from .utilstudy import DumpMesh
-#from .SATURNE8_DataModel import SATURNE8_DataModel
+# from .SATURNE8_DataModel import SATURNE8_DataModel
 from .CFDSTUDYGUI_Commons import CheckCFD_CodeEnv, CFD_Saturne
 from .CFDSTUDYGUI_Message import cfdstudyMess
 from .CFDSTUDYGUI_ActionsHandler import CFDSTUDYGUI_ActionsHandler
@@ -189,6 +189,7 @@ class ClientGui():
         if self.ah is None:
             self.ah = CFDSTUDYGUI_ActionsHandler()
             self.ah.createActions()
+
         # if self._dataModel is None:
         #     self._dataModel = SATURNE8_DataModel()
         # self._dataModel.findOrCreateObject("une entree bidon")
@@ -224,6 +225,8 @@ class ClientGui():
         self.ah._SalomeSelection.currentSelectionChanged.connect(
             self.ah.updateActions)
         self.ah.connectSolverGUI()
+        if len(self.casesToReload):
+            self.ah.reloadCases(self.casesToReload)
 
         return True
 
@@ -290,8 +293,10 @@ class ClientGui():
         return os.path.basename(filename)
 
     def openFiles(self, files, url):
-        logging.debug("openFiles %s %s", files, url)
+        logging.debug("openFiles %s --- %s", files, url)
+        from .CFDSTUDYGUI_DataModel import getCFDTW
         filename = os.path.join(*files)
+        logging.debug("filename %s", filename)
         self.loadFile(filename)
         return True
 
@@ -302,9 +307,10 @@ class ClientGui():
         logging.debug("loadFile %s", filename)
         with open(filename,  mode='r', encoding='utf-8') as f:
             for line in f:
-                case = line.split()[0]
-                logging.debug("case: %s", case)
-                self.casesToReload.append(case)
+                casePath = line.split()[0]
+                logging.debug("case: %s", casePath)
+                if os.path.basename(casePath) != "MESH" :
+                    self.casesToReload.append(casePath)
         return True
 
     # def updateSaturneTitle(self):

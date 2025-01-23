@@ -642,6 +642,25 @@ class CFDTreeWidget():
                     logging.debug("childPath %s", childPath)
                     f.write(childPath + "\n")
 
+    # def loadFile(self, filename):
+    #     '''
+    #     Read text file and publish it.
+    #     '''
+    #     logging.debug("loadFile %s", filename)
+    #     with open(filename,  mode='r', encoding='utf-8') as f:
+    #         for line in f:
+    #             casePath = line.split()[0]
+    #             logging.debug("casePath: %s", casePath)
+    #             caseName = os.path.basename(casePath)
+    #             if caseName != "MESH":
+    #                 self.casesToReload.append(casePath)
+    #     return True
+
+    def reloadCases(self, casesToReload):
+        logging.debug("reloadCases")
+        for casePath in casesToReload:
+            self._SetCaseLocation(casePath)
+
     def findAncestorStudyItemFromSelected(self):
         """
         get the parent of the current selected tree widget item recursively
