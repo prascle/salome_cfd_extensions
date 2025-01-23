@@ -48,7 +48,6 @@ SET(_lib_SCRIPTS
   constants.py
   initlog.py
   __init__.py
-  SATURNE8_DataModel.py
   SATURNE8GUI.py
   utilstudy.py
 )

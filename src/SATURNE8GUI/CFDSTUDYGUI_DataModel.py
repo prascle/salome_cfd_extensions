@@ -630,13 +630,17 @@ class CFDTreeWidget():
         """
         logging.debug("saveFile %s", filename)
         with open(filename, mode='w', encoding='utf-8') as f:
-            caseEntries = self.getSaturne8Studies()
-            for entry in caseEntries:
+            studyEntries = self.getSaturne8Studies()
+            for entry in studyEntries:
                 logging.debug("entry: %s", entry)
-                caseObj = self.entryToSO[entry]
-                casePath = caseObj.getPath()
-                logging.debug("casePath %s", casePath)
-                f.write(casePath + "\n")
+                studyObj = self.entryToSO[entry]
+                studyPath = studyObj.getPath()
+                logging.debug("studyPath %s", studyPath)
+                childrenSO = self.ScanChildrenObj(studyObj,  ".*")
+                for childSO in childrenSO:
+                    childPath = childSO.getPath()
+                    logging.debug("childPath %s", childPath)
+                    f.write(childPath + "\n")
 
     def findAncestorStudyItemFromSelected(self):
         """

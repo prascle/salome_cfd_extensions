@@ -223,10 +223,10 @@ def dumpStudy(files):
     # onObjectBrowserClicked, si
 
 
-def publishCase(CaseName, meshCond, meshRay):
-    """
-    call from Saturne GUI: SATURNE_IHMCollector.PublishInSalome
-    publish case in SALOME study with the associated meshes, and update the object browser
-    """
-    logging.debug("publishCase %s %s %s", CaseName, meshCond, meshRay)
-    getClientGui().publishCase(CaseName, meshCond, meshRay)
+# def publishCase(CaseName, meshCond, meshRay):
+#     """
+#     call from Saturne GUI: SATURNE_IHMCollector.PublishInSalome
+#     publish case in SALOME study with the associated meshes, and update the object browser
+#     """
+#     logging.debug("publishCase %s %s %s", CaseName, meshCond, meshRay)
+#     getClientGui().publishCase(CaseName, meshCond, meshRay)
