@@ -258,6 +258,11 @@ class ClientGui():
         self.clsmainw.externSelectionChanged(entryList)
 
     def saveFiles(self, directory, url):
+        """
+        Called by SALOME when saving module's data in a SALOME study,
+        The data to save will be written in a given temporary directory, 
+        with a filename built with the SALOME study hdf filename and the module name
+        """
         logging.debug("saveFiles %s %s", directory, url)
         from .CFDSTUDYGUI_DataModel import getCFDTW
         filename = os.path.join(directory, os.path.splitext(
@@ -266,6 +271,10 @@ class ClientGui():
         return os.path.basename(filename)
 
     def openFiles(self, files, url):
+        """
+        Called by SALOME when opening a saved study, provides the filename to open, to reload items saved.
+        files contains a temporary path and filename to be read, url is the study hdf file.
+        """
         logging.debug("openFiles %s --- %s", files, url)
         from .CFDSTUDYGUI_DataModel import getCFDTW
         filename = os.path.join(*files)
