@@ -2324,14 +2324,14 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
 
         return self._ActionMap[action_id]
 
-    def disconnectSolverGUI(self):
-        """
-        Hide all the dock windows of CFDSTUDY, when activating another Salome Component
-        We can have one or several of them with the right click on the main menu bar of
-        Salome
-        """
-        logging.debug("disconnectSolverGUI")
-        self._SolverGUI.disconnectDockWindows()
+    # def disconnectSolverGUI(self):
+    #     """
+    #     Hide all the dock windows of CFDSTUDY, when activating another Salome Component
+    #     We can have one or several of them with the right click on the main menu bar of
+    #     Salome
+    #     """
+    #     logging.debug("disconnectSolverGUI")
+    #     self._SolverGUI.disconnectDockWindows()
 
     def connectSolverGUI(self):
         """
