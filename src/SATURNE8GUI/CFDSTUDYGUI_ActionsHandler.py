@@ -1693,6 +1693,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         sgPyQt.activateViewManagerAndView(self.getClientGui().getVTKViewer())
         if entry:
             salome.sg.Display(entry)
+            self.getClientGui().setColor(entry)
         salome.sg.FitAll()
 
     def slotShowOnly(self):
@@ -1704,6 +1705,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         sgPyQt.activateViewManagerAndView(self.getClientGui().getVTKViewer())
         if entry:
             salome.sg.DisplayOnly(entry)
+            self.getClientGui().setColor(entry)
         salome.sg.FitAll()
 
     def slotHide(self):

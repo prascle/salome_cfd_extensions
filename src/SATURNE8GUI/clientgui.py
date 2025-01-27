@@ -2,8 +2,7 @@
 
 import os
 import logging
-import traceback
-import time
+import colorsys
 
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QMenu, QMessageBox, QDockWidget
@@ -72,7 +71,6 @@ class ClientGui():
         self._OCCViewer = 0
         self._VTKViewer = 0
         self._PVViewer = 0
-        # self._dataModel = None
         self.ah = None
 
         self.mainWindow = None
@@ -83,9 +81,10 @@ class ClientGui():
         self.currentFile = ""
         self.selectedItem = None
 
-        self.meshNames = {}  # mesh name from entry (without path and ext)
-        self.meshPaths = {}  # entry from mesh path
-        self.nbMesh = 0
+        self.meshNames = {}    # mesh name from entry (without path and ext)
+        self.meshPaths = {}    # entry from mesh path
+        self.meshColor = 0.25  # for HSV color
+        self.actors = {}       # one color actor by entry
 
         self.casesToReload = []
 
@@ -157,7 +156,6 @@ class ClientGui():
             # --- Paraview Viewer and Geom Viewer are not used now: removed
             self.clsmainw.ui.tw_central.removeTab(2)
             self.clsmainw.ui.tw_central.removeTab(0)
-            
 
     def activate(self):
         """
@@ -187,29 +185,10 @@ class ClientGui():
                 "activateViewManagerAndView VTK Viewer: %s", self._VTKViewer)
             getSalomePyQt().activateViewManagerAndView(self._VTKViewer)
         getSalomePyQt().enableSelector()
-        # self.clsmainw.ui.pb_createLoadCase.clicked.connect(
-        #     self.createOrLoadCase)
         self.initSmesh()
         if self.ah is None:
             self.ah = CFDSTUDYGUI_ActionsHandler()
             self.ah.createActions()
-
-        # if self._dataModel is None:
-        #     self._dataModel = SATURNE8_DataModel()
-        # self._dataModel.findOrCreateObject("une entree bidon")
-        # values = self._dataModel.getSaturne8Studies()
-        # logging.debug(values)
-
-        # if len(self.casesToReload) and self.widget is None:  # when reload study
-        #     # self.createOrLoadCase(True)
-        #     i = 0
-        #     for case in self.casesToReload:
-        #         if i == 0:
-        #             self.reloadCase(case)
-        #             i += 1
-        #         else:
-        #             self.publishCase(case, "", "")
-        #     self.casesToReload = []
 
         env_saturne, msg = CheckCFD_CodeEnv(CFD_Saturne)
         logging.debug("activate -> env_saturne = %s" % env_saturne)
@@ -278,16 +257,6 @@ class ClientGui():
         logging.debug("onSelectionUpdated %s", entryList)
         self.clsmainw.externSelectionChanged(entryList)
 
-    # def loadfile(self):
-    #     """
-    #     """
-    #     logging.debug("loadfile")
-
-    # def savefile(self):
-    #     """
-    #     """
-    #     logging.debug("savefile")
-
     def saveFiles(self, directory, url):
         logging.debug("saveFiles %s %s", directory, url)
         from .CFDSTUDYGUI_DataModel import getCFDTW
@@ -313,55 +282,33 @@ class ClientGui():
             for line in f:
                 casePath = line.split()[0]
                 logging.debug("case: %s", casePath)
-                if os.path.basename(casePath) != "MESH" :
+                if os.path.basename(casePath) != "MESH":
                     self.casesToReload.append(casePath)
         return True
 
-    # def updateSaturneTitle(self):
-    #     logging.debug("updateSaturneTitle")
-    #     if self.widget is not None:
-    #         aTitle = self.widget.windowTitle()
-    #         self.clsmainw.ui.lbl_droite.setText(aTitle)
-
-    # def publishCase(self, CaseName, meshCond, meshRay):
-    #     """
-    #     """
-    #     logging.debug("publishCase: %s %s %s", CaseName, meshCond, meshRay)
-    #     self.clsmainw.addSaturneItem(CaseName, meshCond, meshRay)
-    #     entry = self._dataModel.findOrCreateObject(CaseName)
-    #     logging.debug("entry %s", entry)
-
-    # def closeWelcomeDialog(self):
-    #     """
-    #     check use case utility of this
-    #     """
-    #     logging.debug("closeWelcomeDialog")
-    #     if self.widget is not None:
-    #         self.widget.close()
-
-    # def unloadCase(self, caseName):
-    #     """
-    #     """
-    #     logging.debug("unloadCase %s", caseName)
-    #     if self.widget is not None:
-    #         identik = self.widget.SavingCompare()
-    #         if identik == False:
-    #             reply = QtWidgets.QMessageBox.question(self, 'Message', "Do you want to save the current data file ?",
-    #                                                    QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No |
-    #                                                    QtWidgets.QMessageBox.Cancel)
-    #             if reply == QtWidgets.QMessageBox.Yes:
-    #                 self.widget.SavingFile()
-    #             elif reply == QtWidgets.QMessageBox.Cancel:
-    #                 return
-    #         self.widget.New_File()
-
-    # def reloadCase(self, caseName):
-    #     """
-    #     """
-    #     logging.debug("reloadCase %s", caseName)
-    #     if self.widget is not None:
-    #         logging.debug("OpeningFile %s", caseName)
-    #         self.widget.OpeningFile(caseName, getSalomePyQt().getDesktop())
+    def setColor(self, entry):
+        if entry in self.actors:
+            return
+        smg = salome.ImportComponentGUI('SMESH')
+        actorPres = smg.properties(entry, self._VTKViewer)
+        actorPres.opacity = 1.
+        h = self.meshColor
+        r, g, b = colorsys.hsv_to_rgb(h, 1., 1.)
+        actorPres.nodeColor.r = r
+        actorPres.nodeColor.g = g
+        actorPres.nodeColor.b = b
+        actorPres.surfaceColor.r = r
+        actorPres.surfaceColor.g = g
+        actorPres.surfaceColor.b = b
+        actorPres.volumeColor.r = r
+        actorPres.volumeColor.g = g
+        actorPres.volumeColor.b = b
+        logging.debug("parametres presentation acteur %s %s %s %s %s",
+                      entry, actorPres.opacity,
+                      actorPres.surfaceColor.r, actorPres.surfaceColor.g, actorPres.surfaceColor.b)
+        smg.setProperties(entry, actorPres, self._VTKViewer)
+        self.meshColor += 0.18
+        self.actors[entry] = actorPres
 
     def importMedMesh(self, fileMed):
         """
@@ -411,78 +358,6 @@ class ClientGui():
         logging.debug("entryMesh %s", entryMesh)
         return entryMesh
 
-    # def currentViewType(self):
-    #     cv = getSalomePyQt().getActiveView()
-    #     vtype = getSalomePyQt().getViewType(cv)
-    #     logging.debug("view id and type: %s %s", cv, vtype)
-    #     return vtype
-
-    # def actUnloadCase(self):
-    #     """
-    #     """
-    #     logging.debug("menu unload case %s", self.currentFile)
-    #     self.unloadCase(self.currentFile)
-
-    # def actReloadCase(self):
-    #     """
-    #     """
-    #     logging.debug("menu reload case %s", self.currentFile)
-    #     self.reloadCase(self.currentFile)
-
-    # def actLoadMesh(self):
-    #     """
-    #     """
-    #     logging.debug("actLoadMesh %s", self.currentFile)
-    #     self.importMedMesh(self.currentFile)
-
-    # def actShow(self):
-    #     """
-    #     """
-    #     logging.debug("menu show %s %s", self.currentEntry, self.currentFile)
-    #     entry = self.currentEntry
-    #     fileMed = self.currentFile
-    #     getSalomePyQt().activateViewManagerAndView(self._VTKViewer)
-    #     if fileMed:
-    #         entryMesh = self.importMedMesh(fileMed)
-    #         salome.sg.Display(entryMesh)
-    #     elif entry:
-    #         salome.sg.Display(entry)
-    #     salome.sg.FitAll()
-
-    # def actShowOnly(self):
-    #     """
-    #     """
-    #     logging.debug("menu show only%s %s",
-    #                   self.currentEntry, self.currentFile)
-    #     entry = self.currentEntry
-    #     fileMed = self.currentFile
-    #     getSalomePyQt().activateViewManagerAndView(self._VTKViewer)
-    #     if fileMed:
-    #         entryMesh = self.importMedMesh(fileMed)
-    #         salome.sg.DisplayOnly(entryMesh)
-    #     if entry:
-    #         salome.sg.DisplayOnly(entry)
-    #     salome.sg.FitAll()
-
-    # def actHide(self):
-    #     """
-    #     """
-    #     logging.debug("menu hide %s", self.currentEntry)
-    #     entry = self.currentEntry
-    #     if entry:
-    #         isVisible = salome.sg.IsInCurrentView(entry)
-    #         logging.debug("isInCurrentView %s, %s", entry, isVisible)
-    #         logging.debug(" hide mesh %s", entry)
-    #         salome.sg.Erase(entry)
-
-    # def actFitAll(self):
-    #     logging.debug("menu FitAll %s", self.currentEntry)
-    #     salome.sg.FitAll()
-
-    # def actResetView(self):
-    #     logging.debug("menu ResetView %s", self.currentEntry)
-    #     salome.sg.ResetView()
-
     def getTWSelectedItems(self):
         return self.clsmainw.ui.tw_gauche.selectedItems()
 
@@ -501,9 +376,6 @@ class ClientGui():
             self.selectedItem = item
             self.ah.customPopup(item, menu)
         menu.exec_(self.clsmainw.ui.tw_gauche.viewport().mapToGlobal(position))
-
-    # def getCurrentEntry(self):
-    #     return self.currentEntry
 
     def getCLSMainWindow(self):
         return self.clsmainw
