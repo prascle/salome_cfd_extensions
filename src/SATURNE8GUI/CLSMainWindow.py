@@ -39,6 +39,8 @@ class CLSMainWindow(QMainWindow):
         self.saturneFolder.setText(col.entry, "entry")
         self.saturneFolder.setText(col.id, "id")
         self.ui.tw_gauche.hideColumn(col.ref)
+        self.ui.tw_gauche.hideColumn(col.entry)
+        self.ui.tw_gauche.hideColumn(col.id)
         self.ui.tw_gauche.addTopLevelItem(self.saturneFolder)
         self.ui.tw_gauche.itemSelectionChanged.connect(
             self.treeSelectionChanged)
@@ -151,8 +153,7 @@ class CLSMainWindow(QMainWindow):
                 self.entryItems[entry] = groupItem
                 parentItem.addChild(groupItem)
         self.ui.tw_gauche.expandItem(meshItem)
-        for i in range(4):
-            self.ui.tw_gauche.resizeColumnToContents(i)
+        self.ui.tw_gauche.resizeColumnToContents(0)
 
     def treeSelectionChanged(self):
         """
