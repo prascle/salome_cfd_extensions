@@ -154,6 +154,10 @@ class ClientGui():
                 self.clsmainw.ui.wd_viewSmesh)
             self.clsmainw.ui.gl_mesh.addWidget(vtkwidget, 0, 0, 1, 1)
             self.clsmainw.ui.tw_central.setCurrentIndex(1)
+            # --- Paraview Viewer and Geom Viewer are not used now: removed
+            self.clsmainw.ui.tw_central.removeTab(2)
+            self.clsmainw.ui.tw_central.removeTab(0)
+            
 
     def activate(self):
         """
