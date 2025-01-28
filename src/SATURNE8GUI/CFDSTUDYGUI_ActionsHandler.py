@@ -1691,9 +1691,18 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         entry = item.text(col.entry)
         logging.debug("menu show %s", entry)
         sgPyQt.activateViewManagerAndView(self.getClientGui().getVTKViewer())
-        if entry:
-            salome.sg.Display(entry)
-            self.getClientGui().setColor(entry)
+        nbChildren = item.childCount()
+        if nbChildren:
+            for i in range(nbChildren):
+                chitm = item.child(i)
+                entry = chitm.text(col.entry)
+                if entry:
+                    salome.sg.Display(entry)
+                    self.getClientGui().setColor(entry)
+        else:
+            if entry:
+                salome.sg.Display(entry)
+                self.getClientGui().setColor(entry)
         salome.sg.FitAll()
 
     def slotShowOnly(self):
@@ -1703,9 +1712,21 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         entry = item.text(col.entry)
         logging.debug("menu show only%s", entry)
         sgPyQt.activateViewManagerAndView(self.getClientGui().getVTKViewer())
-        if entry:
-            salome.sg.DisplayOnly(entry)
-            self.getClientGui().setColor(entry)
+        nbChildren = item.childCount()
+        if nbChildren:
+            for i in range(nbChildren):
+                chitm = item.child(i)
+                entry = chitm.text(col.entry)
+                if entry:
+                    if i == 0:
+                        salome.sg.DisplayOnly(entry)
+                    else:
+                        salome.sg.Display(entry)
+                    self.getClientGui().setColor(entry)
+        else:
+            if entry:
+                salome.sg.DisplayOnly(entry)
+                self.getClientGui().setColor(entry)
         salome.sg.FitAll()
 
     def slotHide(self):
@@ -1714,13 +1735,23 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         item = self.selectedItem
         entry = item.text(col.entry)
         logging.debug("menu hide %s", entry)
-        if entry:
-            sgPyQt.activateViewManagerAndView(
-                self.getClientGui().getVTKViewer())
-            isVisible = salome.sg.IsInCurrentView(entry)
-            logging.debug("isInCurrentView %s, %s", entry, isVisible)
-            logging.debug(" hide mesh %s", entry)
-            salome.sg.Erase(entry)
+        sgPyQt.activateViewManagerAndView(self.getClientGui().getVTKViewer())
+        nbChildren = item.childCount()
+        if nbChildren:
+            for i in range(nbChildren):
+                chitm = item.child(i)
+                entry = chitm.text(col.entry)
+                if entry:
+                    isVisible = salome.sg.IsInCurrentView(entry)
+                    logging.debug("isInCurrentView %s, %s", entry, isVisible)
+                    logging.debug(" hide mesh %s", entry)
+                    salome.sg.Erase(entry)
+        else:
+            if entry:
+                isVisible = salome.sg.IsInCurrentView(entry)
+                logging.debug("isInCurrentView %s, %s", entry, isVisible)
+                logging.debug(" hide mesh %s", entry)
+                salome.sg.Erase(entry)
 
     def slotFitAll(self):
         item = self.selectedItem

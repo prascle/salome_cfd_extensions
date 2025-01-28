@@ -140,6 +140,7 @@ class CLSMainWindow(QMainWindow):
                 groupTypeItem = QTreeWidgetItem()
                 groupTypeItem.setText(col.name, name)
                 groupTypeItem.setText(col.entry, entry)
+                groupTypeItem.setText(col.id, str(dict_object["Display"]))
                 self.entryItems[entry] = groupTypeItem
                 meshItem.addChild(groupTypeItem)
                 parentItem = groupTypeItem
