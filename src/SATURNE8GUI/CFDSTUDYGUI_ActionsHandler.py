@@ -1483,19 +1483,6 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
                 casePath = twItem.text(col.details)
                 self.getSolverGUI().removeTab(casePath)
 
-                # caseName = twItem.text(col.name)
-                # studyName = twItem.parent().text(col.name)
-                # XmlCaseNameList = CFDSTUDYGUI_DataModel.getXmlCaseNameList(
-                #     twItem)
-                # if XmlCaseNameList != []:
-                #     for i in XmlCaseNameList:
-                #         if CFDSTUDYGUI_SolverGUI.findDockWindow(i, caseName, studyName):
-                #             self._SolverGUI.removeDockWindow(
-                #                 studyName, caseName, i)
-                # if CFDSTUDYGUI_SolverGUI.findDockWindow("unnamed", caseName, studyName):
-                #     self._SolverGUI.removeDockWindow(
-                #         studyName, caseName, "unnamed")
-
             watchCursor = QCursor(Qt.WaitCursor)
             QApplication.setOverrideCursor(watchCursor)
             # --- As we remove case directory which can be the current working directory,
@@ -1891,28 +1878,9 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         Close into Salome the CFD GUI from an XML file whose name is sobj.GetName()
         """
         logging.debug("CloseCFD_GUI")
-        # TODO: check if useful
-        # if sobj != None and CFDSTUDYGUI_DataModel.checkType(sobj, CFDSTUDYGUI_DataModel.dict_object["DATAfileXML"]):
-        #     aXmlFileName = sobj.GetName()
-        #     aCase = CFDSTUDYGUI_DataModel.GetCase(sobj)
-        #     aStudy = CFDSTUDYGUI_DataModel.GetStudyByObj(sobj)
-        #     if aCase:
-        #         aCaseName = aCase.GetName()
-        #     else:
-        #         mess = cfdstudyMess.trMessage(self.tr("INFO_DLG_NO_CASE_INTO_OB"),[aXmlFileName])
-        #         cfdstudyMess.warningMessage(mess)
-        #         return
-        #     if aStudy:
-        #         aStudyName = aStudy.GetName()
-        #     else:
-        #         mess = cfdstudyMess.trMessage(self.tr("INFO_DLG_NO_CFD_STUDY_INTO_OB"),[aXmlFileName])
-        #         cfdstudyMess.warningMessage(mess)
-        #         return
-        # else:
-        if True:
-            # close the active CFDGUI window with the icon button CLOSE_CFD_GUI_ACTION_ICON in the tool bar
-            aStudyName, aCaseName, aXmlFileName = self._SolverGUI.getStudyCaseXmlNames(
-                self._SolverGUI._CurrentWindow)
+        # --- close the active CFDGUI window with the icon button CLOSE_CFD_GUI_ACTION_ICON in the tool bar
+        aStudyName, aCaseName, aXmlFileName = self._SolverGUI.getStudyCaseXmlNames(
+            self._SolverGUI._CurrentWindow)
 
         logging.debug("CloseCFD_GUI %s %s %s" %
                       (aStudyName, aCaseName, aXmlFileName))
@@ -2354,15 +2322,6 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
             raise ActionError("Invalid action map content")
 
         return self._ActionMap[action_id]
-
-    # def disconnectSolverGUI(self):
-    #     """
-    #     Hide all the dock windows of CFDSTUDY, when activating another Salome Component
-    #     We can have one or several of them with the right click on the main menu bar of
-    #     Salome
-    #     """
-    #     logging.debug("disconnectSolverGUI")
-    #     self._SolverGUI.disconnectDockWindows()
 
     def connectSolverGUI(self):
         """

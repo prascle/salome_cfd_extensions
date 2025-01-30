@@ -479,11 +479,6 @@ class CFDSTUDYGUI_SolverGUI(QObject):
         """
         logging.debug(
             "resizeObjectBrowserDock ***************************************************************************************")
-        # dsk = sgPyQt.getDesktop()
-        # if dsk != None:
-        #     objectBrowserDockWindow = findObjectBrowserDockWindow()
-        #     if objectBrowserDockWindow != None:
-        #         dsk.resizeDocks({objectBrowserDockWindow}, {300},Qt.Horizontal)
 
     def resizeMainWindowDock(self, visible):
         """
@@ -491,11 +486,6 @@ class CFDSTUDYGUI_SolverGUI(QObject):
         """
         logging.debug(
             "resizeMainWindowDock ********************************************************************************************")
-        # dsk = sgPyQt.getDesktop()
-        # if dsk != None:
-        #     dock = self.sender()
-        #     if visible:
-        #         dsk.resizeDocks({dock}, {900},Qt.Horizontal)
 
     def resizeObjectBrowserDock(self, visible):
         """
@@ -503,15 +493,6 @@ class CFDSTUDYGUI_SolverGUI(QObject):
         """
         logging.debug(
             "resizeObjectBrowserDock ******************************************************************************************")
-        # dsk = sgPyQt.getDesktop()
-        # if dsk != None:
-        #     if visible:
-        #         objectBrowserDockWindow = findObjectBrowserDockWindow()
-        #         dsk.resizeDocks({objectBrowserDockWindow}, {300},Qt.Horizontal)
-
-        #     else:
-        #         if self.dockMainWin != None :
-        #             dsk.resizeDocks({self.dockMainWin}, {900},Qt.Horizontal)
 
     def hideDocks(self):
         _c_CFDGUI.hideDocks()

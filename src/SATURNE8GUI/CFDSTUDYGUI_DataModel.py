@@ -380,29 +380,6 @@ def _getComponent():
     return study.FindComponent(__MODULE_NAME__)
 
 
-# def _findOrCreateComponent():
-#     """
-#     Finds or creates component object, i.e. root of the tree.
-
-#     @return: the root C{SObject} for the Object browser representation.
-#     @rtype: C{SObject}
-#     """
-#     logging.debug("_findOrCreateComponent")
-#     study = _getStudy()
-#     father = study.FindComponent(__MODULE_NAME__)
-#     if father is None:
-#         builder = study.NewBuilder()
-#         father = builder.NewComponent(__MODULE_NAME__)
-#         attr = builder.FindOrCreateAttribute(father, "AttributeName")
-#         attr.SetValue(__MODULE_NAME__)
-#         attr = builder.FindOrCreateAttribute(father, "AttributeLocalID")
-#         attr.SetValue(__MODULE_ID__)
-#         attr = builder.FindOrCreateAttribute(father, "AttributePixMap")
-#         attr.SetPixMap("CFDSTUDY.png")
-
-#     return father
-
-
 def getCFDTW():
     global _CFDTreeWidget
     if _CFDTreeWidget is None:
@@ -1280,12 +1257,6 @@ class CFDTreeWidget():
 
         self.UpdateSubTree(twiStudy)
 
-        # TODO handle number of procs required in a consistant manner for coupled cases
-        # Better handled using models/BatchRunningModel
-        # if "run.cfg" in os.listdir(theStudyPath) and theCreateOpt:
-        #     if theNprocs != "":
-        #         pass
-
         return iok
 
     def _SetCaseLocation(self, theCasePath):
@@ -1380,36 +1351,6 @@ class CFDTreeWidget():
         return CaseList
 
 
-# def FindCaseByPath(theCasePath):
-#     """
-#     Returns a CFD study described by the unix path I{theCasePath}.
-
-#     @type theCasePath: C{String}
-#     @param theCasePath: unix path of the CFD study.
-#     @return: the CFD study.
-#     @rtype: C{SObject} or C{None}
-#     """
-#     logging.debug("FindCaseByPath")
-#     component = _getComponent()
-#     if component == None:
-#         return None
-
-#     study = _getStudy()
-#     builder = study.NewBuilder()
-#     studyCfdObject = FindStudyByPath(os.path.dirname(theCasePath))
-#     iter = study.NewChildIterator(studyCfdObject)
-#     while iter.More():
-#         attr = builder.FindOrCreateAttribute(iter.Value(), "AttributeLocalID")
-#         if attr.Value() == dict_object["Case"]:
-#             # compare case path
-#             aCurCasePath = _GetPath(iter.Value())
-#             if aCurCasePath == theCasePath:
-#                 return iter.Value()
-#         iter.Next()
-
-#     return None
-
-
 def _CallCreateScript(theStudyPath, isCreateStudy, theCaseNames,
                       theCopyOpt, theNameRef, theSyrthesOpt, theSyrthesCase):
     """
@@ -1479,29 +1420,6 @@ def updateCasePath(theCasePath):
     return mess == ""
 
 
-# def _CreateObject(theFather, theBuilder, theName):
-#     """
-#     Creates a child branch in the tree from the father branch I{theFather}.
-#     Sets the AttributeName value of this new child with the name theName of the child object
-#     Calls _FillObject which sets the AttributeLocalID of the child
-#     _FillObject calls _setIcon which sets the AttributePixMap and AttributeComment of the child object
-
-#     Result : an object entry in the Object Browser with AttributeName, AttributeLocalID, AttributePixMap, AttributeComment
-#     @type theFather: C{SObject}
-#     @param theFather: branch of the tree to add a child.
-#     @type theBuilder: C{SUIT_Study}
-#     @param theBuilder: C{SObject} constructor.
-#     @type theName: C{String}
-#     @param theName: AttributeName of the new child branch.
-#     """
-#     logging.debug("_CreateObject: %s" % theName)
-#     newChild = theBuilder.NewObject(theFather)
-#     attr = theBuilder.FindOrCreateAttribute(newChild, "AttributeName")
-#     attr.SetValue(theName)
-#     _FillObject(newChild, theFather, theBuilder)
-#     return newChild
-
-
 def getNameCodeFromXmlCasePath(XMLCasePath):
     """
     """
@@ -1535,39 +1453,6 @@ def getNameCodeFromXmlCasePath(XMLCasePath):
     return code
 
 
-# def searchDepth(directory):
-#     l = []
-#     l = directory.split(str(os.sep))
-#     niveau = 0
-#     for i in list(reversed(range(len(l)-1))):
-#         if l[i] == "MESH":
-#             niveau = len(l)-1-i
-#             return len(l)-1-i
-#     return niveau
-
-
-# def parseDir(dirname):
-#     """
-#     External method which permits to return a directory whose keys are objectId for the salome study and value is a list of MESH sub-directories to see then into Object Browser, to access to the med or other extensions mesh files
-#     """
-#     global d_dirMesh
-#     niveau = 0
-#     for root, dirs, files in os.walk(dirname):
-#         l_dirs = []
-#         if dirs != []:
-#             for j in dirs:
-#                 l_dirs.append(os.path.join(root, j))
-#             niveau = searchDepth(root)+1
-#             key = MESHSubFolder_int+niveau
-#             if key not in list(d_dirMesh.keys()):
-#                 d_dirMesh[key] = l_dirs
-#                 dict_object[MESHSubFolder+str(niveau)] = key
-#                 icon_collection[dict_object[MESHSubFolder +
-#                                             str(niveau)]] = "CFDSTUDY_FOLDER_OBJ_ICON"
-#             else:
-#                 d_dirMesh[key] = d_dirMesh[key]+l_dirs
-
-
 def _GetPath(theObject):
     """
     Returns the unix path of the branch I{theObject}.
@@ -1580,80 +1465,6 @@ def _GetPath(theObject):
     else:
         logging.debug("_GetPath None")
         return
-
-
-# def _GetDirList(theObject):
-#     """
-#     Returns the unix pathes of the directories which are child of the branch I{theObject}.
-
-#     @type theObject: C{SObject}
-#     @param theObject: branch of the tree.
-#     @return: list of unix pathes of directory.
-#     @rtype: C{List} of C{String}
-#     """
-#     study = _getStudy()
-#     builder = study.NewBuilder()
-
-#     path = _GetPath(theObject)
-#     attr = builder.FindOrCreateAttribute(theObject, "AttributeLocalID")
-#     lst = []
-#     if os.path.isdir(path):
-#         lst = os.listdir(path)
-#     lst.sort()
-#     return lst
-
-
-# def _DetectUSERSObject(theObject):
-#     """
-#     Search if the branch I{theObject} represents the USERS folder.
-
-#     @type theObject: C{SObject}
-#     @param theObject: branch of the tree.
-#     @return: C{True} if the I{theObject} represents the USERS folder
-#     @rtype: C{True} or C{False}
-#     """
-#     study = _getStudy()
-#     builder = study.NewBuilder()
-#     cur = theObject.GetFather()
-#     attr = builder.FindOrCreateAttribute(cur, "AttributeLocalID")
-
-#     while True:
-#         if attr.Value() == dict_object["USERSFolder"]:
-#             return True
-#         elif attr.Value() == dict_object["Study"]:
-#             return False
-
-#         cur = cur.GetFather()
-#         attr = builder.FindOrCreateAttribute(cur, "AttributeLocalID")
-
-#     return False
-
-
-# def _DetectSRCObject(theObject):
-#     """
-#     Returns the type of the branch I{theObject} which represents
-#     the files in the SRC folder.
-
-#     @type theObject: C{SObject}
-#     @param theObject: branch of the tree.
-#     @return: type of the I{theObject} which represents files in the SRC folder.
-#     @rtype: C{int}
-#     """
-#     study = _getStudy()
-#     builder = study.NewBuilder()
-#     cur = theObject.GetFather()
-#     attr = builder.FindOrCreateAttribute(cur, "AttributeLocalID")
-
-#     while True:
-#         if attr.Value() == dict_object["SRCFolder"]:
-#             return dict_object["USRSRCFile"]
-#         if attr.Value() == dict_object["SRCFolder"]:
-#             return dict_object["USRSRCFile"]
-
-#         cur = cur.GetFather()
-#         attr = builder.FindOrCreateAttribute(cur, "AttributeLocalID")
-
-    # return dict_object["USRSRCFile"]
 
 
 def GetFirstStudy():
@@ -1764,18 +1575,7 @@ def ScanChildNames(theObject, theRegExp):
         if not aName == "" and re.match(theRegExp, aName):
             NameList.append(aName)
         iter.Next()
-
-    # log.debug("ScanChildNames: %s -> %s" % (theObject.GetName(), NameList))
     return NameList
-
-
-# def getType(theObject):
-#     if theObject == None:
-#         return None
-#     study = _getStudy()
-#     builder = study.NewBuilder()
-#     attr = builder.FindOrCreateAttribute(theObject, "AttributeLocalID")
-#     return attr.Value()
 
 
 def checkCaseLaunchGUI(theCase):
@@ -1823,43 +1623,6 @@ def isLinkPathItem(twItem):
         return os.path.islink(path)
 
 
-# def setCaseInProcess(theCasePath, isInProcess):
-#     """
-#     Udpates the case icon with I{Case} or I{CaseInProcess} in the Object Browser.
-
-#     @type theCasePath: C{String}
-#     @param theCasePath: absolute path of the case.
-#     @type isInProcess: C{True} or C{False}
-#     @param isInProcess: if C{True}, shows the I{CaseInProcess} icon.
-#     """
-#     logging.debug("setCaseInProcess")
-#     aStudyPath, aCaseName = os.path.split(theCasePath)
-#     aStudyObj = FindStudyByPath(aStudyPath)
-#     if not aStudyPath:
-#         if Trace():
-#             print("Study by case path not found")
-#         return
-
-#     # get case object
-#     lst = ScanChildren(aStudyObj, aCaseName)
-#     if len(lst) != 1:
-#         if Trace():
-#             print("Invalid number of cases under study")
-#         return
-
-#     aCaseObj = lst[0]
-
-#     study = _getStudy()
-#     builder = study.NewBuilder()
-
-#     attr = builder.FindOrCreateAttribute(aCaseObj, "AttributePixMap")
-#     if isInProcess:
-#         attr.SetPixMap(
-#             str(ObjectTR.tr(icon_collection[dict_object["CaseInProcess"]])))
-#     else:
-#         attr.SetPixMap(str(ObjectTR.tr(icon_collection[dict_object["Case"]])))
-
-
 def getOrLoadObject(item):
     """
     Get the CORBA object associated with the SObject `item`, eventually by
@@ -1867,50 +1630,6 @@ def getOrLoadObject(item):
     """
     object = item.GetObject()
     return object
-
-
-# def getMeshFromMesh(meshSobjItem):
-#     """
-#     return: The SALOMEDS._objref_SObject instance of the mesh, if the meshSobjItem is a sobj of a mesh, None if not
-#     """
-#     meshItem = None
-#     obj = getOrLoadObject(meshSobjItem)
-#     if obj != None:
-#         mesh = obj._narrow(SMESH.SMESH_Mesh)
-#         if mesh != None:
-#             meshItem = salome.ObjectToSObject(mesh)
-#     return meshItem
-
-
-# def SetAutoColor(meshSobjItem):
-#     obj = getOrLoadObject(meshSobjItem)
-#     if obj is not None:
-#         mesh = obj._narrow(SMESH.SMESH_Mesh)
-#         if mesh is not None:
-#             mesh.SetAutoColor(1)
-
-
-# def getMeshFromGroup(meshGroupItem):
-#     """
-#     Get the mesh item owning the mesh group `meshGroupItem`.
-
-#     :type   meshGroupItem: SObject
-#     :param  meshGroupItem: Mesh group belonging to the searched mesh.
-
-#     :return: The SALOMEDS._objref_SObject instance corresponding to the mesh group or None
-#              and SMESH._objref_SMESH_Group instance  or None if it was not
-#              found.
-#     """
-#     group = None
-#     meshItem = None
-#     obj = getOrLoadObject(meshGroupItem)
-
-#     if obj is not None:
-#         group = obj._narrow(SMESH.SMESH_GroupBase)
-#         if group != None:  # The type of the object is ok
-#             meshObj = group.GetMesh()
-#             meshItem = salome.ObjectToSObject(meshObj)
-#     return meshItem, group
 
 
 class SATURNE8_DataObject:
