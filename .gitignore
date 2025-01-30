@@ -29,28 +29,3 @@
 
 #-------------------------------------------------------------------------------
 
-Makefile.in
-
-# /
-/ABOUT-NLS
-/aclocal.m4
-/autom4te.cache
-/salome_cfd_config.h.in
-/configure
-
-# /m4/
-/build-aux/compile
-/build-aux/config.guess
-/build-aux/config.rpath
-/build-aux/config.sub
-/build-aux/depcomp
-/build-aux/install-sh
-/build-aux/ltmain.sh
-/build-aux/missing
-/build-aux/py-compile
-/m4/libtool.m4
-/m4/lt~obsolete.m4
-/m4/ltoptions.m4
-/m4/ltsugar.m4
-/m4/ltversion.m4
-
