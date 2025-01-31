@@ -9,6 +9,7 @@ from PyQt5.QtWidgets import QMenu, QMessageBox, QDockWidget
 from PyQt5.QtCore import Qt, QObject
 
 import salome
+import SalomePyQt
 from salome.smesh import smeshBuilder
 # from qtsalome import QMenu
 
@@ -26,6 +27,9 @@ from .CFDSTUDYGUI_ActionsHandler import CFDSTUDYGUI_ActionsHandler
 
 salome.salome_init()
 
+# ObjectTR is a convenient object for traduction purpose
+
+ObjectTR = QObject()
 
 _clientGui = None
 
@@ -388,3 +392,18 @@ class ClientGui():
 
     def getCLSMainWindow(self):
         return self.clsmainw
+
+    def createPreferences(self):
+        logging.debug("createPreferences")
+        genTab = getSalomePyQt().addPreference(ObjectTR.tr("CFDSTUDY_PREF_GEN_GROUP"))
+        EditorField = str(ObjectTR.tr("EDITOR"))
+        editorGroup = getSalomePyQt().addPreference(EditorField, genTab)
+        externalEditorField = str(ObjectTR.tr("EXTERNAL_EDITOR"))
+        externalReaderField = str(ObjectTR.tr("EXTERNAL_READER"))
+        editor = getSalomePyQt().addPreference(externalEditorField, editorGroup,
+                                               SalomePyQt.PT_String, "CFDSTUDY", "ExternalEditor")
+        Reader = getSalomePyQt().addPreference(externalReaderField, editorGroup,
+                                               SalomePyQt.PT_String, "CFDSTUDY", "ExternalReader")
+        externalDisplayField = str(ObjectTR.tr("EXTERNAL_DISPLAY"))
+        displayViewer = getSalomePyQt().addPreference(externalDisplayField, editorGroup,
+                                                      SalomePyQt.PT_String, "CFDSTUDY", "ExternalDisplay")

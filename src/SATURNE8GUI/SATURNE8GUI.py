@@ -164,7 +164,7 @@ def createPreferences():
     called by GUI (SALOME_PyQt).
     """
     logging.debug("createPreferences")
-
+    getClientGui().createPreferences()
 
 def activeViewChanged(viewId):
     """
