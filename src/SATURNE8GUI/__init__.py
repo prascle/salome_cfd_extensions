@@ -1,5 +1,5 @@
 """
-SALOME Saturne8 module implementation
+SALOME Saturne8 module implementation: main scripts, classes and methods
 
 The interface functions of the module are in SATURNE8GUI (outside the module, to be found by SALOME)
 SATURNE8GUI instantiate a clientgui object at first call. 
@@ -18,12 +18,25 @@ Implements logging. The trace system is started and the trace level set in SATUR
 __init__.py
 This file: only the module documentation
 
-mw_saturne_ui.py
-Generated from the Qt designer file mw_saturne.ui : Qt widgets nature and geometry 
+mw_saturne8_ui.py
+Generated from the Qt designer file mw_saturne8.ui : Qt widgets nature and geometry 
 
-SATURNE8_DataModel.py
+CFDSTUDYGUI_DataModel.py
 Implements the SATURNE8_DataModel, i.e. what is stored in the SALOME study and saved in the hdf study file.
-Only the path of the Saturne8 case files (*.syd) are stored.
+Only the path of the CFD studies and case are stored.
+The class SATURNE8_DataObject implements the SALOME Study Light objects
+The class CFD_TreeWidget manages the tree items which are QTreeWidget items.
+For CFD Studies and Case, the tree items are associated to SALOME Study Light objects.
+The dict_object dictionary defines the different kind of items in the CFD study and case
+
+CFDSTUDYGUI_ActionsHandler.py
+The class CFDSTUDYGUI_ActionsHandler implements the actions in menus and popup menu (Tree Widget)
+The actions are stored in a map (_CommonActionIdMap) with an integer key.
+The actions are updated (updateActions). They can be disabled or made invisible, depending on the current state of the module and the selection.
+The custom popup menu of the tree widget items are build depending on the current selection.
+
+CFDSTUDYGUI_SolverGUI.py
+The class CFDSTUDYGUI_SolverGUI provides an interface to the Solvers GUIs (Code Saturne / neptune_cfd). Only tested with Code_Saturne...
 
 utilstudy.py
 The DumpMesh function explore the SALOME study to find a loaded mesh and all its groups which have an entry in the study
