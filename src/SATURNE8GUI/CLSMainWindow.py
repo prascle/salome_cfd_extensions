@@ -103,6 +103,8 @@ class CLSMainWindow(QMainWindow):
     def slotSelectTabCase(self):
         indexTab = self.ui.tw_case.currentIndex()
         logging.debug("slotSelectTabCase %s", indexTab)
+        if indexTab<0:
+            return
         currentWd = self.ui.tw_case.currentWidget()
         mw_case = None
         for c in currentWd.children():
