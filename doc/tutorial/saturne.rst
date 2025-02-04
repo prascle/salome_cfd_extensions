@@ -332,7 +332,7 @@ define a study for *Code_Saturne*. Each data set defined in a case.
 
 Click on **"Add new case(s)"**. Then, use **"Browse"** button to select the directory which will contain the study directory.
 
-.. image:: images/T_PIPE/t-pipe-study_location_add_new_case.png
+.. image:: images/T_PIPE/t-pipe-study_location-add_new_case.png
   :align: center
   :width: 10cm
 
