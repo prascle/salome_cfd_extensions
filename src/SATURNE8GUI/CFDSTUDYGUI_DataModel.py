@@ -1221,6 +1221,16 @@ class CFDTreeWidget():
         """
         logging.debug("_SetStudyLocation %s %s", theStudyPath, theCaseName)
 
+        parentPath = os.path.dirname(theStudyPath)
+        while len(parentPath) > 2:
+            if os.path.isdir(parentPath):
+                if CFDSTUDYGUI_Commons.isaCFDStudy(parentPath):
+                    mess = cfdstudyMess.trMessage(ObjectTR.tr(
+                        "Can't create a study inside another"), [""])
+                    cfdstudyMess.criticalMessage(mess)
+                    return False
+            parentPath = os.path.dirname(parentPath)
+
         iok = True
         if theCopyOpt:
             if not os.path.exists(theNameRef):
