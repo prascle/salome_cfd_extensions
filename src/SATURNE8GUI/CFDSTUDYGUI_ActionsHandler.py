@@ -952,6 +952,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
                 boo = (id == str(CFDSTUDYGUI_DataModel.dict_object["DATALaunch"])) or \
                       (id == str(CFDSTUDYGUI_DataModel.dict_object["Case"]))
                 self.commonAction(LaunchGUIAction).setEnabled(boo)
+                self.solverAction(SolverCloseAction).setEnabled(True)
                 # self.commonAction(OpenGUIAction).setEnabled(CFDSTUDYGUI_DataModel.checkCaseLaunchGUI(aCase))
                 self.commonAction(OpenGUIAction).setEnabled(
                     True)  # TODO: check
@@ -1014,16 +1015,12 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
             self.solverAction(SolverUndoAction).setEnabled(False)
             self.solverAction(SolverRedoAction).setEnabled(False)
             if case != None and study != None:
-                # if CFDSTUDYGUI_SolverGUI._c_CFDGUI.findDock(XMLSobj.GetName(),
-                #                                             case.GetName(),
-                #                                             study.GetName()):
-                if True:  # TODO...
-                    self.solverAction(SolverCloseAction).setEnabled(True)
-                    self.commonAction(OpenGUIAction).setEnabled(False)
-                    self.solverAction(SolverSaveAction).setEnabled(True)
-                    self.solverAction(SolverSaveAsAction).setEnabled(True)
-                    self.solverAction(SolverUndoAction).setEnabled(True)
-                    self.solverAction(SolverRedoAction).setEnabled(True)
+                self.solverAction(SolverCloseAction).setEnabled(True)
+                self.commonAction(OpenGUIAction).setEnabled(False)
+                self.solverAction(SolverSaveAction).setEnabled(True)
+                self.solverAction(SolverSaveAsAction).setEnabled(True)
+                self.solverAction(SolverUndoAction).setEnabled(True)
+                self.solverAction(SolverRedoAction).setEnabled(True)
 
     def updateActionsXmlFile(self, XMLSobj):
         logging.debug("updateActionsXmlFile")
@@ -1076,6 +1073,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
             popup.addAction(self.commonAction(UpdateObjBrowserAction))
         elif id == CFDSTUDYGUI_DataModel.dict_object["Case"]:
             popup.addAction(self.commonAction(LaunchGUIAction))
+            popup.addAction(self.solverAction(SolverCloseAction))
             popup.addAction(self.commonAction(UpdateCasePath))
             popup.addAction(self.commonAction(RemoveAction))
             popup.addAction(self.commonAction(UpdateObjBrowserAction))
