@@ -1146,10 +1146,11 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
             popup.addAction(self.commonAction(ViewAction))
         elif id == CFDSTUDYGUI_DataModel.dict_object["HISTFile"]:
             popup.addAction(self.commonAction(ViewAction))
-            popup.addAction(self.commonAction(ExportInParaViSAction))
+            # popup.addAction(self.commonAction(ExportInParaViSAction))
         elif id == CFDSTUDYGUI_DataModel.dict_object["RESMEDFile"] \
                 or id == CFDSTUDYGUI_DataModel.dict_object["RESENSIGHTFile"]:
-            popup.addAction(self.commonAction(ExportInParaViSAction))
+            # popup.addAction(self.commonAction(ExportInParaViSAction))
+            pass
         elif id == CFDSTUDYGUI_DataModel.dict_object["DESFile"] \
                 or id == CFDSTUDYGUI_DataModel.dict_object["CGNSFile"] \
                 or id == CFDSTUDYGUI_DataModel.dict_object["CcmFile"] \
@@ -1440,10 +1441,9 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
             caseList = getCFDTW().GetCaseList(studyTwi)
             if caseList != []:
                 for aCase in caseList:
-                    # TODO: remove CFD dialog instances
-                    # self._SolverGUI.removeDockWindowfromStudyAndCaseNames(theStudy.GetName(), aCase.GetName())
-                    pass
-            self.getClientGui().getCLSMainWindow().removeItem(studyTwi)
+                    self.CloseCFD_GUI(aCase)
+            getCFDTW().removeObjFromTwi(studyTwi)
+            getCFDTW().removeTwiWithChildren(studyTwi)
 
     def slotRemoveAction(self):
         logging.debug("slotRemoveAction")
@@ -1873,31 +1873,28 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
             cfdstudyMess.warningMessage(mess)
         return boo, StudyPath, CasePath
 
-    def CloseCFD_GUI(self, sobj):
+    def CloseCFD_GUI(self, twi):
         """
         Close into Salome the CFD GUI from an XML file whose name is sobj.GetName()
         """
         logging.debug("CloseCFD_GUI")
-        # --- close the active CFDGUI window with the icon button CLOSE_CFD_GUI_ACTION_ICON in the tool bar
-        aStudyName, aCaseName, aXmlFileName = self._SolverGUI.getStudyCaseXmlNames(
-            self._SolverGUI._CurrentWindow)
-
-        logging.debug("CloseCFD_GUI %s %s %s" %
-                      (aStudyName, aCaseName, aXmlFileName))
-        if self._SolverGUI.okToContinue():
-            self._SolverGUI.removeDockWindow(
-                aStudyName, aCaseName, aXmlFileName)
-            self.commonAction(OpenGUIAction).setEnabled(True)
-            self.solverAction(SolverCloseAction).setEnabled(False)
-            self.updateActions()
+        id = twi.text(col.id)
+        if id == str(CFDSTUDYGUI_DataModel.dict_object["Case"]):
+            casePath = twi.text(col.details)
+            self.getSolverGUI().removeTab(casePath)
+        else:
+            caseTwi = getCFDTW().findCaseItem(twi)
+            if caseTwi:
+                casePath = caseTwi.text(col.details)
+                self.getSolverGUI().removeTab(casePath)
 
     def slotCloseCFD_GUI(self):
         """
         Close into Salome the CFD GUI from an XML file whose name is sobj.GetName()
         """
         logging.debug("slotCloseCFD_GUI")
-        sobj = self._singleSelectedObject()
-        self.CloseCFD_GUI(sobj)
+        item = self.selectedItem
+        self.CloseCFD_GUI(item)
 
     def slotUndo(self):
         self._SolverGUI.onUndo()
