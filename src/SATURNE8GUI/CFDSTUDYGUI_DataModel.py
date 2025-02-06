@@ -311,15 +311,15 @@ ObjectTR = QObject()
 ###
 # Get ORB reference
 ###
-__orb__ = None
+# __orb__ = None
 
 
-def getORB():
-    global __orb__
-    if __orb__ is None:
-        __orb__ = CORBA.ORB_init([''], CORBA.ORB_ID)
-        pass
-    return __orb__
+# def getORB():
+#     global __orb__
+#     if __orb__ is None:
+#         __orb__ = CORBA.ORB_init([''], CORBA.ORB_ID)
+#         pass
+#     return __orb__
 
 # --------------------------------------------------------------------------
 ###
@@ -336,15 +336,15 @@ def getNS():
 ##
 # Get life cycle CORBA instance
 ##
-__lcc__ = None
+# __lcc__ = None
 
 
-def getLCC():
-    global __lcc__
-    if __lcc__ is None:
-        __lcc__ = LifeCycleCORBA(getORB())
-        pass
-    return __lcc__
+# def getLCC():
+#     global __lcc__
+#     if __lcc__ is None:
+#         __lcc__ = LifeCycleCORBA(getORB())
+#         pass
+#     return __lcc__
 
 
 # --------------------------------------------------------------------------
