@@ -225,7 +225,10 @@ def isaCFDCase(theCasePath):
     logging.debug("isaCFDCase")
     dirList = []
     if os.path.isdir(theCasePath):
-        dirList = os.walk(theCasePath).__next__()[1]
+        try:
+            dirList = os.walk(theCasePath).__next__()[1]
+        except:
+            logging.debug("private access")
         if (dirList.count("DATA") or
                 dirList.count("SRC")):
             return True
@@ -236,7 +239,10 @@ def isaCFDStudy(theStudyPath):
     logging.debug("isaCFDStudy %s", theStudyPath)
     dirList = []
     if os.path.isdir(theStudyPath):
-        dirList = os.walk(theStudyPath).__next__()[1]
+        try:
+            dirList = os.walk(theStudyPath).__next__()[1]
+        except:
+            logging.debug("private access")
         for i in dirList:
             logging.debug(" --- %s", i)
             if i not in ["MESH"]:
