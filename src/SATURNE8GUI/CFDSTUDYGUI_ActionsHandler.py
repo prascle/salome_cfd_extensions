@@ -1673,21 +1673,32 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         """
         """
         item = self.selectedItem
-        entry = item.text(col.entry)
-        logging.debug("menu show %s", entry)
-        sgPyQt.activateViewManagerAndView(self.getClientGui().getVTKViewer())
-        nbChildren = item.childCount()
-        if nbChildren:
-            for i in range(nbChildren):
-                chitm = item.child(i)
-                entry = chitm.text(col.entry)
+        path = self.selectedItem.text(col.details)
+        if path:
+            # --- selection is the mesh itself
+            self.slotExportInSMESH()
+            entryMesh = item.text(col.entry)
+            logging.debug("menu show mesh %s", entryMesh)
+            sgPyQt.activateViewManagerAndView(self.getClientGui().getVTKViewer())
+            salome.sg.Display(entryMesh)
+            self.getClientGui().setColor(entryMesh)
+        else:
+            # --- selection is a group or a type of groups (nodes, faces, solids...)
+            entry = item.text(col.entry)
+            logging.debug("menu show group(s) %s", entry)
+            sgPyQt.activateViewManagerAndView(self.getClientGui().getVTKViewer())
+            nbChildren = item.childCount()
+            if nbChildren:
+                for i in range(nbChildren):
+                    chitm = item.child(i)
+                    entry = chitm.text(col.entry)
+                    if entry:
+                        salome.sg.Display(entry)
+                        self.getClientGui().setColor(entry)
+            else:
                 if entry:
                     salome.sg.Display(entry)
                     self.getClientGui().setColor(entry)
-        else:
-            if entry:
-                salome.sg.Display(entry)
-                self.getClientGui().setColor(entry)
         salome.sg.FitAll()
 
     def slotShowOnly(self):
@@ -1697,21 +1708,29 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         entry = item.text(col.entry)
         logging.debug("menu show only%s", entry)
         sgPyQt.activateViewManagerAndView(self.getClientGui().getVTKViewer())
-        nbChildren = item.childCount()
-        if nbChildren:
-            for i in range(nbChildren):
-                chitm = item.child(i)
-                entry = chitm.text(col.entry)
-                if entry:
-                    if i == 0:
-                        salome.sg.DisplayOnly(entry)
-                    else:
-                        salome.sg.Display(entry)
-                    self.getClientGui().setColor(entry)
-        else:
+        path = self.selectedItem.text(col.details)
+        if path:
+            # --- selection is the mesh itself
             if entry:
                 salome.sg.DisplayOnly(entry)
                 self.getClientGui().setColor(entry)
+        else:
+            # --- selection is a group or a type of groups (nodes, faces, solids...)
+            nbChildren = item.childCount()
+            if nbChildren:
+                for i in range(nbChildren):
+                    chitm = item.child(i)
+                    entry = chitm.text(col.entry)
+                    if entry:
+                        if i == 0:
+                            salome.sg.DisplayOnly(entry)
+                        else:
+                            salome.sg.Display(entry)
+                        self.getClientGui().setColor(entry)
+            else:
+                if entry:
+                    salome.sg.DisplayOnly(entry)
+                    self.getClientGui().setColor(entry)
         salome.sg.FitAll()
 
     def slotHide(self):
@@ -1721,22 +1740,32 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
         entry = item.text(col.entry)
         logging.debug("menu hide %s", entry)
         sgPyQt.activateViewManagerAndView(self.getClientGui().getVTKViewer())
-        nbChildren = item.childCount()
-        if nbChildren:
-            for i in range(nbChildren):
-                chitm = item.child(i)
-                entry = chitm.text(col.entry)
-                if entry:
-                    isVisible = salome.sg.IsInCurrentView(entry)
-                    logging.debug("isInCurrentView %s, %s", entry, isVisible)
-                    logging.debug(" hide mesh %s", entry)
-                    salome.sg.Erase(entry)
-        else:
+        path = self.selectedItem.text(col.details)
+        if path:
+            # --- selection is the mesh itself
             if entry:
                 isVisible = salome.sg.IsInCurrentView(entry)
                 logging.debug("isInCurrentView %s, %s", entry, isVisible)
                 logging.debug(" hide mesh %s", entry)
                 salome.sg.Erase(entry)
+        else:
+            # --- selection is a group or a type of groups (nodes, faces, solids...)
+            nbChildren = item.childCount()
+            if nbChildren:
+                for i in range(nbChildren):
+                    chitm = item.child(i)
+                    entry = chitm.text(col.entry)
+                    if entry:
+                        isVisible = salome.sg.IsInCurrentView(entry)
+                        logging.debug("isInCurrentView %s, %s", entry, isVisible)
+                        logging.debug(" hide mesh %s", entry)
+                        salome.sg.Erase(entry)
+            else:
+                if entry:
+                    isVisible = salome.sg.IsInCurrentView(entry)
+                    logging.debug("isInCurrentView %s, %s", entry, isVisible)
+                    logging.debug(" hide mesh %s", entry)
+                    salome.sg.Erase(entry)
 
     def slotFitAll(self):
         item = self.selectedItem
