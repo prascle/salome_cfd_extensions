@@ -1469,7 +1469,7 @@ def _GetPath(theObject):
     """
     name = None
     if theObject:
-        name = theObject.getName()
+        name = theObject.GetName()
         logging.debug("_GetPath %s", name)
         return theObject.getPath()
     else:

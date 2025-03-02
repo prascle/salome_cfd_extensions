@@ -932,6 +932,7 @@ class CFDSTUDYGUI_ActionsHandler(QObject):
 
         if len(items) == 1:
             item = items[0]
+            self.selectedItem = item
             id = item.text(col.id)
             logging.debug("single selection %s", id)
             isStudy = (id == str(CFDSTUDYGUI_DataModel.dict_object["Study"]))
